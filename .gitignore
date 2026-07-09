@@ -1,0 +1,45 @@
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Secrets and credentials
+*secret*
+*credential*
+*token*
+*.pem
+*.p12
+*.pfx
+
+# Node
+node_modules/
+dist/
+build/
+
+# Python
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+
+# .NET / Revit
+bin/
+obj/
+*.dll
+*.pdb
+*.cache
+
+# Logs and runtime outputs
+logs/
+log/
+runtime/
+outputs/
+*.log
+*.tmp
+
+# IDE
+.vs/
+.vscode/
+.idea/
