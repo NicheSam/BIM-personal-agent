@@ -92,6 +92,25 @@
     .result-row span { color: var(--muted); }
     .result-row strong { font-size: 15px; }
 
+    .deploy { border-top: 1px solid var(--line); }
+    .deploy-note { margin-bottom: 26px; padding: 16px 18px; border-left: 5px solid var(--amber); background: var(--amber-soft); }
+    .deploy-note strong { display: block; }
+    .deploy-note span { color: var(--muted); font-size: 14px; }
+    .deploy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+    .deploy-column { padding-top: 20px; border-top: 5px solid var(--blue); }
+    .deploy-column.daily { border-color: var(--green); }
+    .deploy-step { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .deploy-step:last-of-type { border-bottom: 0; }
+    .deploy-index { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); background: var(--blue-soft); border-radius: 50%; font-weight: 850; }
+    .daily .deploy-index { color: var(--green); background: var(--green-soft); }
+    .deploy-step p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+    .command-block { margin-top: 18px; padding: 16px; overflow-x: auto; border-radius: 5px; color: #d6efeb; background: #172126; font: 13px/1.7 Consolas, monospace; white-space: pre; }
+    .ready-line { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 24px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .ready-item { padding: 16px; border-right: 1px solid var(--line); background: var(--soft); }
+    .ready-item:last-child { border-right: 0; }
+    .ready-item strong, .ready-item span { display: block; }
+    .ready-item span { color: var(--muted); font-size: 13px; }
+
     .rules { background: var(--soft); border-top: 1px solid var(--line); }
     .rule-strip { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
     .rule { padding: 24px; border-right: 1px solid var(--line); background: #fff; }
@@ -109,7 +128,7 @@
     footer a { color: var(--green); font-weight: 700; }
 
     @media (max-width: 900px) {
-      .hero-grid, .demo-grid, .route-view { grid-template-columns: 1fr; }
+      .hero-grid, .demo-grid, .route-view, .deploy-grid { grid-template-columns: 1fr; }
       .story-line { grid-template-columns: 1fr; }
       .story-step, .story-step:first-child, .story-step:last-child { min-height: 0; border-right: 1px solid var(--line); border-bottom: 0; border-radius: 0; }
       .story-step:first-child { border-radius: 6px 6px 0 0; }
@@ -127,10 +146,11 @@
       .hero-grid { gap: 30px; }
       .hero-picture { grid-template-columns: 1fr; }
       .hero-arrow { transform: rotate(90deg); }
-      .demo-flow, .route-visual, .result-grid, .rule-strip, .tech-grid { grid-template-columns: 1fr; }
+      .demo-flow, .route-visual, .result-grid, .rule-strip, .tech-grid, .ready-line { grid-template-columns: 1fr; }
       .demo-arrow { transform: rotate(90deg); }
       .route-piece, .rule { border-left: 0; border-right: 0; border-bottom: 1px solid var(--line); }
-      .route-piece:last-child, .rule:last-child { border-bottom: 0; }
+      .route-piece:last-child, .rule:last-child, .ready-item:last-child { border-bottom: 0; }
+      .ready-item { border-right: 0; border-bottom: 1px solid var(--line); }
     }
   </style>
 </head>
@@ -202,6 +222,45 @@
         <div class="result-grid">
           <div class="result-panel"><h3>Codex 對話回覆</h3><div class="result-row"><span>結果</span><strong>已完成</strong></div><div class="result-row"><span>修改範圍</span><strong>12 支選取的風管</strong></div><div class="result-row"><span>執行內容</span><strong>備註改為「待檢查」</strong></div><div class="result-row"><span>復原方式</span><strong>可在 Revit 使用 Undo</strong></div></div>
           <div class="result-panel attention"><h3>活動控制台</h3><div class="result-row"><span>時間</span><strong>依發生順序排列</strong></div><div class="result-row"><span>狀態</span><strong>完成、失敗或已取消</strong></div><div class="result-row"><span>影響</span><strong>物件數量與可公開範圍</strong></div><div class="result-row"><span>耗時</span><strong>這次操作花了多久</strong></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="deploy" id="deploy">
+      <div class="shell">
+        <div class="section-head"><h2>如何部署與開始使用</h2><p>首次部署只做一次；完成後，BIM 工程人員每天只要開啟 Revit、啟動 Agent，再用自然語言下指令。</p></div>
+        <div class="deploy-note"><strong>目前是 V0.5 測試版</strong><span>尚未提供一鍵安裝程式。首次部署需要具備 Windows、Revit 2024、Node.js 22+、.NET SDK 10 與 Codex Desktop，建議由 BIM 管理者或資訊人員處理。</span></div>
+        <div class="deploy-grid">
+          <div class="deploy-column">
+            <h3>首次部署：管理者執行</h3>
+            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>下載專案</strong><p>從 GitHub 取得完整 repository，安裝 Node dependencies。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>建置並安裝 Revit Add-in</strong><p>建置會檢查 Gateway、C# 核心與工具清單，再安裝到 Revit 2024 Addins。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>連接 Codex</strong><p>設定 Codex 只使用 bim-personal-agent，連線埠固定為 localhost:9686。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>安裝 BIM Agent skill</strong><p>將 skills/bim-agent 放進 Codex 個人 skills 目錄，讓新 task 能用 $bim-agent 啟動。</p></div></div>
+            <details>
+              <summary>顯示安裝指令</summary>
+              <div class="command-block">git clone https://github.com/NicheSam/BIM-personal-agent.git
+cd BIM-personal-agent
+npm.cmd --prefix gateway ci
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+python scripts\configure-codex-agent.py
+Copy-Item skills\bim-agent $HOME\.codex\skills\bim-agent -Recurse</div>
+            </details>
+          </div>
+
+          <div class="deploy-column daily">
+            <h3>每天使用：BIM 工程人員</h3>
+            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>開啟 Revit 2024 與工作模型</strong><p>確認目前 active document 就是要操作的模型。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>啟動 Agent 服務</strong><p>在 Revit 的 BIM Personal 頁籤按「Agent服務 開/關」。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>在新 Codex task 輸入 $bim-agent</strong><p>Skill 會檢查 Revit 連線、讀取目前模型並開啟活動控制台。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>直接描述工作</strong><p>例如：「把目前視圖的風管依樓層分類，並回報數量。」</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">5</span><div><strong>查看結果</strong><p>在 Revit 檢查模型；在 Codex 與活動控制台查看執行內容。</p></div></div>
+          </div>
+        </div>
+        <div class="ready-line">
+          <div class="ready-item"><strong>Revit 已開啟</strong><span>且有 active model</span></div>
+          <div class="ready-item"><strong>Agent 服務已啟動</strong><span>localhost:9686</span></div>
+          <div class="ready-item"><strong>Codex 使用 $bim-agent</strong><span>即可開始自然語言操作</span></div>
         </div>
       </div>
     </section>
