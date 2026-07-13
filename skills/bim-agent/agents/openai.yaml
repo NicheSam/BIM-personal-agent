@@ -1,0 +1,13 @@
+interface:
+  display_name: "BIM Personal Agent"
+  short_description: "啟動 Revit Agent 與 BIM 活動控制台"
+  default_prompt: "Use $bim-agent to connect to the active Revit model and open the BIM activity console."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "bim-personal-agent"
+      description: "Local BIM Agent Gateway for Revit 2024"
+
+policy:
+  allow_implicit_invocation: true

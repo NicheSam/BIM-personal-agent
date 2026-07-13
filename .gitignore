@@ -32,6 +32,10 @@ obj/
 *.cache
 
 # Logs and runtime outputs
+artifacts/
+.packages/
+gateway/node_modules/
+gateway/build/
 logs/
 log/
 runtime/

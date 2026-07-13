@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>BIM Personal Agent</Name>
+    <Assembly>BimPersonalAgent\0.5.0\BimPersonalAgent.Revit.dll</Assembly>
+    <AddInId>6CFB89EA-A4C8-4E22-82CB-88E567AE348B</AddInId>
+    <FullClassName>BimPersonalAgent.Revit.App</FullClassName>
+    <VendorId>NicheSam</VendorId>
+    <VendorDescription>Personal Revit workflow tools</VendorDescription>
+    <AllowLoadIntoExistingSession>false</AllowLoadIntoExistingSession>
+  </AddIn>
+</RevitAddIns>

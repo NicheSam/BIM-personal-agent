@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BIM Agent 活動紀錄</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">BA</div>
+      <div>
+        <h1>BIM Agent 活動紀錄</h1>
+        <p id="last-updated">等待 Agent 事件</p>
+      </div>
+    </div>
+    <div class="bridge-state" id="bridge-state" data-connected="false">
+      <span class="state-dot" aria-hidden="true"></span>
+      <span id="bridge-label">檢查 Revit 連線</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="summary-strip" aria-label="活動摘要">
+      <div><span id="event-count">0</span><small>事件</small></div>
+      <div><span id="success-count">0</span><small>完成</small></div>
+      <div><span id="attention-count">0</span><small>需注意</small></div>
+      <div><span id="average-duration">0 ms</span><small>平均耗時</small></div>
+    </section>
+
+    <nav class="filters" aria-label="篩選活動">
+      <button type="button" class="filter-button is-active" data-filter="all">全部</button>
+      <button type="button" class="filter-button" data-filter="operation">模型操作</button>
+      <button type="button" class="filter-button" data-filter="attention">需注意</button>
+    </nav>
+
+    <section class="timeline" id="timeline" aria-live="polite"></section>
+  </main>
+
+  <template id="event-template">
+    <article class="event-row">
+      <div class="timeline-rail"><span class="event-dot"></span></div>
+      <div class="event-content">
+        <div class="event-heading">
+          <div>
+            <time></time>
+            <h2></h2>
+          </div>
+          <span class="event-status"></span>
+        </div>
+        <p class="event-summary"></p>
+        <div class="event-scope"></div>
+        <footer>
+          <span class="event-tool"></span>
+          <span class="event-duration"></span>
+          <span class="event-transaction"></span>
+        </footer>
+      </div>
+    </article>
+  </template>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
