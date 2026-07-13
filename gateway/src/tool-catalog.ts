@@ -25,6 +25,7 @@ export class ToolCatalog {
     limit: number,
     includeExperimental: boolean,
     performance: Record<string, ToolPerformanceSummary> = {},
+    directoryTerms: string[] = [],
   ): Promise<ToolDescriptor[]> {
     const savedById = new Map<string, ToolDescriptor>();
     for (const saved of await this.store.list(["active"])) {
@@ -39,7 +40,7 @@ export class ToolCatalog {
       .map((tool) => ({ ...tool, performance: performance[tool.toolId] }));
     const tokens = query.toLowerCase().split(/[^\p{L}\p{N}_-]+/u).filter(Boolean);
     return candidates
-      .map((tool) => ({ tool, score: score(tool, query.toLowerCase(), tokens) }))
+      .map((tool) => ({ tool, score: score(tool, query.toLowerCase(), tokens, directoryTerms) }))
       .filter((item) => item.score > 0 || tokens.length === 0)
       .sort((left, right) => right.score - left.score || left.tool.name.localeCompare(right.tool.name))
       .slice(0, Math.max(1, Math.min(limit, 20)))
@@ -78,7 +79,7 @@ function loadBuiltins(): ToolDescriptor[] {
   return tools;
 }
 
-function score(tool: ToolDescriptor, query: string, tokens: string[]): number {
+function score(tool: ToolDescriptor, query: string, tokens: string[], directoryTerms: string[]): number {
   const name = `${tool.name} ${tool.toolId}`.toLowerCase();
   const description = tool.description.toLowerCase();
   const tags = tool.tags.join(" ").toLowerCase();
@@ -89,6 +90,10 @@ function score(tool: ToolDescriptor, query: string, tokens: string[]): number {
     if (name.includes(token)) value += 20;
     if (tags.includes(token)) value += 10;
     if (description.includes(token)) value += 5;
+  }
+  const directoryText = `${name} ${description} ${tags}`;
+  for (const term of directoryTerms) {
+    if (directoryText.includes(term.toLowerCase())) value += 8;
   }
   if (tool.performance?.health === "degraded") value -= 15;
   return value;

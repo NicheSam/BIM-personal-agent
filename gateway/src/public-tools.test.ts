@@ -14,3 +14,9 @@ test("Codex sees exactly six stable Agent tools", () => {
     "execute_dynamic_csharp",
   ]);
 });
+
+test("tool search requires a structured task before discovery", () => {
+  const search = publicTools.find((tool) => tool.name === "search_bim_tools");
+  assert.ok(search);
+  assert.deepEqual(search.inputSchema.required, ["task"]);
+});

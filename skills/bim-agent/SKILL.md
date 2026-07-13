@@ -19,7 +19,9 @@ Activate the existing local BIM Personal Agent. Codex remains the language model
 
 ## Operate
 
-- Search existing and saved tools before generating C#.
+- Understand the request before searching. Identify the goal, BIM objects, intended actions, constraints, execution mode, and ordered steps.
+- Call `search_bim_tools` once with that structured task. Reuse its recommendation and alternatives across the whole task instead of searching each step separately.
+- Refine the search at most once only when the first recommendation cannot cover the task. Include experimental tools only in that refinement.
 - Use Dynamic C# only when no suitable tool exists or the measured route is inferior.
 - Normal read, create and reversible modify operations execute directly.
 - Destructive operations require the Revit scope dialog and user confirmation.

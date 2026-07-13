@@ -3,6 +3,7 @@ import { ActivityStore } from "./activity-store.js";
 import { AgentError, normalizeError } from "./errors.js";
 import { TelemetryStore } from "./telemetry.js";
 import { ToolCatalog } from "./tool-catalog.js";
+import { directoryToolTerms, parseTaskUnderstanding, routeTask } from "./tool-directory.js";
 import { ToolStore, validateGeneratedToolManifest } from "./tool-store.js";
 import type {
   AgentResponse,
@@ -13,6 +14,7 @@ import type {
   JsonObject,
   ToolDescriptor,
   ToolRisk,
+  ToolSummary,
 } from "./types.js";
 import { requireObject, validateArguments } from "./validation.js";
 
@@ -109,12 +111,23 @@ export class AgentRuntime {
   }
 
   private async searchTools(input: JsonObject): Promise<unknown> {
+    const task = parseTaskUnderstanding(input);
     const query = typeof input.query === "string" ? input.query.trim().slice(0, 500) : "";
-    const limit = clampInteger(input.limit, 1, 20, 8);
+    const searchText = [task.goal, ...task.actions, ...task.objects, ...task.steps.flatMap((step) => [step.action, step.object ?? "", step.outcome]), query].join(" ");
+    const directory = routeTask(task, query);
+    const limit = clampInteger(input.limit, 1, 10, 5);
     const performance = await this.telemetry.summaries();
+    const tools = await this.catalog.search(searchText, limit, input.includeExperimental === true, performance, directoryToolTerms(directory));
+    const recommendedTool = tools[0];
     return {
-      query,
-      tools: await this.catalog.search(query, limit, input.includeExperimental === true, performance),
+      understoodTask: { mode: task.mode, actions: task.actions, objects: task.objects, stepCount: task.steps.length },
+      directory,
+      recommendedTool,
+      alternatives: tools.slice(1).map(toToolSummary),
+      resultCount: tools.length,
+      guidance: recommendedTool
+        ? "Use the recommended tool when its schema covers the task. Refine this search at most once when it does not."
+        : "No suitable tool was found. Expand to experimental tools once or use dynamic C#.",
     };
   }
 
@@ -347,6 +360,11 @@ function readFiniteNumber(value: unknown): number | undefined {
 
 function humanizeToolName(name: string): string {
   return name.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function toToolSummary(tool: ToolDescriptor): ToolSummary {
+  const { inputSchema: _inputSchema, source: _source, projectFingerprint: _projectFingerprint, ...summary } = tool;
+  return { ...summary, description: summary.description.slice(0, 300), tags: summary.tags.slice(0, 6) };
 }
 
 function readString(value: unknown, ...keys: string[]): string | undefined {

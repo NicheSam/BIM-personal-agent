@@ -84,9 +84,12 @@ test("dynamic C# is saved and reusable without becoming a new MCP tool", async (
     assert.equal(generated.success, true);
     assert.equal(generated.toolId, "saved:set-reviewed-mark");
 
-    const search = await runtime.execute("search_bim_tools", { query: "reviewed mark" });
-    const tools = (search.data as { tools: ToolDescriptor[] }).tools;
-    assert.equal(tools[0].toolId, "saved:set-reviewed-mark");
+    const search = await runtime.execute("search_bim_tools", { task: {
+      goal: "Set the reviewed mark parameter", actions: ["set parameter"], objects: ["reviewed mark"],
+      steps: [{ action: "set", object: "reviewed mark", outcome: "mark is updated" }], mode: "execute",
+    } });
+    const recommended = (search.data as { recommendedTool: ToolDescriptor }).recommendedTool;
+    assert.equal(recommended.toolId, "saved:set-reviewed-mark");
 
     const rerun = await runtime.execute("run_bim_tool", {
       toolId: "saved:set-reviewed-mark",
@@ -97,6 +100,36 @@ test("dynamic C# is saved and reusable without becoming a new MCP tool", async (
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("tool search requires task understanding and decomposition", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", { query: "project" });
+    assert.equal(result.success, false);
+    assert.equal(result.errorCode, "VALIDATION_ERROR");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("tool search routes a Chinese DWG task and returns only one full schema", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const dwgTool: ToolDescriptor = { ...builtin, toolId: "builtin:preview_dwg_columns", name: "preview_dwg_columns", description: "Preview column geometry from DWG layers", tags: ["cad", "dwg", "column"] };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [dwgTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", { task: {
+      goal: "讀取連結的 DWG 並預覽柱的位置", actions: ["讀取", "預覽"], objects: ["DWG 圖層", "柱"], constraints: ["先不修改模型"],
+      steps: [{ action: "掃描", object: "DWG 圖層", outcome: "取得柱的位置" }], mode: "assess",
+    } });
+    assert.equal(result.success, true);
+    const data = result.data as { directory: Array<{ id: string }>; recommendedTool: ToolDescriptor; alternatives: Array<Record<string, unknown>> };
+    assert.equal(data.directory[0].id, "cad-dwg");
+    assert.equal(data.recommendedTool.toolId, dwgTool.toolId);
+    assert.ok("inputSchema" in data.recommendedTool);
+    assert.equal(data.alternatives.some((tool) => "inputSchema" in tool), false);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("atomic plans are delegated as one bridge command", async () => {

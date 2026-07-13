@@ -20,6 +20,29 @@ export interface ToolDescriptor {
   performance?: ToolPerformanceSummary;
 }
 
+export interface BimTaskStep {
+  action: string;
+  object?: string;
+  outcome: string;
+}
+
+export interface BimTaskUnderstanding {
+  goal: string;
+  actions: string[];
+  objects: string[];
+  constraints?: string[];
+  steps: BimTaskStep[];
+  mode: "assess" | "execute" | "plan";
+}
+
+export interface ToolDirectoryMatch {
+  id: string;
+  name: string;
+  score: number;
+}
+
+export type ToolSummary = Omit<ToolDescriptor, "inputSchema" | "source" | "projectFingerprint">;
+
 export interface GeneratedToolManifestInput {
   toolId: string;
   name: string;

@@ -1,6 +1,22 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 const objectSchema = { type: "object", additionalProperties: true } as const;
+const taskUnderstandingSchema = {
+  type: "object", additionalProperties: false,
+  properties: {
+    goal: { type: "string", minLength: 1, maxLength: 500 },
+    actions: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
+    objects: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
+    constraints: { type: "array", maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
+    steps: { type: "array", minItems: 1, maxItems: 20, items: {
+      type: "object", additionalProperties: false,
+      properties: { action: { type: "string", minLength: 1, maxLength: 300 }, object: { type: "string", minLength: 1, maxLength: 300 }, outcome: { type: "string", minLength: 1, maxLength: 300 } },
+      required: ["action", "outcome"],
+    } },
+    mode: { type: "string", enum: ["assess", "execute", "plan"] },
+  },
+  required: ["goal", "actions", "objects", "steps", "mode"],
+} as const;
 const manifestSchema = {
   type: "object",
   additionalProperties: false,
@@ -36,15 +52,16 @@ export const publicTools: Tool[] = [
   },
   {
     name: "search_bim_tools",
-    description: "Search validated built-in and active saved Revit tools. Experimental tools are excluded unless explicitly requested.",
+    description: "After understanding and decomposing the BIM request, route it through the tool directory and return one full recommended schema plus compact alternatives.",
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
-        query: { type: "string", maxLength: 500 },
-        limit: { type: "integer", minimum: 1, maximum: 20, default: 8 },
+        task: taskUnderstandingSchema,
+        query: { type: "string", maxLength: 500, description: "Optional refinement hint; do not replace the structured task." },
+        limit: { type: "integer", minimum: 1, maximum: 10, default: 5 },
         includeExperimental: { type: "boolean", default: false },
       },
-      required: ["query"],
+      required: ["task"],
     },
   },
   {

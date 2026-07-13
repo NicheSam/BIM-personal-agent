@@ -36,6 +36,8 @@ Codex 固定只看見六個工具：
 
 上游 148 個 Revit 工具位於內部 catalog：21 個 `validated`、120 個 `experimental`、7 個 `disabled`。保存的 C# 不會擴增 MCP schema，而是透過 `search_bim_tools` 與 `run_bim_tool` 重用。
 
+工具搜尋不是直接拿使用者句子反覆查詢。Codex 會先整理目標、BIM 對象、動作、限制與步驟，再由 Gateway 分到工具目錄；一次只回傳一個完整建議工具與精簡候選，第一次不適用時最多再細化搜尋一次。
+
 ## 原始碼開發需求
 
 - Windows 與 Autodesk Revit 2024。
