@@ -96,6 +96,7 @@
     .deploy-note { margin-bottom: 26px; padding: 16px 18px; border-left: 5px solid var(--amber); background: var(--amber-soft); }
     .deploy-note strong { display: block; }
     .deploy-note span { color: var(--muted); font-size: 14px; }
+    .deploy-note a { color: var(--green); font-weight: 750; }
     .deploy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
     .deploy-column { padding-top: 20px; border-top: 5px solid var(--blue); }
     .deploy-column.daily { border-color: var(--green); }
@@ -229,19 +230,17 @@
     <section class="deploy" id="deploy">
       <div class="shell">
         <div class="section-head"><h2>如何部署與開始使用</h2><p>首次部署只做一次；完成後，BIM 工程人員每天只要開啟 Revit、啟動 Agent，再用自然語言下指令。</p></div>
-        <div class="deploy-note"><strong>目前是 V0.5 測試版</strong><span>尚未提供一鍵安裝程式。首次部署需要具備 Windows、Revit 2024、Node.js 22+、.NET SDK 10 與 Codex Desktop，建議由 BIM 管理者或資訊人員處理。</span></div>
+        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/latest">GitHub Releases</a> 下載 `BIMPersonalAgent-v0.5.0-win-x64.zip`，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
         <div class="deploy-grid">
           <div class="deploy-column">
             <h3>首次部署：管理者執行</h3>
             <div class="deploy-step"><span class="deploy-index">1</span><div><strong>先關閉 Revit</strong><p>避免正在載入的 Add-in DLL 無法安全更新。Codex 安裝後再重新啟動即可。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub 下載專案</strong><p>下載 ZIP 解壓縮，或使用 git clone 取得完整資料夾。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 `BIMPersonalAgent-v0.5.0-win-x64.zip`，不要使用 Source code ZIP。</p></div></div>
             <div class="deploy-step"><span class="deploy-index">3</span><div><strong>雙擊 install.bat</strong><p>安裝器會自動檢查環境、建置、安裝 Revit Add-in、設定 Codex 並安裝 skill。</p></div></div>
             <div class="deploy-step"><span class="deploy-index">4</span><div><strong>重新啟動 Revit 與 Codex</strong><p>之後就依右側的日常流程開始使用，不必再次安裝。</p></div></div>
             <details>
-              <summary>顯示下載與檢查指令</summary>
-              <div class="command-block">git clone https://github.com/NicheSam/BIM-personal-agent.git
-cd BIM-personal-agent
-install.bat -CheckOnly
+              <summary>顯示檢查與安裝指令</summary>
+              <div class="command-block">install.bat -CheckOnly
 install.bat</div>
             </details>
           </div>

@@ -1,5 +1,15 @@
 param(
-    [string]$RepoRoot = $(if ($env:BIM_PERSONAL_AGENT_REPO) { $env:BIM_PERSONAL_AGENT_REPO } else { "E:\Desktop\Codex\BIM-personal-agent" }),
+    [string]$RepoRoot = $(
+        if ($env:BIM_PERSONAL_AGENT_REPO) {
+            $env:BIM_PERSONAL_AGENT_REPO
+        }
+        elseif (Test-Path -LiteralPath (Join-Path $env:APPDATA "BIMPersonalAgent\runtime\0.5.0")) {
+            Join-Path $env:APPDATA "BIMPersonalAgent\runtime\0.5.0"
+        }
+        else {
+            "E:\Desktop\Codex\BIM-personal-agent"
+        }
+    ),
     [int]$ConsolePort = 4178,
     [int]$BridgePort = 9686
 )

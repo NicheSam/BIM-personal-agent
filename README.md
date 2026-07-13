@@ -11,6 +11,18 @@ Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
 
 V0.5 不使用模型 API Key。Revit 側邊欄保留本機選取檢查與參數修改，未來接模型 API 時共用同一 Runtime。
 
+## 一般使用者安裝
+
+一般 BIM 工程人員請下載 [最新 Windows 安裝包](https://github.com/NicheSam/BIM-personal-agent/releases/latest/download/BIMPersonalAgent-v0.5.0-win-x64.zip)，不要使用 GitHub 的 `Source code (zip)`。
+
+1. 解壓縮 `BIMPersonalAgent-v0.5.0-win-x64.zip`。
+2. 關閉 Revit 2024 與 Codex Desktop。
+3. 執行 `install.bat -CheckOnly`。
+4. 檢查通過後執行 `install.bat`。
+5. 重新開啟 Revit 與 Codex，在新 task 輸入 `$bim-agent`。
+
+使用者安裝包已包含 portable Node.js、production Gateway、預建 Revit DLL 與 skill；同事不需要另裝 Node.js、npm、Python 或 .NET SDK，也不需要系統管理員權限。
+
 ## MCP 工具
 
 Codex 固定只看見六個工具：
@@ -24,7 +36,7 @@ Codex 固定只看見六個工具：
 
 上游 148 個 Revit 工具位於內部 catalog：21 個 `validated`、120 個 `experimental`、7 個 `disabled`。保存的 C# 不會擴增 MCP schema，而是透過 `search_bim_tools` 與 `run_bim_tool` 重用。
 
-## 環境需求
+## 原始碼開發需求
 
 - Windows 與 Autodesk Revit 2024。
 - .NET SDK 10（用於建置 `net48` RevitBridge 與 Revit Add-in）。
@@ -66,14 +78,14 @@ npm.cmd run smoke:live
 npm.cmd run call:live -- get_agent_status '{}'
 ```
 
-## 安裝與 Codex
+## 從原始碼安裝
 
 ```powershell
 install.bat -CheckOnly
 install.bat
 ```
 
-執行正式安裝前先關閉 Revit。`install.bat` 會安裝鎖定的 Gateway dependencies、建置與測試、部署 Revit Add-in、設定 Codex MCP 並安裝 `bim-agent` skill；`-CheckOnly` 只檢查環境，不修改檔案。完成後重新啟動 Revit，在 `BIM Personal` 頁籤按「Agent服務 開/關」，再建立新的 Codex task。
+Repository 根目錄的 `install.bat` 是開發者版本，會從原始碼建置，因此需要 Node.js 22+ 與 .NET SDK 10。一般使用者應使用 GitHub Release 內附的 `install.bat`，兩者用途不同。
 
 ### BIM Agent skill
 
