@@ -233,18 +233,16 @@
         <div class="deploy-grid">
           <div class="deploy-column">
             <h3>首次部署：管理者執行</h3>
-            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>下載專案</strong><p>從 GitHub 取得完整 repository，安裝 Node dependencies。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>建置並安裝 Revit Add-in</strong><p>建置會檢查 Gateway、C# 核心與工具清單，再安裝到 Revit 2024 Addins。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>連接 Codex</strong><p>設定 Codex 只使用 bim-personal-agent，連線埠固定為 localhost:9686。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>安裝 BIM Agent skill</strong><p>將 skills/bim-agent 放進 Codex 個人 skills 目錄，讓新 task 能用 $bim-agent 啟動。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>先關閉 Revit</strong><p>避免正在載入的 Add-in DLL 無法安全更新。Codex 安裝後再重新啟動即可。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub 下載專案</strong><p>下載 ZIP 解壓縮，或使用 git clone 取得完整資料夾。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>雙擊 install.bat</strong><p>安裝器會自動檢查環境、建置、安裝 Revit Add-in、設定 Codex 並安裝 skill。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>重新啟動 Revit 與 Codex</strong><p>之後就依右側的日常流程開始使用，不必再次安裝。</p></div></div>
             <details>
-              <summary>顯示安裝指令</summary>
+              <summary>顯示下載與檢查指令</summary>
               <div class="command-block">git clone https://github.com/NicheSam/BIM-personal-agent.git
 cd BIM-personal-agent
-npm.cmd --prefix gateway ci
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-python scripts\configure-codex-agent.py
-Copy-Item skills\bim-agent $HOME\.codex\skills\bim-agent -Recurse</div>
+install.bat -CheckOnly
+install.bat</div>
             </details>
           </div>
 

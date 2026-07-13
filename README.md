@@ -69,11 +69,11 @@ npm.cmd run call:live -- get_agent_status '{}'
 ## 安裝與 Codex
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-python scripts\configure-codex-agent.py
+install.bat -CheckOnly
+install.bat
 ```
 
-重新啟動 Revit，在 `BIM Personal` 頁籤按「Agent服務 開/關」，再建立新的 Codex task。Codex 設定完成後只應存在 `bim-personal-agent`，不應同時啟用 raw `revit-mcp`。
+執行正式安裝前先關閉 Revit。`install.bat` 會安裝鎖定的 Gateway dependencies、建置與測試、部署 Revit Add-in、設定 Codex MCP 並安裝 `bim-agent` skill；`-CheckOnly` 只檢查環境，不修改檔案。完成後重新啟動 Revit，在 `BIM Personal` 頁籤按「Agent服務 開/關」，再建立新的 Codex task。
 
 ### BIM Agent skill
 
