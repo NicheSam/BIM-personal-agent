@@ -52,7 +52,7 @@ export const publicTools: Tool[] = [
   },
   {
     name: "search_bim_tools",
-    description: "After understanding and decomposing the BIM request, route it through the tool directory and return one full recommended schema plus compact alternatives.",
+    description: "After understanding and decomposing the BIM request, design a step-by-step workflow and return every recommended tool schema needed to complete it plus compact alternatives.",
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {

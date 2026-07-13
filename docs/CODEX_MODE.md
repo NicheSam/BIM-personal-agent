@@ -26,7 +26,8 @@ Codex 是 V1 唯一 LLM。Gateway 不接模型 API，也不自行理解未結構
 ## 路由指引
 
 - `search_bim_tools` 必須接收已理解並拆解的結構化任務，再由工具目錄路由到 validated built-ins 與 active saved tools。
-- 一次搜尋只展開一個建議工具的完整 schema；其餘候選使用精簡摘要。第一個結果不適用時最多再細化一次。
+- 一次搜尋會為每個任務步驟配對工具，並展開完成流程所需工具的完整 schema；其餘候選使用精簡摘要。只有未覆蓋或不適用的步驟才再細化一次。
+- Dynamic C# 是逐步驟的實作路由：只補上沒有合適工具或既有路徑效能劣化的步驟，其餘步驟繼續使用現有工具。
 - 無合適工具時可明確搜尋 experimental tools，或使用 `execute_dynamic_csharp`。
 - 效能與成功率是選擇依據，不是硬性 gate。
 - Dynamic C# 成功後預設保存；下一個 task 透過 saved tool ID 重用，不重新生成 source。

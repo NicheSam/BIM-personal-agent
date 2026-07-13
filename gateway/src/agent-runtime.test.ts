@@ -88,8 +88,8 @@ test("dynamic C# is saved and reusable without becoming a new MCP tool", async (
       goal: "Set the reviewed mark parameter", actions: ["set parameter"], objects: ["reviewed mark"],
       steps: [{ action: "set", object: "reviewed mark", outcome: "mark is updated" }], mode: "execute",
     } });
-    const recommended = (search.data as { recommendedTool: ToolDescriptor }).recommendedTool;
-    assert.equal(recommended.toolId, "saved:set-reviewed-mark");
+    const recommended = (search.data as { recommendedTools: ToolDescriptor[] }).recommendedTools;
+    assert.equal(recommended[0].toolId, "saved:set-reviewed-mark");
 
     const rerun = await runtime.execute("run_bim_tool", {
       toolId: "saved:set-reviewed-mark",
@@ -113,7 +113,7 @@ test("tool search requires task understanding and decomposition", async () => {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-test("tool search routes a Chinese DWG task and returns only one full schema", async () => {
+test("tool search routes a Chinese DWG task and keeps alternatives compact", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
   try {
     const store = new ToolStore(root);
@@ -124,11 +124,51 @@ test("tool search routes a Chinese DWG task and returns only one full schema", a
       steps: [{ action: "掃描", object: "DWG 圖層", outcome: "取得柱的位置" }], mode: "assess",
     } });
     assert.equal(result.success, true);
-    const data = result.data as { directory: Array<{ id: string }>; recommendedTool: ToolDescriptor; alternatives: Array<Record<string, unknown>> };
-    assert.equal(data.directory[0].id, "cad-dwg");
-    assert.equal(data.recommendedTool.toolId, dwgTool.toolId);
-    assert.ok("inputSchema" in data.recommendedTool);
-    assert.equal(data.alternatives.some((tool) => "inputSchema" in tool), false);
+    const data = result.data as { workflow: Array<{ directory: Array<{ id: string }>; recommendedToolId?: string; alternatives: Array<Record<string, unknown>> }>; recommendedTools: ToolDescriptor[] };
+    assert.equal(data.workflow[0].directory[0].id, "cad-dwg");
+    assert.equal(data.workflow[0].recommendedToolId, dwgTool.toolId);
+    assert.equal(data.recommendedTools[0].toolId, dwgTool.toolId);
+    assert.ok("inputSchema" in data.recommendedTools[0]);
+    assert.equal(data.workflow[0].alternatives.some((tool) => "inputSchema" in tool), false);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("complex tasks return a workflow with every required tool schema", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const scanTool: ToolDescriptor = { ...builtin, toolId: "builtin:scan_dwg_layers", name: "scan_dwg_layers", description: "Scan DWG layers and imported CAD geometry", tags: ["cad", "dwg", "layer"] };
+    const createTool: ToolDescriptor = { ...builtin, toolId: "builtin:create_structural_columns", name: "create_structural_columns", description: "Create structural columns from validated positions", risk: "reversibleMutation", tags: ["structure", "column", "create"] };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [scanTool, createTool]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", { task: {
+      goal: "從 DWG 建立結構柱", actions: ["掃描", "建立"], objects: ["DWG 圖層", "結構柱"],
+      steps: [{ action: "掃描 DWG", object: "DWG 圖層", outcome: "取得柱位置" }, { action: "建立", object: "結構柱", outcome: "依確認位置建立柱" }], mode: "plan",
+    } });
+    assert.equal(result.success, true);
+    const data = result.data as { workflow: Array<{ recommendedToolId?: string }>; recommendedTools: ToolDescriptor[] };
+    assert.deepEqual(data.workflow.map((step) => step.recommendedToolId), [scanTool.toolId, createTool.toolId]);
+    assert.deepEqual(data.recommendedTools.map((tool) => tool.toolId), [scanTool.toolId, createTool.toolId]);
+    assert.equal(data.recommendedTools.every((tool) => "inputSchema" in tool), true);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("uncovered workflow steps are routed to dynamic C# without replacing covered steps", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const scanTool: ToolDescriptor = { ...builtin, toolId: "builtin:scan_dwg_layers", name: "scan_dwg_layers", description: "Scan DWG layers and imported CAD geometry", tags: ["cad", "dwg", "layer"] };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [scanTool]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", { task: {
+      goal: "掃描 DWG 後執行公司自訂編碼流程", actions: ["掃描", "自訂編碼"], objects: ["DWG 圖層", "公司編碼"],
+      steps: [{ action: "掃描 DWG", object: "DWG 圖層", outcome: "取得圖層資料" }, { action: "套用 ZXQ 專案專屬編碼", object: "ZXQ 編碼規則", outcome: "完成專屬編碼" }], mode: "plan",
+    } });
+    assert.equal(result.success, true);
+    const data = result.data as { workflow: Array<{ route: string; recommendedToolId?: string; dynamicCSharp?: Record<string, unknown> }>; dynamicSteps: number[] };
+    assert.equal(data.workflow[0].route, "existingTool");
+    assert.equal(data.workflow[0].recommendedToolId, scanTool.toolId);
+    assert.equal(data.workflow[1].route, "dynamicCSharp");
+    assert.ok(data.workflow[1].dynamicCSharp);
+    assert.deepEqual(data.dynamicSteps, [2]);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

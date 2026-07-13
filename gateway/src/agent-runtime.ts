@@ -113,21 +113,41 @@ export class AgentRuntime {
   private async searchTools(input: JsonObject): Promise<unknown> {
     const task = parseTaskUnderstanding(input);
     const query = typeof input.query === "string" ? input.query.trim().slice(0, 500) : "";
-    const searchText = [task.goal, ...task.actions, ...task.objects, ...task.steps.flatMap((step) => [step.action, step.object ?? "", step.outcome]), query].join(" ");
-    const directory = routeTask(task, query);
     const limit = clampInteger(input.limit, 1, 10, 5);
     const performance = await this.telemetry.summaries();
-    const tools = await this.catalog.search(searchText, limit, input.includeExperimental === true, performance, directoryToolTerms(directory));
-    const recommendedTool = tools[0];
+    const recommendedById = new Map<string, ToolDescriptor>();
+    const workflow = [];
+    const candidateIds = new Set<string>();
+    for (const [index, step] of task.steps.entries()) {
+      const stepTask = { ...task, goal: `${step.action} ${step.object ?? ""} ${step.outcome}`,
+        actions: [step.action], objects: step.object ? [step.object] : task.objects, steps: [step] };
+      const directory = routeTask(stepTask, query);
+      const searchText = [step.action, step.object ?? "", step.outcome, ...(task.constraints ?? []), query].join(" ");
+      const tools = await this.catalog.search(searchText, limit, input.includeExperimental === true, performance, directoryToolTerms(directory));
+      const recommended = tools[0];
+      const route = !recommended ? "dynamicCSharp" : recommended.performance?.health === "degraded" ? "evaluateDynamicCSharp" : "existingTool";
+      if (recommended) recommendedById.set(recommended.toolId, recommended);
+      for (const tool of tools) candidateIds.add(tool.toolId);
+      workflow.push({
+        stepNumber: index + 1, action: step.action, object: step.object, outcome: step.outcome, directory, route,
+        recommendedToolId: recommended?.toolId,
+        alternatives: tools.slice(1).map(toToolSummary),
+        dynamicCSharp: route === "existingTool" ? undefined : {
+          reason: route === "dynamicCSharp" ? "No relevant existing or saved tool covers this workflow step." : "The relevant tool is degraded in local telemetry; compare it with a direct parameterized C# implementation.",
+          nextAction: "Generate and execute parameterized C# for this step, then save it as a reusable tool on success.",
+        },
+      });
+    }
+    const dynamicSteps = workflow.filter((step) => step.route !== "existingTool").map((step) => step.stepNumber);
     return {
       understoodTask: { mode: task.mode, actions: task.actions, objects: task.objects, stepCount: task.steps.length },
-      directory,
-      recommendedTool,
-      alternatives: tools.slice(1).map(toToolSummary),
-      resultCount: tools.length,
-      guidance: recommendedTool
-        ? "Use the recommended tool when its schema covers the task. Refine this search at most once when it does not."
-        : "No suitable tool was found. Expand to experimental tools once or use dynamic C#.",
+      workflow,
+      recommendedTools: [...recommendedById.values()],
+      resultCount: candidateIds.size,
+      dynamicSteps,
+      guidance: dynamicSteps.length === 0
+        ? "Validate the proposed workflow, then run its tools individually or as one atomic plan when the steps modify the same document."
+        : "Keep suitable existing tools in the workflow. Refine unresolved steps once, then use dynamic C# only for remaining gaps or degraded routes.",
     };
   }
 

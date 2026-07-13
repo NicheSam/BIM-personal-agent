@@ -20,9 +20,9 @@ Activate the existing local BIM Personal Agent. Codex remains the language model
 ## Operate
 
 - Understand the request before searching. Identify the goal, BIM objects, intended actions, constraints, execution mode, and ordered steps.
-- Call `search_bim_tools` once with that structured task. Reuse its recommendation and alternatives across the whole task instead of searching each step separately.
-- Refine the search at most once only when the first recommendation cannot cover the task. Include experimental tools only in that refinement.
-- Use Dynamic C# only when no suitable tool exists or the measured route is inferior.
+- Call `search_bim_tools` once with the complete structured task. Let the Gateway map every step to the tools needed for the workflow; do not assume one tool must cover the whole task.
+- Review the returned workflow and reuse its recommended tools and alternatives. Refine only uncovered or unsuitable steps once, including experimental tools when needed.
+- Treat Dynamic C# as a per-step implementation route, not an all-or-nothing fallback. Use it for uncovered steps or when local telemetry makes the existing route inferior, then save the successful parameterized command for reuse.
 - Normal read, create and reversible modify operations execute directly.
 - Destructive operations require the Revit scope dialog and user confirmation.
 - Never guess ElementId, localized parameter names, active view, units or project identity.

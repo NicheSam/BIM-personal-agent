@@ -83,7 +83,7 @@ function score(tool: ToolDescriptor, query: string, tokens: string[], directoryT
   const name = `${tool.name} ${tool.toolId}`.toLowerCase();
   const description = tool.description.toLowerCase();
   const tags = tool.tags.join(" ").toLowerCase();
-  let value = tool.status === "active" ? 30 : tool.status === "validated" ? 20 : 0;
+  let value = 0;
   if (name === query || tool.toolId.toLowerCase() === query) value += 120;
   if (name.includes(query) && query.length > 1) value += 50;
   for (const token of tokens) {
@@ -95,6 +95,8 @@ function score(tool: ToolDescriptor, query: string, tokens: string[], directoryT
   for (const term of directoryTerms) {
     if (directoryText.includes(term.toLowerCase())) value += 8;
   }
+  if (value === 0) return 0;
+  value += tool.status === "active" ? 30 : tool.status === "validated" ? 20 : 0;
   if (tool.performance?.health === "degraded") value -= 15;
   return value;
 }
