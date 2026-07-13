@@ -2,6 +2,8 @@
 
 Revit 2024 個人執行代理。Codex 負責自然語言與必要的 C# 生成；本機 Gateway 負責工具搜尋、參數驗證、保存工具與 telemetry；單一 Revit Add-in 負責 queue、`ExternalEvent`、`Transaction`、Undo 與破壞性確認。
 
+[用圖解了解 BIM Personal Agent 如何運作](https://nichesam.github.io/BIM-personal-agent/)
+
 ```text
 Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
       -> BIM Personal Agent RevitBridge -> Revit API -> Revit 2024
