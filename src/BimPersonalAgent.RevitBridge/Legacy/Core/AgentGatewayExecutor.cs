@@ -62,7 +62,10 @@ namespace RevitMCP.Core
                 throw new InvalidOperationException("Agent plan must contain between 1 and 20 steps.");
             }
 
-            var validated = new List<RevitCommandRequest>();
+            JArray verificationChecks = parameters["verificationChecks"] as JArray ?? new JArray();
+            string runId = parameters.Value<string>("runId");
+            int attempt = parameters.Value<int?>("attempt") ?? 1;
+            var validated = new List<AgentPlanStep>();
             foreach (JToken token in steps)
             {
                 JObject step = token as JObject ?? throw new InvalidOperationException("Every Agent plan step must be an object.");
@@ -79,11 +82,18 @@ namespace RevitMCP.Core
                     throw new InvalidOperationException("Agent plan contains a destructive or non-atomic command: " + commandName);
                 }
 
-                validated.Add(new RevitCommandRequest
+                string stepId = step.Value<string>("stepId") ?? "step-" + (validated.Count + 1);
+                string toolId = step.Value<string>("toolId") ?? stepId;
+                validated.Add(new AgentPlanStep
                 {
-                    CommandName = commandName,
-                    Parameters = step["parameters"] as JObject ?? new JObject(),
-                    RequestId = step.Value<string>("toolId") ?? Guid.NewGuid().ToString("N")
+                    StepId = stepId,
+                    ToolId = toolId,
+                    Request = new RevitCommandRequest
+                    {
+                        CommandName = commandName,
+                        Parameters = step["parameters"] as JObject ?? new JObject(),
+                        RequestId = stepId
+                    }
                 });
             }
 
@@ -95,58 +105,7 @@ namespace RevitMCP.Core
 
             Document document = uiDocument.Document;
             string documentFingerprint = ComputeProjectFingerprint(document);
-            var results = new List<object>();
-            using (var group = new TransactionGroup(document, "BIM Personal Agent plan"))
-            {
-                group.Start();
-                try
-                {
-                    foreach (RevitCommandRequest request in validated)
-                    {
-                        Document activeDocument = _uiApp.ActiveUIDocument?.Document;
-                        if (activeDocument == null ||
-                            !string.Equals(
-                                ComputeProjectFingerprint(activeDocument),
-                                documentFingerprint,
-                                StringComparison.Ordinal))
-                        {
-                            throw new InvalidOperationException("The active Revit document changed during the Agent plan.");
-                        }
-
-                        RevitCommandResponse response = ExecuteCommand(request);
-                        if (!response.Success)
-                        {
-                            throw new InvalidOperationException(response.Error ?? "Agent plan step failed.");
-                        }
-
-                        results.Add(new
-                        {
-                            ToolId = request.RequestId,
-                            CommandName = request.CommandName,
-                            response.Data
-                        });
-                    }
-
-                    group.Assimilate();
-                }
-                catch
-                {
-                    if (group.GetStatus() == TransactionStatus.Started)
-                    {
-                        group.RollBack();
-                    }
-
-                    throw;
-                }
-            }
-
-            return new
-            {
-                Atomic = true,
-                ExecutedSteps = results.Count,
-                TransactionName = "BIM Personal Agent plan",
-                Results = results
-            };
+            return ExecuteVerifiedAgentPlan(document, uiDocument, documentFingerprint, validated, verificationChecks, runId, attempt);
         }
     }
 }

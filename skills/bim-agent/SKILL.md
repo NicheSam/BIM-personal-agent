@@ -28,6 +28,15 @@ Activate the existing local BIM Personal Agent. Codex remains the language model
 - Never guess ElementId, localized parameter names, active view, units or project identity.
 - Keep the activity console open; it refreshes automatically and is read-only.
 
+## Bounded Harness
+
+- Keep the direct path as the default. Set `startLoop=true` only when the request needs explicit acceptance evidence, controlled self-correction, or the user asks for verification.
+- Domain profiles, acceptance criteria and verification checks guide planning; they are not a mandatory checklist for every task. Use only checks that prove the requested result.
+- Reuse one complete tool search. On a retry, change one supported hypothesis instead of exploring several speculative branches.
+- Quantity, RFI, constructability and clash work stays read-only in the Loop. Any model correction becomes a separate task.
+- Stop on timeout, uncertain Revit state, document change, destructive work, repeated error or exhausted budget. Do not expand the Loop after failure.
+- Dynamic C# may enter any uncovered workflow step. Inside a Loop it becomes active only after verification passes; outside a Loop the existing direct save behavior remains.
+
 ## Console Boundary
 
 The console is for BIM engineers. Present event time, action, affected elements, result, transaction and duration. Do not expose prompts, arguments, parameter values, generated source, MCP schemas or developer diagnostics.

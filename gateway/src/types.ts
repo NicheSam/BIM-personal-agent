@@ -3,6 +3,11 @@ export type JsonSchema = Record<string, unknown>;
 export type ToolRisk = "readOnly" | "reversibleMutation" | "destructive";
 export type ToolStatus = "validated" | "experimental" | "disabled" | "active" | "draft";
 export type ToolBinding = "portable" | "project";
+export type BimDomain = "mep" | "constructability" | "documentation" | "quantity" | "rfi" | "clash";
+export type LoopMode = "observe" | "bounded";
+export type LoopPhase = "planned" | "executing" | "verifying" | "correcting" | "passed" | "failed" | "stopped";
+export type LoopVerdict = "pending" | "passed" | "failed" | "stopped" | "unverified";
+export type VerificationKind = "elementExists" | "elementCount" | "parameterEquals" | "mepConnectivity" | "clearance" | "viewPlacement" | "quantity" | "evidence";
 
 export interface ToolDescriptor {
   toolId: string;
@@ -33,6 +38,59 @@ export interface BimTaskUnderstanding {
   constraints?: string[];
   steps: BimTaskStep[];
   mode: "assess" | "execute" | "plan";
+  domain: BimDomain;
+  acceptanceCriteria: string[];
+  evidenceRequirements: string[];
+  loopMode: LoopMode;
+  complexity: "standard" | "complex";
+}
+
+export interface VerificationCheck extends JsonObject {
+  id: string;
+  kind: VerificationKind;
+  stepId?: string;
+}
+
+export interface LoopBudget {
+  maxAttempts: number;
+  maxSearches: number;
+  maxMcpCalls: number;
+  maxDynamicSources: number;
+  maxContextDeltas: number;
+  maxAutoCorrectionElements: number;
+  maxDurationMs: number;
+}
+
+export interface LoopUsage {
+  attempts: number;
+  searches: number;
+  mcpCalls: number;
+  dynamicSources: number;
+  contextDeltas: number;
+  responseBytes: number;
+}
+
+export interface LoopRunState {
+  schemaVersion: 1;
+  runId: string;
+  domain: BimDomain;
+  requestedMode: LoopMode;
+  effectiveMode: LoopMode;
+  complexity: "standard" | "complex";
+  phase: LoopPhase;
+  verdict: LoopVerdict;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+  expiresAtUtc: string;
+  projectFingerprint?: string;
+  steps: Array<{ stepId: string; action: string; object?: string; outcome: string }>;
+  acceptanceCriteria: string[];
+  evidenceRequirements: string[];
+  budget: LoopBudget;
+  usage: LoopUsage;
+  lastErrorCode?: string;
+  consecutiveSameError: number;
+  stopReason?: string;
 }
 
 export interface ToolDirectoryMatch {
@@ -117,6 +175,12 @@ export interface AgentActivityScope {
   createdElementIds?: number[];
   parameterName?: string;
   stepCount?: number;
+  runId?: string;
+  phase?: LoopPhase;
+  verdict?: LoopVerdict;
+  attempt?: number;
+  remainingCalls?: number;
+  responseBytes?: number;
 }
 
 export interface AgentActivityEvent {

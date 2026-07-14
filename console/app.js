@@ -87,6 +87,11 @@ function renderEvents() {
 function renderScope(container, scope) {
   if (!scope) return;
   const values = [];
+  if (scope.phase) values.push(`流程：${phaseLabel(scope.phase)}`);
+  if (scope.verdict) values.push(`驗證：${verdictLabel(scope.verdict)}`);
+  if (scope.attempt !== undefined) values.push(`執行：第 ${scope.attempt} 次`);
+  if (scope.remainingCalls !== undefined) values.push(`剩餘呼叫：${scope.remainingCalls}`);
+  if (scope.responseBytes !== undefined) values.push(`回傳：${formatBytes(scope.responseBytes)}`);
   if (scope.parameterName) values.push(`參數：${scope.parameterName}`);
   if (scope.stepCount !== undefined) values.push(`步驟：${scope.stepCount}`);
   if (scope.elementIds?.length) values.push(`元素：${scope.elementIds.join(", ")}`);
@@ -97,6 +102,19 @@ function renderScope(container, scope) {
     item.textContent = value;
     container.append(item);
   });
+}
+
+function phaseLabel(phase) {
+  return ({ planned: "已規劃", executing: "執行中", verifying: "驗證中", correcting: "修正中", passed: "完成", failed: "未通過", stopped: "已停止" })[phase] || phase;
+}
+
+function verdictLabel(verdict) {
+  return ({ pending: "待驗證", passed: "通過", failed: "未通過", stopped: "停止", unverified: "未啟用" })[verdict] || verdict;
+}
+
+function formatBytes(value) {
+  const bytes = Number(value || 0);
+  return bytes >= 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${Math.round(bytes)} B`;
 }
 
 function statusLabel(status) {

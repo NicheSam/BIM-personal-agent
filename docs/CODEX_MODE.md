@@ -33,4 +33,13 @@ Codex 是 V1 唯一 LLM。Gateway 不接模型 API，也不自行理解未結構
 - Dynamic C# 成功後預設保存；下一個 task 透過 saved tool ID 重用，不重新生成 source。
 - 正常 create/modify 不確認；破壞性操作的最終裁決與確認在 Revit Bridge。
 
+## Harness 使用邊界
+
+- 一般任務不啟用 Loop，也不被 snapshot、驗證 DSL 或修正預算包住。
+- 只有需要明確驗收證據或有限自動修正時，第一次搜尋才設定 `startLoop=true`；後續以同一 `runId` 執行 plan。
+- `domain`、`acceptanceCriteria` 與 `evidenceRequirements` 用來幫助 Codex規劃，不要求模型填滿不相關項目。
+- 驗證檢查只加入足以證明任務完成的最小集合。每輪只修正一個有證據支持的假設。
+- Gateway 以呼叫次數、搜尋次數、回傳 bytes、編譯數、修正次數與時間控制成本，不宣稱取得精確 token 數。
+- Dynamic C# 可放在任一未覆蓋步驟；Loop 內通過驗證才成為 active，Loop 外維持成功即保存。
+
 同一個 Revit session 只允許一個 Gateway client。不要同時啟用 `revit-mcp` 與 `bim-personal-agent`。

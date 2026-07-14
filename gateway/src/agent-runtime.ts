@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
+import { dirname } from "node:path";
 import { ActivityStore } from "./activity-store.js";
+import { ContextSnapshotStore } from "./context-snapshots.js";
+import { getDomainProfile } from "./domain-profiles.js";
 import { AgentError, normalizeError } from "./errors.js";
+import { LoopController } from "./loop-controller.js";
+import { RunStore } from "./run-store.js";
 import { TelemetryStore } from "./telemetry.js";
 import { ToolCatalog } from "./tool-catalog.js";
 import { directoryToolTerms, parseTaskUnderstanding, routeTask } from "./tool-directory.js";
@@ -12,20 +17,33 @@ import type {
   BridgeClient,
   GeneratedToolManifestInput,
   JsonObject,
+  LoopPhase,
+  LoopRunState,
+  LoopVerdict,
   ToolDescriptor,
   ToolRisk,
   ToolSummary,
+  VerificationCheck,
 } from "./types.js";
 import { requireObject, validateArguments } from "./validation.js";
+import { parseVerificationChecks, sanitizeEvidence } from "./verification.js";
 
 export class AgentRuntime {
+  private readonly loop: LoopController;
+  private readonly snapshots: ContextSnapshotStore;
+
   constructor(
     private readonly bridge: BridgeClient,
     private readonly catalog: ToolCatalog,
     private readonly store: ToolStore,
     private readonly telemetry: TelemetryStore,
     private readonly activity?: ActivityStore,
-  ) {}
+    loop?: LoopController,
+    snapshots?: ContextSnapshotStore,
+  ) {
+    this.loop = loop ?? new LoopController(new RunStore(dirname(store.root)));
+    this.snapshots = snapshots ?? new ContextSnapshotStore();
+  }
 
   async execute(name: string, input: JsonObject): Promise<AgentResponse> {
     const startedAt = Date.now();
@@ -101,17 +119,41 @@ export class AgentRuntime {
       const normalized = normalizeError(error);
       bridge = { connected: false, errorCode: normalized.code, errorMessage: normalized.message };
     }
-    return { gatewayVersion: "0.5.0", bridge, catalog: await this.catalog.counts() };
+    return {
+      gatewayVersion: "0.5.0",
+      bridge,
+      catalog: await this.catalog.counts(),
+      harness: {
+        mode: this.loop.gatewayMode,
+        defaultBudget: { attempts: this.loop.gatewayMode === "bounded" ? 2 : 1, searches: 2, mcpCalls: 10, dynamicSources: 2, contextDeltas: 2, durationMinutes: 10 },
+        publicTools: 6,
+      },
+    };
   }
 
   private async getContext(input: JsonObject): Promise<unknown> {
     const includeSchema = input.includeSchema !== false;
     const selectionLimit = clampInteger(input.selectionLimit, 1, 50, 20);
-    return (await this.bridge.sendCommand("get_task_context", { includeSchema, maxSelectedElements: selectionLimit })).data;
+    const runId = optionalRunId(input.runId);
+    const snapshotId = optionalRunId(input.snapshotId, "snapshotId");
+    if (runId) await this.loop.consume(runId, snapshotId ? ["call", "contextDelta"] : ["call"]);
+    const raw = (await this.bridge.sendCommand("get_task_context", { includeSchema, maxSelectedElements: selectionLimit })).data;
+    if (!runId && !snapshotId) return raw;
+    const data = this.snapshots.capture(raw, snapshotId);
+    if (runId) {
+      const fingerprint = readString(data, "ProjectFingerprint", "projectFingerprint");
+      if (fingerprint) await this.loop.attachProject(runId, fingerprint);
+      await this.loop.recordResponse(runId, data);
+    }
+    return data;
   }
 
   private async searchTools(input: JsonObject): Promise<unknown> {
     const task = parseTaskUnderstanding(input);
+    const requestedRunId = optionalRunId(input.runId);
+    let run = requestedRunId
+      ? await this.loop.consume(requestedRunId, ["call", "search"])
+      : input.startLoop === true ? await this.loop.start(task) : undefined;
     const query = typeof input.query === "string" ? input.query.trim().slice(0, 500) : "";
     const limit = clampInteger(input.limit, 1, 10, 5);
     const performance = await this.telemetry.summaries();
@@ -119,36 +161,73 @@ export class AgentRuntime {
     const workflow = [];
     const candidateIds = new Set<string>();
     for (const [index, step] of task.steps.entries()) {
-      const stepTask = { ...task, goal: `${step.action} ${step.object ?? ""} ${step.outcome}`,
-        actions: [step.action], objects: step.object ? [step.object] : task.objects, steps: [step] };
+      const stepTask = {
+        ...task,
+        goal: `${step.action} ${step.object ?? ""} ${step.outcome}`,
+        actions: [step.action],
+        objects: step.object ? [step.object] : task.objects,
+        steps: [step],
+      };
       const directory = routeTask(stepTask, query);
       const searchText = [step.action, step.object ?? "", step.outcome, ...(task.constraints ?? []), query].join(" ");
-      const tools = await this.catalog.search(searchText, limit, input.includeExperimental === true, performance, directoryToolTerms(directory));
+      const tools = await this.catalog.search(
+        searchText,
+        limit,
+        input.includeExperimental === true,
+        performance,
+        directoryToolTerms(directory),
+      );
       const recommended = tools[0];
-      const route = !recommended ? "dynamicCSharp" : recommended.performance?.health === "degraded" ? "evaluateDynamicCSharp" : "existingTool";
+      const route = !recommended
+        ? "dynamicCSharp"
+        : recommended.performance?.health === "degraded"
+          ? "evaluateDynamicCSharp"
+          : "existingTool";
       if (recommended) recommendedById.set(recommended.toolId, recommended);
       for (const tool of tools) candidateIds.add(tool.toolId);
       workflow.push({
-        stepNumber: index + 1, action: step.action, object: step.object, outcome: step.outcome, directory, route,
+        stepNumber: index + 1,
+        action: step.action,
+        object: step.object,
+        outcome: step.outcome,
+        directory,
+        route,
         recommendedToolId: recommended?.toolId,
         alternatives: tools.slice(1).map(toToolSummary),
         dynamicCSharp: route === "existingTool" ? undefined : {
-          reason: route === "dynamicCSharp" ? "No relevant existing or saved tool covers this workflow step." : "The relevant tool is degraded in local telemetry; compare it with a direct parameterized C# implementation.",
+          reason: route === "dynamicCSharp"
+            ? "No relevant existing or saved tool covers this workflow step."
+            : "The relevant tool is degraded in local telemetry; compare it with a direct parameterized C# implementation.",
           nextAction: "Generate and execute parameterized C# for this step, then save it as a reusable tool on success.",
         },
       });
     }
     const dynamicSteps = workflow.filter((step) => step.route !== "existingTool").map((step) => step.stepNumber);
-    return {
-      understoodTask: { mode: task.mode, actions: task.actions, objects: task.objects, stepCount: task.steps.length },
+    const profile = run ? getDomainProfile(task.domain) : undefined;
+    const data = {
+      runId: run?.runId,
+      understoodTask: {
+        mode: task.mode,
+        domain: task.domain,
+        actions: task.actions,
+        objects: task.objects,
+        stepCount: task.steps.length,
+        acceptanceCriteria: task.acceptanceCriteria,
+        evidenceRequirements: task.evidenceRequirements,
+      },
+      domainProfile: profile,
       workflow,
       recommendedTools: [...recommendedById.values()],
       resultCount: candidateIds.size,
       dynamicSteps,
+      loop: run ? { enabled: true, requestedMode: run.requestedMode, effectiveMode: run.effectiveMode, remainingBudget: this.loop.remaining(run) } : { enabled: false },
       guidance: dynamicSteps.length === 0
         ? "Validate the proposed workflow, then run its tools individually or as one atomic plan when the steps modify the same document."
         : "Keep suitable existing tools in the workflow. Refine unresolved steps once, then use dynamic C# only for remaining gaps or degraded routes.",
     };
+    if (!run) return data;
+    run = await this.loop.recordResponse(run.runId, data);
+    return { ...data, loop: { enabled: true, requestedMode: run.requestedMode, effectiveMode: run.effectiveMode, remainingBudget: this.loop.remaining(run) } };
   }
 
   private async runTool(input: JsonObject): Promise<{
@@ -165,6 +244,17 @@ export class AgentRuntime {
     }
     const args = validateArguments(resolved.descriptor.inputSchema, input.arguments ?? {});
     await this.assertProjectBinding(resolved.descriptor);
+    const runId = optionalRunId(input.runId);
+    const checks = parseVerificationChecks(input.verificationChecks, false);
+    if (runId) {
+      const data = await this.runPlan({
+        runId,
+        attempt: input.attempt,
+        steps: [{ kind: "tool", stepId: "step-1", toolId, version: requestedVersion, arguments: args }],
+        verificationChecks: checks,
+      });
+      return { data, toolId, version: resolved.descriptor.version, title: humanizeToolName(resolved.descriptor.name), risk: resolved.descriptor.risk };
+    }
     const command = toolId.startsWith("builtin:") ? resolved.descriptor.name : "execute_dynamic_csharp";
     const parameters = toolId.startsWith("builtin:") ? args : { mode: "execute", source: resolved.source, inputs: args };
     const data = (await this.bridge.sendCommand(command, parameters, command === "execute_dynamic_csharp" ? 120_000 : 30_000)).data;
@@ -181,9 +271,51 @@ export class AgentRuntime {
     if (!Array.isArray(input.steps) || input.steps.length < 1 || input.steps.length > 20) {
       throw new AgentError("VALIDATION_ERROR", "steps must contain between 1 and 20 operations.");
     }
+    const runId = optionalRunId(input.runId);
+    const attempt = clampInteger(input.attempt, 1, 3, 1);
+    const checks = parseVerificationChecks(input.verificationChecks, false);
+    if (runId && checks.length === 0) {
+      throw new AgentError("VALIDATION_ERROR", "verificationChecks are required when runId enables the Harness.");
+    }
+    let run: LoopRunState | undefined;
+    const dynamicCount = input.steps.filter((item) => item && typeof item === "object" && (item as JsonObject).kind === "dynamic").length;
+    if (runId) {
+      run = await this.loop.limitBudget(runId, input.loopBudget === undefined ? undefined : requireObject(input.loopBudget, "loopBudget"));
+      const usageKinds: Array<"call" | "attempt" | "dynamicSource"> = ["call", "attempt"];
+      for (let index = 0; index < dynamicCount; index += 1) usageKinds.push("dynamicSource");
+      run = await this.loop.consume(runId, usageKinds, attempt);
+    }
+    let projectFingerprint: string | undefined;
+    if (runId) {
+      projectFingerprint = await this.getProjectFingerprint();
+      run = await this.loop.attachProject(runId, projectFingerprint);
+    }
+    if (runId && run && attempt > 1 && verificationScopeSize(checks) > run.budget.maxAutoCorrectionElements) {
+      await this.loop.stop(runId, "AUTO_CORRECTION_SCOPE_EXCEEDED");
+      throw new AgentError("AUTO_CORRECTION_SCOPE_EXCEEDED", `Automatic correction is limited to ${run.budget.maxAutoCorrectionElements} scoped elements.`);
+    }
     const steps: JsonObject[] = [];
+    const pendingDynamic: Array<{ source: string; manifest: GeneratedToolManifestInput; projectFingerprint?: string; saveOnSuccess: boolean }> = [];
+    const savedSteps: Array<{ stepId: string; toolId: string; version: string }> = [];
     for (const rawStep of input.steps) {
       const step = requireObject(rawStep, "step");
+      const kind = step.kind === "dynamic" ? "dynamic" : "tool";
+      const stepId = requireString(step.stepId ?? `step-${steps.length + 1}`, "step.stepId", 80);
+      if (kind === "dynamic") {
+        const source = requireString(step.source, "step.source", 60_000);
+        const manifest = requireObject(step.manifest, "step.manifest") as unknown as GeneratedToolManifestInput;
+        validateGeneratedToolManifest(manifest);
+        if (manifest.risk === "destructive") {
+          if (runId) await this.loop.stop(runId, "DESTRUCTIVE_OPERATION");
+          throw new AgentError("DESTRUCTIVE_PLAN_NOT_SUPPORTED", "Destructive Dynamic C# cannot run inside a correction loop.");
+        }
+        const args = validateArguments(manifest.inputSchema, step.arguments ?? {});
+        if (manifest.binding === "project" && !projectFingerprint) projectFingerprint = await this.getProjectFingerprint();
+        const bindingFingerprint = manifest.binding === "project" ? projectFingerprint : undefined;
+        pendingDynamic.push({ source, manifest, projectFingerprint: bindingFingerprint, saveOnSuccess: step.saveOnSuccess !== false });
+        steps.push({ commandName: "execute_dynamic_csharp", parameters: { mode: "execute", source, inputs: args }, toolId: `dynamic:${hashPrefix(source)}`, stepId });
+        continue;
+      }
       const toolId = requireString(step.toolId, "step.toolId", 140);
       const resolved = await this.catalog.resolve(toolId, optionalVersion(step.version));
       if (resolved.descriptor.risk === "destructive") {
@@ -191,11 +323,53 @@ export class AgentRuntime {
       }
       const args = validateArguments(resolved.descriptor.inputSchema, step.arguments ?? {});
       await this.assertProjectBinding(resolved.descriptor);
+      if (toolId.startsWith("saved:")) savedSteps.push({ stepId, toolId, version: resolved.descriptor.version });
       steps.push(toolId.startsWith("builtin:")
-        ? { commandName: resolved.descriptor.name, parameters: args, toolId }
-        : { commandName: "execute_dynamic_csharp", parameters: { mode: "execute", source: resolved.source, inputs: args }, toolId });
+        ? { commandName: resolved.descriptor.name, parameters: args, toolId, stepId }
+        : { commandName: "execute_dynamic_csharp", parameters: { mode: "execute", source: resolved.source, inputs: args }, toolId, stepId });
     }
-    return (await this.bridge.sendCommand("execute_agent_plan", { steps }, 120_000)).data;
+    const bridgeData = (await this.bridge.sendCommand("execute_agent_plan", {
+      steps, verificationChecks: checks, runId, attempt,
+    }, 120_000)).data;
+    const verdict = readString(bridgeData, "Verdict", "verdict") ?? "unverified";
+    const passed = verdict === "passed";
+    const rolledBack = readBoolean(bridgeData, "RolledBack", "rolledBack") === true;
+    const savedTools = [];
+    for (const pending of pendingDynamic) {
+      if (!pending.saveOnSuccess) continue;
+      savedTools.push(await this.store.save(
+        pending.source,
+        pending.manifest,
+        (passed || (!runId && verdict === "unverified")) && !rolledBack ? "active" : "draft",
+        pending.projectFingerprint,
+      ));
+    }
+    if (checks.length > 0) await this.recordSavedToolVerification(savedSteps, bridgeData, passed);
+    const evidence = sanitizeEvidence(bridgeData);
+    if (!runId || !run) {
+      return { execution: bridgeData, verdict, rolledBack, evidence, savedTools };
+    }
+    run = await this.loop.recordOutcome(
+      runId,
+      passed ? "passed" : verdict === "stopped" ? "stopped" : "failed",
+      passed ? "passed" : verdict === "stopped" ? "stopped" : verdict === "failed" ? "failed" : "unverified",
+      evidence,
+      passed ? undefined : readString(bridgeData, "ErrorCode", "errorCode") ?? "VERIFICATION_FAILED",
+    );
+    const data = {
+      runId,
+      attempt,
+      phase: run.phase,
+      verdict: run.verdict,
+      evidence,
+      remainingBudget: this.loop.remaining(run),
+      rolledBack,
+      nextAction: passed ? "complete" : run.phase === "stopped" ? "inspect-and-start-a-new-task" : "correct-one-hypothesis-and-retry",
+      execution: bridgeData,
+      savedTools,
+    };
+    await this.loop.recordResponse(runId, data);
+    return data;
   }
 
   private async executeDynamic(input: JsonObject): Promise<{
@@ -206,6 +380,28 @@ export class AgentRuntime {
     validateGeneratedToolManifest(manifest);
     const args = validateArguments(manifest.inputSchema, input.arguments ?? {});
     const saveOnSuccess = input.saveOnSuccess !== false;
+    const runId = optionalRunId(input.runId);
+    const checks = parseVerificationChecks(input.verificationChecks, false);
+    if (runId) {
+      if (manifest.risk === "destructive") {
+        await this.loop.stop(runId, "DESTRUCTIVE_OPERATION");
+        throw new AgentError("DESTRUCTIVE_PLAN_NOT_SUPPORTED", "Destructive Dynamic C# cannot run inside a correction loop.");
+      }
+      const data = await this.runPlan({
+        runId,
+        attempt: input.attempt,
+        steps: [{ kind: "dynamic", stepId: "step-1", source, manifest, arguments: args, saveOnSuccess }],
+        verificationChecks: checks,
+      });
+      const saved = Array.isArray((data as JsonObject).savedTools) ? ((data as JsonObject).savedTools as JsonObject[])[0] : undefined;
+      return {
+        toolId: saved ? `saved:${String(saved.toolId)}` : `dynamic:${hashPrefix(source)}`,
+        version: typeof saved?.version === "string" ? saved.version : undefined,
+        title: manifest.name,
+        risk: manifest.risk,
+        data,
+      };
+    }
     let projectFingerprint: string | undefined;
     if (manifest.binding === "project") {
       projectFingerprint = await this.getProjectFingerprint();
@@ -229,7 +425,7 @@ export class AgentRuntime {
         version: saved?.version,
         title: manifest.name,
         risk: effectiveManifest.risk,
-        data: { execution: data, savedTool: saved },
+        data: { phase: executed && !cancelled ? "passed" : "failed", verdict: executed && !cancelled ? "unverified" : "failed", execution: data, savedTool: saved },
       };
     } catch (error) {
       const normalized = normalizeError(error);
@@ -261,6 +457,18 @@ export class AgentRuntime {
     }
     return fingerprint;
   }
+
+  private async recordSavedToolVerification(
+    steps: Array<{ stepId: string; toolId: string; version: string }>,
+    bridgeData: unknown,
+    passed: boolean,
+  ): Promise<void> {
+    const failedStepIds = readFailedStepIds(bridgeData);
+    for (const step of steps) {
+      const stepPassed = passed || (failedStepIds.size > 0 && !failedStepIds.has(step.stepId));
+      await this.store.recordVerification(step.toolId.slice("saved:".length), step.version, stepPassed);
+    }
+  }
 }
 
 function requireString(value: unknown, name: string, maxLength: number): string {
@@ -278,6 +486,14 @@ function optionalVersion(value: unknown): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || !value.trim() || value.length > 80) {
     throw new AgentError("VALIDATION_ERROR", "version must be a non-empty string of at most 80 characters.");
+  }
+  return value;
+}
+
+function optionalRunId(value: unknown, name = "runId"): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !/^[0-9a-f-]{36}$/i.test(value)) {
+    throw new AgentError("VALIDATION_ERROR", `${name} must be a UUID.`);
   }
   return value;
 }
@@ -325,7 +541,7 @@ function createActivityEvent(input: {
   const payload = unwrapExecution(input.data);
   const cancelled = readBoolean(payload, "Cancelled", "cancelled") === true;
   const transactionName = readString(payload, "TransactionName", "transactionName");
-  const scope = summarizeScope(payload);
+  const scope = mergeScopes(summarizeScope(payload), summarizeScope(input.data));
   return {
     schemaVersion: 1,
     requestId: input.requestId,
@@ -358,14 +574,36 @@ function summarizeScope(data: unknown): AgentActivityEvent["scope"] {
   const created = readIdArray(record.ActualCreatedElementIds ?? record.actualCreatedElementIds);
   const parameterName = readString(record, "ParameterName", "parameterName");
   const stepCount = readFiniteNumber(record.ExecutedSteps ?? record.executedSteps);
+  const runId = readString(record, "runId", "RunId");
+  const phase = readString(record, "phase", "Phase") as LoopPhase | undefined;
+  const verdict = readString(record, "verdict", "Verdict") as LoopVerdict | undefined;
+  const attempt = readFiniteNumber(record.attempt ?? record.Attempt);
+  const remaining = record.remainingBudget && typeof record.remainingBudget === "object"
+    ? readFiniteNumber((record.remainingBudget as JsonObject).mcpCalls)
+    : undefined;
   const scope = {
     elementIds: elementId === undefined ? undefined : [elementId],
     deletedElementIds: deleted,
     createdElementIds: created,
     parameterName,
     stepCount,
+    runId,
+    phase,
+    verdict,
+    attempt,
+    remainingCalls: remaining,
+    responseBytes: Buffer.byteLength(JSON.stringify(data), "utf8"),
   };
   return Object.values(scope).some((value) => value !== undefined) ? scope : undefined;
+}
+
+function mergeScopes(
+  executionScope: AgentActivityEvent["scope"],
+  harnessScope: AgentActivityEvent["scope"],
+): AgentActivityEvent["scope"] {
+  if (!executionScope) return harnessScope;
+  if (!harnessScope) return executionScope;
+  return { ...executionScope, ...harnessScope };
 }
 
 function readIdArray(value: unknown): number[] | undefined {
@@ -384,7 +622,11 @@ function humanizeToolName(name: string): string {
 
 function toToolSummary(tool: ToolDescriptor): ToolSummary {
   const { inputSchema: _inputSchema, source: _source, projectFingerprint: _projectFingerprint, ...summary } = tool;
-  return { ...summary, description: summary.description.slice(0, 300), tags: summary.tags.slice(0, 6) };
+  return {
+    ...summary,
+    description: summary.description.slice(0, 300),
+    tags: summary.tags.slice(0, 6),
+  };
 }
 
 function readString(value: unknown, ...keys: string[]): string | undefined {
@@ -404,4 +646,35 @@ function hashPrefix(source: string): string {
 
 function isCompilationFailure(message: string): boolean {
   return /(compile|compilation|emit failed|source is required|blocked api|blocked namespace|syntax is not allowed)/i.test(message);
+}
+
+function verificationScopeSize(checks: VerificationCheck[]): number {
+  const ids = new Set<number>();
+  for (const check of checks) {
+    for (const key of ["elementIds", "viewIds"] as const) {
+      if (Array.isArray(check[key])) for (const value of check[key] as unknown[]) if (typeof value === "number") ids.add(value);
+    }
+    if (Array.isArray(check.pairs)) {
+      for (const pair of check.pairs) {
+        if (!pair || typeof pair !== "object") continue;
+        for (const value of Object.values(pair as JsonObject)) if (typeof value === "number") ids.add(value);
+      }
+    }
+  }
+  return ids.size;
+}
+
+function readFailedStepIds(data: unknown): Set<string> {
+  if (!data || typeof data !== "object") return new Set();
+  const verification = (data as JsonObject).Verification ?? (data as JsonObject).verification;
+  if (!verification || typeof verification !== "object") return new Set();
+  const checks = (verification as JsonObject).Checks ?? (verification as JsonObject).checks;
+  if (!Array.isArray(checks)) return new Set();
+  return new Set(checks.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const check = item as JsonObject;
+    const passed = check.Passed ?? check.passed;
+    const stepId = check.StepId ?? check.stepId;
+    return passed === false && typeof stepId === "string" ? [stepId] : [];
+  }));
 }

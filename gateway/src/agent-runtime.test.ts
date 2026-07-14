@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { AgentRuntime } from "./agent-runtime.js";
+import { LoopController } from "./loop-controller.js";
+import { RunStore } from "./run-store.js";
 import { TelemetryStore } from "./telemetry.js";
 import { ToolCatalog } from "./tool-catalog.js";
 import { ToolStore } from "./tool-store.js";
@@ -34,6 +36,31 @@ class DestructiveFakeBridge extends FakeBridge {
     this.calls.push({ commandName, parameters });
     if (commandName === "execute_dynamic_csharp") {
       return { success: true, data: { Executed: true, Destructive: true } };
+    }
+    return { success: true, data: { ok: true } };
+  }
+}
+
+class VerifiedPlanBridge extends FakeBridge {
+  override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
+    this.calls.push({ commandName, parameters });
+    if (commandName === "get_task_context") {
+      return { success: true, data: { ProjectFingerprint: "project-001" } };
+    }
+    if (commandName === "execute_agent_plan") {
+      return {
+        success: true,
+        data: {
+          ExecutedSteps: 1,
+          Atomic: true,
+          Verdict: "passed",
+          RolledBack: false,
+          Verification: {
+            Passed: true,
+            Checks: [{ Id: "project-exists", Kind: "evidence", StepId: "step-1", Passed: true, ElementIds: [1] }],
+          },
+        },
+      };
     }
     return { success: true, data: { ok: true } };
   }
@@ -84,10 +111,15 @@ test("dynamic C# is saved and reusable without becoming a new MCP tool", async (
     assert.equal(generated.success, true);
     assert.equal(generated.toolId, "saved:set-reviewed-mark");
 
-    const search = await runtime.execute("search_bim_tools", { task: {
-      goal: "Set the reviewed mark parameter", actions: ["set parameter"], objects: ["reviewed mark"],
-      steps: [{ action: "set", object: "reviewed mark", outcome: "mark is updated" }], mode: "execute",
-    } });
+    const search = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "Set the reviewed mark parameter",
+        actions: ["set parameter"],
+        objects: ["reviewed mark"],
+        steps: [{ action: "set", object: "reviewed mark", outcome: "mark is updated" }],
+        mode: "execute",
+      },
+    });
     const recommended = (search.data as { recommendedTools: ToolDescriptor[] }).recommendedTools;
     assert.equal(recommended[0].toolId, "saved:set-reviewed-mark");
 
@@ -110,66 +142,127 @@ test("tool search requires task understanding and decomposition", async () => {
     const result = await runtime.execute("search_bim_tools", { query: "project" });
     assert.equal(result.success, false);
     assert.equal(result.errorCode, "VALIDATION_ERROR");
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("tool search routes a Chinese DWG task and keeps alternatives compact", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
   try {
     const store = new ToolStore(root);
-    const dwgTool: ToolDescriptor = { ...builtin, toolId: "builtin:preview_dwg_columns", name: "preview_dwg_columns", description: "Preview column geometry from DWG layers", tags: ["cad", "dwg", "column"] };
+    const dwgTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:preview_dwg_columns",
+      name: "preview_dwg_columns",
+      description: "Preview column geometry from DWG layers",
+      tags: ["cad", "dwg", "column"],
+    };
     const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [dwgTool, builtin]), store, new TelemetryStore(root));
-    const result = await runtime.execute("search_bim_tools", { task: {
-      goal: "讀取連結的 DWG 並預覽柱的位置", actions: ["讀取", "預覽"], objects: ["DWG 圖層", "柱"], constraints: ["先不修改模型"],
-      steps: [{ action: "掃描", object: "DWG 圖層", outcome: "取得柱的位置" }], mode: "assess",
-    } });
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "讀取連結的 DWG 並預覽柱的位置",
+        actions: ["讀取", "預覽"],
+        objects: ["DWG 圖層", "柱"],
+        constraints: ["先不修改模型"],
+        steps: [{ action: "掃描", object: "DWG 圖層", outcome: "取得柱的位置" }],
+        mode: "assess",
+      },
+    });
     assert.equal(result.success, true);
-    const data = result.data as { workflow: Array<{ directory: Array<{ id: string }>; recommendedToolId?: string; alternatives: Array<Record<string, unknown>> }>; recommendedTools: ToolDescriptor[] };
+    const data = result.data as {
+      workflow: Array<{ directory: Array<{ id: string }>; recommendedToolId?: string; alternatives: Array<Record<string, unknown>> }>;
+      recommendedTools: ToolDescriptor[];
+    };
     assert.equal(data.workflow[0].directory[0].id, "cad-dwg");
     assert.equal(data.workflow[0].recommendedToolId, dwgTool.toolId);
     assert.equal(data.recommendedTools[0].toolId, dwgTool.toolId);
     assert.ok("inputSchema" in data.recommendedTools[0]);
     assert.equal(data.workflow[0].alternatives.some((tool) => "inputSchema" in tool), false);
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("complex tasks return a workflow with every required tool schema", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
   try {
     const store = new ToolStore(root);
-    const scanTool: ToolDescriptor = { ...builtin, toolId: "builtin:scan_dwg_layers", name: "scan_dwg_layers", description: "Scan DWG layers and imported CAD geometry", tags: ["cad", "dwg", "layer"] };
-    const createTool: ToolDescriptor = { ...builtin, toolId: "builtin:create_structural_columns", name: "create_structural_columns", description: "Create structural columns from validated positions", risk: "reversibleMutation", tags: ["structure", "column", "create"] };
+    const scanTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:scan_dwg_layers",
+      name: "scan_dwg_layers",
+      description: "Scan DWG layers and imported CAD geometry",
+      tags: ["cad", "dwg", "layer"],
+    };
+    const createTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:create_structural_columns",
+      name: "create_structural_columns",
+      description: "Create structural columns from validated positions",
+      risk: "reversibleMutation",
+      tags: ["structure", "column", "create"],
+    };
     const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [scanTool, createTool]), store, new TelemetryStore(root));
-    const result = await runtime.execute("search_bim_tools", { task: {
-      goal: "從 DWG 建立結構柱", actions: ["掃描", "建立"], objects: ["DWG 圖層", "結構柱"],
-      steps: [{ action: "掃描 DWG", object: "DWG 圖層", outcome: "取得柱位置" }, { action: "建立", object: "結構柱", outcome: "依確認位置建立柱" }], mode: "plan",
-    } });
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "從 DWG 建立結構柱",
+        actions: ["掃描", "建立"],
+        objects: ["DWG 圖層", "結構柱"],
+        steps: [
+          { action: "掃描 DWG", object: "DWG 圖層", outcome: "取得柱位置" },
+          { action: "建立", object: "結構柱", outcome: "依確認位置建立柱" },
+        ],
+        mode: "plan",
+      },
+    });
     assert.equal(result.success, true);
     const data = result.data as { workflow: Array<{ recommendedToolId?: string }>; recommendedTools: ToolDescriptor[] };
     assert.deepEqual(data.workflow.map((step) => step.recommendedToolId), [scanTool.toolId, createTool.toolId]);
     assert.deepEqual(data.recommendedTools.map((tool) => tool.toolId), [scanTool.toolId, createTool.toolId]);
     assert.equal(data.recommendedTools.every((tool) => "inputSchema" in tool), true);
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("uncovered workflow steps are routed to dynamic C# without replacing covered steps", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
   try {
     const store = new ToolStore(root);
-    const scanTool: ToolDescriptor = { ...builtin, toolId: "builtin:scan_dwg_layers", name: "scan_dwg_layers", description: "Scan DWG layers and imported CAD geometry", tags: ["cad", "dwg", "layer"] };
+    const scanTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:scan_dwg_layers",
+      name: "scan_dwg_layers",
+      description: "Scan DWG layers and imported CAD geometry",
+      tags: ["cad", "dwg", "layer"],
+    };
     const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [scanTool]), store, new TelemetryStore(root));
-    const result = await runtime.execute("search_bim_tools", { task: {
-      goal: "掃描 DWG 後執行公司自訂編碼流程", actions: ["掃描", "自訂編碼"], objects: ["DWG 圖層", "公司編碼"],
-      steps: [{ action: "掃描 DWG", object: "DWG 圖層", outcome: "取得圖層資料" }, { action: "套用 ZXQ 專案專屬編碼", object: "ZXQ 編碼規則", outcome: "完成專屬編碼" }], mode: "plan",
-    } });
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "掃描 DWG 後執行公司自訂編碼流程",
+        actions: ["掃描", "自訂編碼"],
+        objects: ["DWG 圖層", "公司編碼"],
+        steps: [
+          { action: "掃描 DWG", object: "DWG 圖層", outcome: "取得圖層資料" },
+          { action: "套用 ZXQ 專案專屬編碼", object: "ZXQ 編碼規則", outcome: "完成專屬編碼" },
+        ],
+        mode: "plan",
+      },
+    });
     assert.equal(result.success, true);
-    const data = result.data as { workflow: Array<{ route: string; recommendedToolId?: string; dynamicCSharp?: Record<string, unknown> }>; dynamicSteps: number[] };
+    const data = result.data as {
+      workflow: Array<{ route: string; recommendedToolId?: string; dynamicCSharp?: Record<string, unknown> }>;
+      dynamicSteps: number[];
+    };
     assert.equal(data.workflow[0].route, "existingTool");
     assert.equal(data.workflow[0].recommendedToolId, scanTool.toolId);
     assert.equal(data.workflow[1].route, "dynamicCSharp");
     assert.ok(data.workflow[1].dynamicCSharp);
     assert.deepEqual(data.dynamicSteps, [2]);
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("atomic plans are delegated as one bridge command", async () => {
@@ -184,6 +277,75 @@ test("atomic plans are delegated as one bridge command", async () => {
     assert.equal(result.success, true);
     assert.equal(bridge.calls.length, 1);
     assert.equal(bridge.calls[0].commandName, "execute_agent_plan");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("normal context reads stay outside the Harness snapshot path", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("get_bim_context", {});
+    assert.deepEqual(result.data, { ProjectFingerprint: "project-001" });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("Harness is opt-in and verifies a bounded plan when explicitly started", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const bridge = new VerifiedPlanBridge();
+    const store = new ToolStore(root);
+    const loop = new LoopController(new RunStore(join(root, "runs")), "bounded");
+    const runtime = new AgentRuntime(
+      bridge,
+      new ToolCatalog(store, [builtin]),
+      store,
+      new TelemetryStore(root),
+      undefined,
+      loop,
+    );
+    const search = await runtime.execute("search_bim_tools", {
+      startLoop: true,
+      task: {
+        goal: "確認目前專案資料可讀取",
+        actions: ["讀取"],
+        objects: ["專案資料"],
+        steps: [{ action: "讀取", object: "專案資料", outcome: "取得可驗證資料" }],
+        mode: "execute",
+        domain: "mep",
+        loopMode: "bounded",
+      },
+    });
+    const searchData = search.data as { runId: string; loop: { enabled: boolean; effectiveMode: string } };
+    assert.equal(searchData.loop.enabled, true);
+    assert.equal(searchData.loop.effectiveMode, "bounded");
+
+    const unverified = await runtime.execute("run_bim_tool", {
+      runId: searchData.runId,
+      toolId: builtin.toolId,
+      arguments: {},
+    });
+    assert.equal(unverified.success, false);
+    assert.equal(unverified.errorCode, "VALIDATION_ERROR");
+    assert.equal(bridge.calls.some((call) => call.commandName === "execute_agent_plan"), false);
+
+    const result = await runtime.execute("run_bim_plan", {
+      runId: searchData.runId,
+      attempt: 1,
+      steps: [{ kind: "tool", stepId: "step-1", toolId: builtin.toolId, arguments: {} }],
+      verificationChecks: [{ id: "project-exists", kind: "evidence", stepId: "step-1", elementIds: [1], minEvidence: 1 }],
+    });
+    const data = result.data as { phase: string; verdict: string; remainingBudget: { attempts: number; mcpCalls: number } };
+    assert.equal(result.success, true);
+    assert.equal(data.phase, "passed");
+    assert.equal(data.verdict, "passed");
+    assert.equal(data.remainingBudget.attempts, 1);
+    assert.ok(data.remainingBudget.mcpCalls < 10);
+    assert.equal(bridge.calls.at(-1)?.commandName, "execute_agent_plan");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

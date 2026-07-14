@@ -38,6 +38,10 @@ Codex 固定只看見六個工具：
 
 工具搜尋不是直接拿使用者句子反覆查詢。Codex 會先整理目標、BIM 對象、動作、限制與步驟，再由 Gateway 為每個步驟設計工具流程；一次回傳完成任務所需工具的完整 schema，其他候選保持精簡。只有未覆蓋或不適用的步驟才再細化搜尋一次，仍無工具時只在該步驟加入 Dynamic C#，不重寫整個流程。
 
+### 有限 Harness
+
+Harness 預設不介入一般工作。普通讀取、建立、修改、單次 plan 與 Dynamic C# 維持原本直接路徑；只有任務明確要求驗收證據、自動修正，或呼叫端設定 `startLoop=true` 時才建立 run。啟用後最多兩次執行、兩次搜尋、十次 MCP 呼叫與十分鐘，並在 timeout、文件切換、重複錯誤、破壞性需求或結果不確定時停止。領域 profile 與驗證項目是規劃指引，不是每次任務必跑的固定表單。
+
 ## 原始碼開發需求
 
 - Windows 與 Autodesk Revit 2024。
@@ -105,7 +109,7 @@ Skill 不會啟動第二個模型服務，也不會改用 raw `revit-mcp`。
 npm.cmd --prefix gateway run console:start
 ```
 
-控制台預設位於 `http://127.0.0.1:4178`，依事件順序顯示 Agent 動作、結果、影響範圍、Transaction 與耗時。控制台不顯示 prompt、完整 arguments、參數值、動態 C# 原始碼或 MCP schema。
+控制台預設位於 `http://127.0.0.1:4178`，依事件順序顯示 Agent 動作、結果、影響範圍、Transaction 與耗時。啟用 Harness 時另顯示執行階段、驗證結果、嘗試次數、剩餘呼叫與回傳大小。控制台不顯示 prompt、完整 arguments、參數值、動態 C# 原始碼或 MCP schema。
 
 ## 本機資料
 

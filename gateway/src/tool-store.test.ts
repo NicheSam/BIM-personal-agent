@@ -89,3 +89,17 @@ test("saved tool risk cannot be downgraded", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("two verification failures degrade the newest tool and restore the previous active version", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-store-"));
+  try {
+    const store = new ToolStore(root);
+    await store.save("public class Command { public int V => 1; }", manifest, "active");
+    const newest = await store.save("public class Command { public int V => 2; }", manifest, "active");
+    await store.recordVerification(manifest.toolId, newest.version, false);
+    await store.recordVerification(manifest.toolId, newest.version, false);
+    assert.equal((await store.getActive(manifest.toolId)).manifest.version, "1.0.0");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

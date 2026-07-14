@@ -2,18 +2,31 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 const objectSchema = { type: "object", additionalProperties: true } as const;
 const taskUnderstandingSchema = {
-  type: "object", additionalProperties: false,
+  type: "object",
+  additionalProperties: false,
   properties: {
     goal: { type: "string", minLength: 1, maxLength: 500 },
     actions: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
     objects: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
     constraints: { type: "array", maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
-    steps: { type: "array", minItems: 1, maxItems: 20, items: {
-      type: "object", additionalProperties: false,
-      properties: { action: { type: "string", minLength: 1, maxLength: 300 }, object: { type: "string", minLength: 1, maxLength: 300 }, outcome: { type: "string", minLength: 1, maxLength: 300 } },
-      required: ["action", "outcome"],
-    } },
+    steps: {
+      type: "array", minItems: 1, maxItems: 20,
+      items: {
+        type: "object", additionalProperties: false,
+        properties: {
+          action: { type: "string", minLength: 1, maxLength: 300 },
+          object: { type: "string", minLength: 1, maxLength: 300 },
+          outcome: { type: "string", minLength: 1, maxLength: 300 },
+        },
+        required: ["action", "outcome"],
+      },
+    },
     mode: { type: "string", enum: ["assess", "execute", "plan"] },
+    domain: { type: "string", enum: ["mep", "constructability", "documentation", "quantity", "rfi", "clash"] },
+    acceptanceCriteria: { type: "array", minItems: 1, maxItems: 20, items: { type: "string", minLength: 1, maxLength: 300 } },
+    evidenceRequirements: { type: "array", minItems: 1, maxItems: 20, items: { type: "string", minLength: 1, maxLength: 300 } },
+    loopMode: { type: "string", enum: ["observe", "bounded"] },
+    complexity: { type: "string", enum: ["standard", "complex"], default: "standard" },
   },
   required: ["goal", "actions", "objects", "steps", "mode"],
 } as const;
@@ -32,6 +45,29 @@ const manifestSchema = {
   },
   required: ["toolId", "name", "description", "inputSchema", "risk", "binding"],
 } as const;
+const verificationCheckSchema = {
+  type: "object",
+  additionalProperties: true,
+  properties: {
+    id: { type: "string", minLength: 1, maxLength: 80 },
+    kind: { type: "string", enum: ["elementExists", "elementCount", "parameterEquals", "mepConnectivity", "clearance", "viewPlacement", "quantity", "evidence"] },
+    stepId: { type: "string", minLength: 1, maxLength: 80 },
+    elementIds: { type: "array", maxItems: 200, items: { type: "integer", minimum: 1 } },
+    viewIds: { type: "array", maxItems: 200, items: { type: "integer", minimum: 1 } },
+  },
+  required: ["id", "kind"],
+} as const;
+const verificationChecksSchema = { type: "array", minItems: 1, maxItems: 20, items: verificationCheckSchema } as const;
+const loopBudgetSchema = {
+  type: "object", additionalProperties: false,
+  properties: {
+    maxAttempts: { type: "integer", minimum: 1, maximum: 3 },
+    maxMcpCalls: { type: "integer", minimum: 1, maximum: 10 },
+    maxDynamicSources: { type: "integer", minimum: 0, maximum: 2 },
+    maxContextDeltas: { type: "integer", minimum: 0, maximum: 2 },
+    maxAutoCorrectionElements: { type: "integer", minimum: 1, maximum: 200 },
+  },
+} as const;
 
 export const publicTools: Tool[] = [
   {
@@ -47,6 +83,8 @@ export const publicTools: Tool[] = [
       properties: {
         includeSchema: { type: "boolean", default: true },
         selectionLimit: { type: "integer", minimum: 1, maximum: 50, default: 20 },
+        runId: { type: "string", format: "uuid" },
+        snapshotId: { type: "string", format: "uuid" },
       },
     },
   },
@@ -57,6 +95,8 @@ export const publicTools: Tool[] = [
       type: "object", additionalProperties: false,
       properties: {
         task: taskUnderstandingSchema,
+        runId: { type: "string", format: "uuid", description: "Reuse the existing runId only for the single allowed refinement search." },
+        startLoop: { type: "boolean", default: false, description: "Opt into Harness state and budgets. Gateway rollout mode decides observe or bounded correction." },
         query: { type: "string", maxLength: 500, description: "Optional refinement hint; do not replace the structured task." },
         limit: { type: "integer", minimum: 1, maximum: 10, default: 5 },
         includeExperimental: { type: "boolean", default: false },
@@ -73,28 +113,51 @@ export const publicTools: Tool[] = [
         toolId: { type: "string", maxLength: 140 },
         version: { type: "string", minLength: 1, maxLength: 80 },
         arguments: objectSchema,
+        runId: { type: "string", format: "uuid" },
+        attempt: { type: "integer", minimum: 1, maximum: 3 },
+        verificationChecks: verificationChecksSchema,
       },
       required: ["toolId", "arguments"],
     },
   },
   {
     name: "run_bim_plan",
-    description: "Validate and atomically run 1-20 non-destructive same-document Revit tool steps through one TransactionGroup.",
+    description: "Run one multi-step BIM plan with existing tools and inline Dynamic C#. Add runId and verificationChecks only when using the optional Harness.",
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
         steps: {
           type: "array", minItems: 1, maxItems: 20,
-          items: {
-            type: "object", additionalProperties: false,
-            properties: {
-              toolId: { type: "string", maxLength: 140 },
-              version: { type: "string", minLength: 1, maxLength: 80 },
-              arguments: objectSchema,
+          items: { oneOf: [
+            {
+              type: "object", additionalProperties: false,
+              properties: {
+                kind: { type: "string", const: "tool" },
+                stepId: { type: "string", minLength: 1, maxLength: 80 },
+                toolId: { type: "string", maxLength: 140 },
+                version: { type: "string", minLength: 1, maxLength: 80 },
+                arguments: objectSchema,
+              },
+              required: ["kind", "stepId", "toolId", "arguments"],
             },
-            required: ["toolId", "arguments"],
-          },
+            {
+              type: "object", additionalProperties: false,
+              properties: {
+                kind: { type: "string", const: "dynamic" },
+                stepId: { type: "string", minLength: 1, maxLength: 80 },
+                source: { type: "string", minLength: 1, maxLength: 60000 },
+                manifest: manifestSchema,
+                arguments: objectSchema,
+                saveOnSuccess: { type: "boolean", default: true },
+              },
+              required: ["kind", "stepId", "source", "manifest", "arguments"],
+            },
+          ] },
         },
+        runId: { type: "string", format: "uuid" },
+        attempt: { type: "integer", minimum: 1, maximum: 3 },
+        verificationChecks: verificationChecksSchema,
+        loopBudget: loopBudgetSchema,
       },
       required: ["steps"],
     },
@@ -109,6 +172,9 @@ export const publicTools: Tool[] = [
         arguments: objectSchema,
         manifest: manifestSchema,
         saveOnSuccess: { type: "boolean", default: true },
+        runId: { type: "string", format: "uuid" },
+        attempt: { type: "integer", minimum: 1, maximum: 3 },
+        verificationChecks: verificationChecksSchema,
       },
       required: ["source", "arguments", "manifest"],
     },

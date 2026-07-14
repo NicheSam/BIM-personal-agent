@@ -1,5 +1,6 @@
 import { AgentError } from "./errors.js";
-import type { BimTaskStep, BimTaskUnderstanding, JsonObject, ToolDirectoryMatch } from "./types.js";
+import { inferDomain } from "./domain-profiles.js";
+import type { BimDomain, BimTaskStep, BimTaskUnderstanding, JsonObject, LoopMode, ToolDirectoryMatch } from "./types.js";
 
 interface ToolDirectory {
   id: string;
@@ -39,15 +40,28 @@ export function parseTaskUnderstanding(input: JsonObject): BimTaskUnderstanding 
   if (mode !== "assess" && mode !== "execute" && mode !== "plan") {
     throw new AgentError("VALIDATION_ERROR", "task.mode must be assess, execute, or plan.");
   }
-  return { goal, actions, objects, constraints, steps, mode };
+  const taskText = [goal, ...actions, ...objects, ...steps.flatMap((step) => [step.action, step.object ?? "", step.outcome])].join(" ");
+  const domain = task.domain === undefined ? inferDomain(taskText) : parseDomain(task.domain);
+  const acceptanceCriteria = task.acceptanceCriteria === undefined
+    ? steps.map((step) => step.outcome)
+    : requiredTextArray(task.acceptanceCriteria, "task.acceptanceCriteria", 20);
+  const evidenceRequirements = task.evidenceRequirements === undefined
+    ? ["Return enough Revit evidence to support the result when applicable."]
+    : requiredTextArray(task.evidenceRequirements, "task.evidenceRequirements", 20);
+  const loopMode = task.loopMode === undefined ? "observe" : parseLoopMode(task.loopMode);
+  const complexity = task.complexity === "complex" ? "complex" : "standard";
+  return { goal, actions, objects, constraints, steps, mode, domain, acceptanceCriteria, evidenceRequirements, loopMode, complexity };
 }
 
 export function routeTask(task: BimTaskUnderstanding, hint = ""): ToolDirectoryMatch[] {
   const text = [task.goal, ...task.actions, ...task.objects, ...(task.constraints ?? []),
     ...task.steps.flatMap((step) => [step.action, step.object ?? "", step.outcome]), hint].join(" ").toLowerCase();
   const matches = directories
-    .map((directory) => ({ id: directory.id, name: directory.name,
-      score: directory.taskTerms.reduce((sum, term) => sum + (text.includes(term.toLowerCase()) ? 1 : 0), 0) }))
+    .map((directory) => ({
+      id: directory.id,
+      name: directory.name,
+      score: directory.taskTerms.reduce((sum, term) => sum + (text.includes(term.toLowerCase()) ? 1 : 0), 0),
+    }))
     .filter((match) => match.score > 0)
     .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name))
     .slice(0, 3);
@@ -64,11 +78,15 @@ function parseSteps(value: unknown): BimTaskStep[] {
     throw new AgentError("VALIDATION_ERROR", "task.steps must contain between 1 and 20 decomposed steps.");
   }
   return value.map((raw, index) => {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new AgentError("VALIDATION_ERROR", `task.steps[${index}] must be an object.`);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      throw new AgentError("VALIDATION_ERROR", `task.steps[${index}] must be an object.`);
+    }
     const step = raw as Record<string, unknown>;
-    return { action: requiredText(step.action, `task.steps[${index}].action`, 300),
+    return {
+      action: requiredText(step.action, `task.steps[${index}].action`, 300),
       object: optionalText(step.object, `task.steps[${index}].object`, 300),
-      outcome: requiredText(step.outcome, `task.steps[${index}].outcome`, 300) };
+      outcome: requiredText(step.outcome, `task.steps[${index}].outcome`, 300),
+    };
   });
 }
 
@@ -85,12 +103,31 @@ function optionalText(value: unknown, field: string, maxLength: number): string 
 }
 
 function requiredTextArray(value: unknown, field: string, maxItems: number): string[] {
-  if (!Array.isArray(value) || value.length < 1 || value.length > maxItems) throw new AgentError("VALIDATION_ERROR", `${field} must contain between 1 and ${maxItems} items.`);
+  if (!Array.isArray(value) || value.length < 1 || value.length > maxItems) {
+    throw new AgentError("VALIDATION_ERROR", `${field} must contain between 1 and ${maxItems} items.`);
+  }
   return value.map((item, index) => requiredText(item, `${field}[${index}]`, 200));
 }
 
 function optionalTextArray(value: unknown, field: string, maxItems: number): string[] | undefined {
   if (value === undefined) return undefined;
-  if (!Array.isArray(value) || value.length > maxItems) throw new AgentError("VALIDATION_ERROR", `${field} must contain at most ${maxItems} items.`);
+  if (!Array.isArray(value) || value.length > maxItems) {
+    throw new AgentError("VALIDATION_ERROR", `${field} must contain at most ${maxItems} items.`);
+  }
   return value.map((item, index) => requiredText(item, `${field}[${index}]`, 200));
+}
+
+function parseDomain(value: unknown): BimDomain {
+  const domains: BimDomain[] = ["mep", "constructability", "documentation", "quantity", "rfi", "clash"];
+  if (typeof value !== "string" || !domains.includes(value as BimDomain)) {
+    throw new AgentError("VALIDATION_ERROR", `task.domain must be one of: ${domains.join(", ")}.`);
+  }
+  return value as BimDomain;
+}
+
+function parseLoopMode(value: unknown): LoopMode {
+  if (value !== "observe" && value !== "bounded") {
+    throw new AgentError("VALIDATION_ERROR", "task.loopMode must be observe or bounded.");
+  }
+  return value;
 }

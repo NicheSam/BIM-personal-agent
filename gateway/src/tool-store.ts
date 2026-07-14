@@ -29,7 +29,7 @@ export class ToolStore {
         }
         try {
           const manifest = JSON.parse(await readFile(join(this.root, toolId, version, "manifest.json"), "utf8")) as SavedToolManifest;
-          if (statuses.includes(manifest.status)) {
+          if (statuses.includes(manifest.status) && !(manifest.status === "active" && await this.isDegraded(toolId, version))) {
             manifests.push(manifest);
           }
         } catch {
@@ -117,7 +117,22 @@ export class ToolStore {
     await writeFile(join(staging, "command.cs"), source, "utf8");
     await writeFile(join(staging, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
     await rename(staging, destination);
+    await this.recordVerification(input.toolId, version, status === "active");
     return manifest;
+  }
+
+  async recordVerification(toolId: string, version: string, passed: boolean): Promise<void> {
+    validateToolId(toolId);
+    if (!VERSION_PATTERN.test(version)) throw new AgentError("VALIDATION_ERROR", "Tool health version is invalid.");
+    const path = join(this.root, toolId, "health.json");
+    const health = await readHealth(path);
+    const current = health.versions[version] ?? { consecutiveFailures: 0, degraded: false };
+    current.consecutiveFailures = passed ? 0 : current.consecutiveFailures + 1;
+    current.degraded = current.consecutiveFailures >= 2;
+    current.lastVerifiedAt = new Date().toISOString();
+    health.versions[version] = current;
+    await mkdir(join(this.root, toolId), { recursive: true });
+    await writeFile(path, `${JSON.stringify(health, null, 2)}\n`, "utf8");
   }
 
   private async nextVersion(toolId: string): Promise<string> {
@@ -135,6 +150,25 @@ export class ToolStore {
     if (highestRisk > riskRank(risk)) {
       throw new AgentError("RISK_DOWNGRADE_BLOCKED", `Saved tool risk cannot be downgraded: ${toolId}`);
     }
+  }
+
+  private async isDegraded(toolId: string, version: string): Promise<boolean> {
+    const health = await readHealth(join(this.root, toolId, "health.json"));
+    return health.versions[version]?.degraded === true;
+  }
+}
+
+interface ToolHealthFile {
+  schemaVersion: 1;
+  versions: Record<string, { consecutiveFailures: number; degraded: boolean; lastVerifiedAt?: string }>;
+}
+
+async function readHealth(path: string): Promise<ToolHealthFile> {
+  try {
+    const value = JSON.parse(await readFile(path, "utf8")) as ToolHealthFile;
+    return value?.schemaVersion === 1 && value.versions ? value : { schemaVersion: 1, versions: {} };
+  } catch {
+    return { schemaVersion: 1, versions: {} };
   }
 }
 
