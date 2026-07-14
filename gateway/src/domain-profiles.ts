@@ -3,7 +3,7 @@ import type { BimDomain, LoopMode, VerificationKind } from "./types.js";
 export interface DomainProfile {
   domain: BimDomain;
   name: string;
-  mutationPolicy: "bounded" | "reportOnly" | "queryOnly";
+  operationGuidance: "bounded" | "reportOnly" | "queryOnly";
   defaultVerification: VerificationKind[];
   guidance: string;
 }
@@ -12,44 +12,44 @@ const profiles: Record<BimDomain, DomainProfile> = {
   mep: {
     domain: "mep",
     name: "MEP",
-    mutationPolicy: "bounded",
+    operationGuidance: "bounded",
     defaultVerification: ["elementCount", "parameterEquals", "mepConnectivity", "clearance"],
     guidance: "Verify systems, levels, dimensions, connectors, quantities, positions, and parameters.",
   },
   constructability: {
     domain: "constructability",
     name: "Constructability review",
-    mutationPolicy: "reportOnly",
+    operationGuidance: "reportOnly",
     defaultVerification: ["clearance", "evidence"],
-    guidance: "Report headroom, installation and maintenance space, sequencing, and ElementId evidence. Do not modify the model.",
+    guidance: "Prefer reporting headroom, installation and maintenance space, sequencing, and ElementId evidence. Modify only when the task explicitly requires a reversible, verifiable correction.",
   },
   documentation: {
     domain: "documentation",
     name: "Documentation",
-    mutationPolicy: "bounded",
+    operationGuidance: "bounded",
     defaultVerification: ["viewPlacement", "elementCount", "parameterEquals"],
     guidance: "Verify sheet numbers, title blocks, viewports, scales, annotations, and schedules. Never overwrite output files in the loop.",
   },
   quantity: {
     domain: "quantity",
     name: "Quantity takeoff",
-    mutationPolicy: "queryOnly",
+    operationGuidance: "queryOnly",
     defaultVerification: ["quantity", "evidence"],
-    guidance: "Recount categories and aggregates with explicit filters, units, missing parameters, and tolerances. Do not modify the model.",
+    guidance: "Prefer query-only recounting with explicit filters, units, missing parameters, and tolerances. Modify only when the task explicitly requires a reversible, verifiable correction.",
   },
   rfi: {
     domain: "rfi",
     name: "RFI",
-    mutationPolicy: "reportOnly",
+    operationGuidance: "reportOnly",
     defaultVerification: ["evidence"],
-    guidance: "Require views, ElementIds, parameters, conflict conditions, and assumptions. Do not modify the model.",
+    guidance: "Prefer report-only evidence with views, ElementIds, parameters, conflict conditions, and assumptions. Modify only when the task explicitly requires a reversible, verifiable correction.",
   },
   clash: {
     domain: "clash",
     name: "Clash review",
-    mutationPolicy: "reportOnly",
+    operationGuidance: "reportOnly",
     defaultVerification: ["clearance", "evidence"],
-    guidance: "Report deduplicated element pairs, locations, distances, systems, and severity. Do not move elements automatically.",
+    guidance: "Prefer reporting deduplicated element pairs, locations, distances, systems, and severity. Move elements only when the task explicitly requires a reversible, verifiable correction.",
   },
 };
 
@@ -67,8 +67,6 @@ export function inferDomain(text: string): BimDomain {
   return "mep";
 }
 
-export function effectiveLoopMode(domain: BimDomain, requested: LoopMode, gatewayMode: LoopMode): LoopMode {
-  return requested === "bounded" && gatewayMode === "bounded" && profiles[domain].mutationPolicy === "bounded"
-    ? "bounded"
-    : "observe";
+export function effectiveLoopMode(requested: LoopMode, gatewayMode: LoopMode): LoopMode {
+  return requested === "bounded" && gatewayMode === "bounded" ? "bounded" : "observe";
 }

@@ -7,6 +7,7 @@
 *secret*
 *credential*
 *token*
+!docs/decisions/ADR-002-thin-harness-and-local-token-attribution.md
 *.pem
 *.p12
 *.pfx
@@ -40,6 +41,7 @@ logs/
 log/
 runtime/
 outputs/
+output/
 *.log
 *.tmp
 

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { AgentRuntime } from "./agent-runtime.js";
+import { AgentError } from "./errors.js";
 import { LoopController } from "./loop-controller.js";
 import { RunStore } from "./run-store.js";
 import { TelemetryStore } from "./telemetry.js";
@@ -61,6 +62,22 @@ class VerifiedPlanBridge extends FakeBridge {
           },
         },
       };
+    }
+    return { success: true, data: { ok: true } };
+  }
+}
+
+class UncertainPlanBridge extends FakeBridge {
+  override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
+    this.calls.push({ commandName, parameters });
+    if (commandName === "get_task_context") {
+      return { success: true, data: { ProjectFingerprint: "project-001" } };
+    }
+    if (commandName === "execute_agent_plan") {
+      throw new AgentError(
+        "REVIT_COMMAND_TIMEOUT_UNCERTAIN",
+        "The command timed out and the Revit model state is uncertain.",
+      );
     }
     return { success: true, data: { ok: true } };
   }
@@ -346,6 +363,48 @@ test("Harness is opt-in and verifies a bounded plan when explicitly started", as
     assert.equal(data.remainingBudget.attempts, 1);
     assert.ok(data.remainingBudget.mcpCalls < 10);
     assert.equal(bridge.calls.at(-1)?.commandName, "execute_agent_plan");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("uncertain Revit execution stops the Harness instead of inviting another attempt", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const bridge = new UncertainPlanBridge();
+    const store = new ToolStore(root);
+    const loop = new LoopController(new RunStore(join(root, "runs")), "bounded");
+    const runtime = new AgentRuntime(
+      bridge,
+      new ToolCatalog(store, [builtin]),
+      store,
+      new TelemetryStore(root),
+      undefined,
+      loop,
+    );
+    const search = await runtime.execute("search_bim_tools", {
+      startLoop: true,
+      task: {
+        goal: "Update a reversible parameter and verify it",
+        actions: ["update"],
+        objects: ["parameter"],
+        steps: [{ action: "update", object: "parameter", outcome: "value matches" }],
+        mode: "execute",
+        loopMode: "bounded",
+      },
+    });
+    const runId = (search.data as { runId: string }).runId;
+    const result = await runtime.execute("run_bim_plan", {
+      runId,
+      attempt: 1,
+      steps: [{ kind: "tool", stepId: "step-1", toolId: builtin.toolId, arguments: {} }],
+      verificationChecks: [{ id: "project-exists", kind: "evidence", elementIds: [1], minEvidence: 1 }],
+    });
+    assert.equal(result.success, false);
+    assert.equal(result.errorCode, "REVIT_COMMAND_TIMEOUT_UNCERTAIN");
+    const state = await loop.get(runId);
+    assert.equal(state.phase, "stopped");
+    assert.equal(state.stopReason, "REVIT_COMMAND_TIMEOUT_UNCERTAIN");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -32,11 +32,11 @@ Activate the existing local BIM Personal Agent. Codex remains the language model
 
 - Keep the direct path as the default. Set `startLoop=true` only when the request needs explicit acceptance evidence, controlled self-correction, or the user asks for verification.
 - Domain profiles, acceptance criteria and verification checks guide planning; they are not a mandatory checklist for every task. Use only checks that prove the requested result.
-- Reuse one complete tool search. On a retry, change one supported hypothesis instead of exploring several speculative branches.
-- Quantity, RFI, constructability and clash work stays read-only in the Loop. Any model correction becomes a separate task.
+- Reuse one complete tool search. On a retry, prefer the smallest evidence-backed correction. Replan when the evidence invalidates the original approach, but do not silently widen scope or risk.
+- Treat quantity, RFI, constructability and clash work as read-only by default. A reversible model correction is allowed only when the task explicitly requires it and the available evidence can verify it.
 - Stop on timeout, uncertain Revit state, document change, destructive work, repeated error or exhausted budget. Do not expand the Loop after failure.
 - Dynamic C# may enter any uncovered workflow step. Inside a Loop it becomes active only after verification passes; outside a Loop the existing direct save behavior remains.
 
 ## Console Boundary
 
-The console is for BIM engineers. Present event time, action, affected elements, result, transaction and duration. Do not expose prompts, arguments, parameter values, generated source, MCP schemas or developer diagnostics.
+The console is for BIM engineers. Present event time, action, affected elements, result, transaction, duration and locally recorded Codex task token usage. Do not expose prompts, arguments, parameter values, generated source, MCP schemas or developer diagnostics. If a Gateway request cannot be proven to belong to a Codex task, label token usage unavailable instead of estimating it.

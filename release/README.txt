@@ -15,6 +15,8 @@ Installation:
 5. Click BIM Personal > Agent service.
 6. Restart Codex Desktop and enter $bim-agent in a new task.
 
+The local activity console reads Codex token usage from the local .codex/sessions history. It does not upload prompts, tool arguments, project paths, or token history.
+
 Project:
 https://github.com/NicheSam/BIM-personal-agent
 

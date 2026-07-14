@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { connect } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { attachCodexUsage } from "./codex-usage.mjs";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const home = process.env.BIM_PERSONAL_AGENT_HOME
@@ -39,7 +40,7 @@ const server = createServer(async (request, response) => {
     }
     if (url.pathname === "/api/events") {
       const limit = Math.max(1, Math.min(Number.parseInt(url.searchParams.get("limit") || "200", 10) || 200, 1000));
-      const events = await readEvents(limit);
+      const events = await attachCodexUsage(await readEvents(limit));
       return sendJson(response, 200, { events: events.reverse(), count: events.length });
     }
     const asset = assets.get(url.pathname);

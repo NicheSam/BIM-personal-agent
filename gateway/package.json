@@ -6,7 +6,7 @@
   "main": "build/index.js",
   "scripts": {
     "build": "tsc && node scripts/copy-assets.mjs",
-    "test": "npm run build && node --test \"build/*.test.js\"",
+    "test": "npm run build && node --test \"build/*.test.js\" \"../console/*.test.mjs\"",
     "start": "node build/index.js",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
     "smoke:live": "node scripts/smoke-live.mjs",

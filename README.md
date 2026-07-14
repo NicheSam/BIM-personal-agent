@@ -40,7 +40,7 @@ Codex 固定只看見六個工具：
 
 ### 有限 Harness
 
-Harness 預設不介入一般工作。普通讀取、建立、修改、單次 plan 與 Dynamic C# 維持原本直接路徑；只有任務明確要求驗收證據、自動修正，或呼叫端設定 `startLoop=true` 時才建立 run。啟用後最多兩次執行、兩次搜尋、十次 MCP 呼叫與十分鐘，並在 timeout、文件切換、重複錯誤、破壞性需求或結果不確定時停止。領域 profile 與驗證項目是規劃指引，不是每次任務必跑的固定表單。
+Harness 預設不介入一般工作。普通讀取、建立、修改、單次 plan 與 Dynamic C# 維持原本直接路徑；只有任務明確要求驗收證據、自動修正，或呼叫端設定 `startLoop=true` 時才建立 run。啟用後標準任務最多兩次執行，明確標記的複雜任務最多三次，並以搜尋、MCP 呼叫、Dynamic C#、修改範圍與十分鐘作為成本上限。Codex 保留選工具、組合流程、產生 C#、設計驗證及根據證據重新規劃的自由；Gateway 只在 timeout、文件切換、重複錯誤、破壞性需求、範圍超限或結果不確定時硬停止。領域 profile 與驗證項目是方向建議，不是固定工作表或領域禁令。
 
 ## 原始碼開發需求
 
@@ -109,7 +109,7 @@ Skill 不會啟動第二個模型服務，也不會改用 raw `revit-mcp`。
 npm.cmd --prefix gateway run console:start
 ```
 
-控制台預設位於 `http://127.0.0.1:4178`，依事件順序顯示 Agent 動作、結果、影響範圍、Transaction 與耗時。啟用 Harness 時另顯示執行階段、驗證結果、嘗試次數、剩餘呼叫與回傳大小。控制台不顯示 prompt、完整 arguments、參數值、動態 C# 原始碼或 MCP schema。
+控制台預設位於 `http://127.0.0.1:4178`，依事件順序顯示 Agent 動作、結果、影響範圍、Transaction 與耗時。啟用 Harness 時另顯示執行階段、驗證結果、嘗試次數、剩餘呼叫與回傳大小。每個可關聯的自然語言任務會顯示本機 Codex session 實際記錄的未快取輸入、快取輸入、輸出與總 Token；同一任務內的多個 Agent 事件共用同一筆用量，不重複加總。無法透過 Gateway `requestId` 證明關聯時顯示「Token 未關聯」，不以 bytes 推估。控制台不顯示 prompt、完整 arguments、參數值、動態 C# 原始碼或 MCP schema。
 
 ## 本機資料
 
@@ -124,6 +124,8 @@ npm.cmd --prefix gateway run console:start
 
 Performance telemetry 不保存 prompt、arguments 或模型回應。保存工具包含 `manifest.json` 與 `command.cs`；project-bound 工具只能在相同 project fingerprint 執行。
 
+控制台會唯讀掃描 `%USERPROFILE%\.codex\sessions` 中的 `session_meta`、`turn_context`、`mcp_tool_call_end` 與 `token_count`，只回傳任務識別與 Token 數字，不回傳 prompt、工具參數、專案路徑或 session 原文。
+
 ## 邊界
 
 - 僅支援 Revit 2024、單一 Revit session、單一 active document。
@@ -132,4 +134,4 @@ Performance telemetry 不保存 prompt、arguments 或模型回應。保存工�
 - MCP timeout 無法安全終止已進入 Revit UI thread 的程式；明顯無限迴圈會被拒絕，但本 runtime 不是完整沙箱。
 - 148 個上游工具的程式來源已納入 `BimPersonalAgent.RevitBridge`，保留 MIT attribution；`REVIT_MCP_latest` 不再是執行時依賴。
 
-參考：[Codex 模式](docs/CODEX_MODE.md)、[執行架構](docs/EXECUTION_ARCHITECTURE.md)、[動態 C#](docs/DYNAMIC_CSHARP.md)、[遷移基準](docs/MIGRATION_BASELINE.md)、[Live smoke](docs/LIVE_SMOKE_2026-07-13.md)、[架構決策](docs/decisions/ADR-001-agent-gateway-and-single-bridge.md)。
+參考：[Codex 模式](docs/CODEX_MODE.md)、[執行架構](docs/EXECUTION_ARCHITECTURE.md)、[動態 C#](docs/DYNAMIC_CSHARP.md)、[遷移基準](docs/MIGRATION_BASELINE.md)、[Live smoke](docs/LIVE_SMOKE_2026-07-13.md)、[Gateway 架構決策](docs/decisions/ADR-001-agent-gateway-and-single-bridge.md)、[Thin Harness 決策](docs/decisions/ADR-002-thin-harness-and-local-token-attribution.md)。

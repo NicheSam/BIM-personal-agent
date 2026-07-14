@@ -44,10 +44,16 @@ function renderSummary() {
   const average = events.length === 0
     ? 0
     : Math.round(events.reduce((total, event) => total + Number(event.durationMs || 0), 0) / events.length);
+  const tasks = new Map();
+  events.forEach((event) => {
+    if (event.codexUsage?.taskKey) tasks.set(event.codexUsage.taskKey, event.codexUsage);
+  });
+  const taskTokens = [...tasks.values()].reduce((total, usage) => total + Number(usage.totalTokens || 0), 0);
   document.querySelector("#event-count").textContent = String(events.length);
   document.querySelector("#success-count").textContent = String(succeeded);
   document.querySelector("#attention-count").textContent = String(attention);
   document.querySelector("#average-duration").textContent = formatDuration(average);
+  document.querySelector("#task-token-count").textContent = formatTokens(taskTokens);
 }
 
 function renderEvents() {
@@ -79,9 +85,20 @@ function renderEvents() {
     row.querySelector(".event-tool").textContent = humanizeTool(event.toolId);
     row.querySelector(".event-duration").textContent = formatDuration(event.durationMs);
     row.querySelector(".event-transaction").textContent = event.transactionName || "";
+    renderTokenUsage(row.querySelector(".event-tokens"), event.codexUsage);
     renderScope(row.querySelector(".event-scope"), event.scope);
     timeline.append(row);
   });
+}
+
+function renderTokenUsage(container, usage) {
+  if (!usage) {
+    container.textContent = "Codex Token 未關聯";
+    container.classList.add("is-unavailable");
+    return;
+  }
+  container.textContent = `Codex ${formatTokens(usage.totalTokens)} Token · 輸入 ${formatTokens(usage.uncachedInputTokens)} / 快取 ${formatTokens(usage.cachedInputTokens)} / 輸出 ${formatTokens(usage.outputTokens)}`;
+  container.title = `本機 Codex task 實際記錄 · ${usage.model || "模型未記錄"}`;
 }
 
 function renderScope(container, scope) {
@@ -115,6 +132,13 @@ function verdictLabel(verdict) {
 function formatBytes(value) {
   const bytes = Number(value || 0);
   return bytes >= 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${Math.round(bytes)} B`;
+}
+
+function formatTokens(value) {
+  const tokens = Number(value || 0);
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(tokens >= 10_000_000 ? 1 : 2)}M`;
+  if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(tokens >= 100_000 ? 0 : 1)}K`;
+  return String(Math.round(tokens));
 }
 
 function statusLabel(status) {

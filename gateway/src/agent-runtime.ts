@@ -100,6 +100,7 @@ export class AgentRuntime {
       return response;
     } catch (error) {
       const normalized = normalizeError(error);
+      await this.recordHarnessFailure(input, normalized);
       const durationMs = Date.now() - startedAt;
       await this.telemetry.record({ toolId, durationMs, success: false, responseBytes: 0, errorCode: normalized.code });
       await this.activity?.record(createActivityEvent({
@@ -289,6 +290,9 @@ export class AgentRuntime {
     if (runId) {
       projectFingerprint = await this.getProjectFingerprint();
       run = await this.loop.attachProject(runId, projectFingerprint);
+      if (run.phase === "stopped") {
+        throw new AgentError("ACTIVE_DOCUMENT_CHANGED", "The active Revit document changed during the Harness run.");
+      }
     }
     if (runId && run && attempt > 1 && verificationScopeSize(checks) > run.budget.maxAutoCorrectionElements) {
       await this.loop.stop(runId, "AUTO_CORRECTION_SCOPE_EXCEEDED");
@@ -364,7 +368,11 @@ export class AgentRuntime {
       evidence,
       remainingBudget: this.loop.remaining(run),
       rolledBack,
-      nextAction: passed ? "complete" : run.phase === "stopped" ? "inspect-and-start-a-new-task" : "correct-one-hypothesis-and-retry",
+      nextAction: passed
+        ? "complete"
+        : run.phase === "stopped"
+          ? "inspect-and-start-a-new-task"
+          : "review-evidence-and-apply-the-smallest-justified-correction",
       execution: bridgeData,
       savedTools,
     };
@@ -469,6 +477,32 @@ export class AgentRuntime {
       await this.store.recordVerification(step.toolId.slice("saved:".length), step.version, stepPassed);
     }
   }
+
+  private async recordHarnessFailure(input: JsonObject, error: AgentError): Promise<void> {
+    const runId = typeof input.runId === "string" && /^[0-9a-f-]{36}$/i.test(input.runId) ? input.runId : undefined;
+    if (!runId) return;
+    try {
+      const current = await this.loop.get(runId);
+      if (current.phase === "passed" || current.phase === "stopped") return;
+      if (mustStopHarness(error.code)) {
+        await this.loop.stop(runId, error.code);
+        return;
+      }
+      await this.loop.recordOutcome(runId, "failed", "failed", { errorCode: error.code }, error.code);
+    } catch {
+      // Harness bookkeeping must never replace the original execution error.
+    }
+  }
+}
+
+function mustStopHarness(errorCode: string): boolean {
+  return errorCode === "ACTIVE_DOCUMENT_CHANGED"
+    || errorCode === "REVIT_COMMAND_TIMEOUT_UNCERTAIN"
+    || errorCode === "INVALID_BRIDGE_RESPONSE"
+    || errorCode === "REVIT_NOT_CONNECTED"
+    || errorCode.startsWith("REVIT_CONNECTION_")
+    || errorCode === "DESTRUCTIVE_PLAN_NOT_SUPPORTED"
+    || errorCode === "AUTO_CORRECTION_SCOPE_EXCEEDED";
 }
 
 function requireString(value: unknown, name: string, maxLength: number): string {

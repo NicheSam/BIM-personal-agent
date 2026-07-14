@@ -39,11 +39,23 @@ test("bounded loops stop when the same failure repeats", async () => {
   }
 });
 
-test("report-only domains cannot enter bounded correction", async () => {
+test("domain profiles guide planning without disabling bounded correction", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-loop-"));
   try {
     const controller = new LoopController(new RunStore(root), "bounded");
     const run = await controller.start(task("rfi"));
+    assert.equal(run.effectiveMode, "bounded");
+    assert.equal(run.budget.maxAttempts, 2);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an observe gateway remains a hard deployment boundary", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-loop-"));
+  try {
+    const controller = new LoopController(new RunStore(root), "observe");
+    const run = await controller.start(task("mep"));
     assert.equal(run.effectiveMode, "observe");
     assert.equal(run.budget.maxAttempts, 1);
   } finally {

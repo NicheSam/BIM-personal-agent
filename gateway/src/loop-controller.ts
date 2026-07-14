@@ -17,7 +17,7 @@ export class LoopController {
   async start(task: BimTaskUnderstanding): Promise<LoopRunState> {
     return this.serialized(async () => {
       const now = new Date();
-      const mode = effectiveLoopMode(task.domain, task.loopMode, this.gatewayMode);
+      const mode = effectiveLoopMode(task.loopMode, this.gatewayMode);
       const budget = createBudget(task.complexity, mode);
       const state: LoopRunState = {
         schemaVersion: 1,
@@ -213,5 +213,5 @@ function touch(state: LoopRunState): void {
 }
 
 function parseGatewayMode(value: string | undefined): "observe" | "bounded" {
-  return value?.toLowerCase() === "bounded" ? "bounded" : "observe";
+  return value?.toLowerCase() === "observe" ? "observe" : "bounded";
 }
