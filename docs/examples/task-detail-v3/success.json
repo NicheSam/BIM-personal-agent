@@ -1,0 +1,391 @@
+{
+  "schemaVersion": 3,
+  "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+  "requestId": "issue-100-success",
+  "tool": {
+    "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+    "publicTool": "run_bim_tool",
+    "kind": "builtin",
+    "version": "1.0.0",
+    "risk": "readOnly"
+  },
+  "domain": "dwg_block_family_placement",
+  "domainSchemaVersion": 1,
+  "domainData": {
+    "summary": {
+      "linkedDwg": "B1F消防撒水.dwg",
+      "importInstanceId": 13719035,
+      "blockName": "B1F消防撒水.dwg.bt11_10",
+      "candidateCount": 137,
+      "anchorCount": 3,
+      "anchorMaximumResidualMm": 0,
+      "anchorAverageResidualMm": 0,
+      "anchorToleranceMm": 1
+    },
+    "anchors": [
+      {
+        "candidateId": "DB-001",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      },
+      {
+        "candidateId": "DB-068",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      },
+      {
+        "candidateId": "DB-137",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      }
+    ],
+    "candidates": [],
+    "placements": []
+  },
+  "startedAtUtc": "2026-08-04T04:47:37.000Z",
+  "completedAtUtc": "2026-08-05T01:35:47.556Z",
+  "durationMs": 390,
+  "executionStatus": "succeeded",
+  "verificationStatus": "passed",
+  "status": "verified",
+  "input": {
+    "arguments": {
+      "importInstanceId": 13719035,
+      "blockName": "B1F消防撒水.dwg.bt11_10",
+      "duplicateToleranceMm": 10
+    },
+    "verificationChecks": [
+      {
+        "id": "source.reference.exists"
+      },
+      {
+        "id": "preview.candidate_count.reported"
+      },
+      {
+        "id": "coordinate.anchors.within_tolerance"
+      }
+    ]
+  },
+  "inputOrigins": {
+    "arguments.importInstanceId": {
+      "origin": "agent_resolved"
+    },
+    "arguments.blockName": {
+      "origin": "user_provided"
+    },
+    "arguments.duplicateToleranceMm": {
+      "origin": "default",
+      "defaultValue": 10,
+      "unit": "mm"
+    }
+  },
+  "rawResult": {
+    "projectName": "Issue 100 model",
+    "projectFingerprint": "issue100-fixture-fingerprint",
+    "revitVersion": "2024",
+    "activeView": {
+      "id": 11061843,
+      "name": "{3D}"
+    },
+    "linkedDwgName": "B1F消防撒水.dwg",
+    "importInstanceId": 13719035,
+    "blockName": "B1F消防撒水.dwg.bt11_10",
+    "candidateCount": 137,
+    "anchors": [
+      {
+        "candidateId": "DB-001",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      },
+      {
+        "candidateId": "DB-068",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      },
+      {
+        "candidateId": "DB-137",
+        "residualMm": 0,
+        "toleranceMm": 1,
+        "status": "passed"
+      }
+    ],
+    "anchorMaxResidualMm": 0,
+    "anchorAverageResidualMm": 0,
+    "anchorResidualToleranceMm": 1,
+    "transactionStarted": false,
+    "modelChanged": false,
+    "verification": {
+      "method": "mixed_claim_verification",
+      "checks": [
+        {
+          "id": "source.reference.exists",
+          "method": "reference_existence",
+          "passed": true,
+          "elementIds": [
+            13719035
+          ]
+        },
+        {
+          "id": "preview.candidate_count.reported",
+          "method": "result_assertion",
+          "passed": true,
+          "expected": 137,
+          "actual": 137
+        },
+        {
+          "id": "coordinate.anchors.within_tolerance",
+          "method": "result_assertion",
+          "passed": true,
+          "expected": "<= 1 mm",
+          "actual": 0
+        }
+      ]
+    }
+  },
+  "normalizedResult": {
+    "normalizerId": "dwg_block_family_placement",
+    "normalizerVersion": 1,
+    "value": {
+      "summary": {
+        "linkedDwg": "B1F消防撒水.dwg",
+        "importInstanceId": 13719035,
+        "blockName": "B1F消防撒水.dwg.bt11_10",
+        "candidateCount": 137,
+        "anchorCount": 3,
+        "anchorMaximumResidualMm": 0,
+        "anchorAverageResidualMm": 0,
+        "anchorToleranceMm": 1
+      },
+      "collections": {
+        "anchors": 3,
+        "candidates": 0,
+        "placements": 0
+      }
+    },
+    "fieldMappings": [
+      {
+        "source": "rawResult..linkedDwg",
+        "target": "domainData.summary.linkedDwg"
+      },
+      {
+        "source": "rawResult..importInstanceId",
+        "target": "domainData.summary.importInstanceId"
+      },
+      {
+        "source": "rawResult..blockName",
+        "target": "domainData.summary.blockName"
+      },
+      {
+        "source": "rawResult..candidateCount",
+        "target": "domainData.summary.candidateCount"
+      },
+      {
+        "source": "rawResult..anchorCount",
+        "target": "domainData.summary.anchorCount"
+      },
+      {
+        "source": "rawResult..anchorMaximumResidualMm",
+        "target": "domainData.summary.anchorMaximumResidualMm"
+      },
+      {
+        "source": "rawResult..anchorAverageResidualMm",
+        "target": "domainData.summary.anchorAverageResidualMm"
+      },
+      {
+        "source": "rawResult..anchorToleranceMm",
+        "target": "domainData.summary.anchorToleranceMm"
+      }
+    ]
+  },
+  "modelBefore": {
+    "capturedAtUtc": "2026-08-04T04:47:37.000Z",
+    "scopeElementIds": []
+  },
+  "modelAfter": {
+    "projectName": "Issue 100 model",
+    "projectFingerprint": "issue100-fixture-fingerprint",
+    "revitVersion": "2024",
+    "activeView": "{3D}",
+    "activeViewId": 11061843,
+    "capturedAtUtc": "2026-08-05T01:35:47.556Z",
+    "scopeElementIds": [
+      13719035
+    ],
+    "scopeHash": "12bcaccbfae1caf0e9521676368de7be4db695347583d80bfa5987ccc866e9e3"
+  },
+  "changes": {
+    "transactionStarted": false,
+    "createdElementIds": [],
+    "modifiedElementIds": [],
+    "deletedElementIds": [],
+    "modelChanged": false
+  },
+  "lineage": {
+    "records": [],
+    "edges": []
+  },
+  "verification": {
+    "requested": true,
+    "status": "passed",
+    "method": "mixed_claim_verification",
+    "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+    "verificationRequestId": "issue-100-success",
+    "checkedElementCount": 1,
+    "passedCount": 3,
+    "failedCount": 0,
+    "verificationScope": "full",
+    "requiredClaims": [
+      {
+        "claimId": "source.reference.exists",
+        "description": "source.reference.exists",
+        "required": true
+      },
+      {
+        "claimId": "preview.candidate_count.reported",
+        "description": "preview.candidate_count.reported",
+        "required": true
+      },
+      {
+        "claimId": "coordinate.anchors.within_tolerance",
+        "description": "coordinate.anchors.within_tolerance",
+        "required": true
+      }
+    ],
+    "claims": [
+      {
+        "id": "source.reference.exists",
+        "method": "reference_existence",
+        "passed": true,
+        "elementIds": [
+          13719035
+        ],
+        "claimId": "source.reference.exists",
+        "status": "passed",
+        "verificationId": "issue-100-success",
+        "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+        "evidenceRefs": [
+          "element:13719035"
+        ]
+      },
+      {
+        "id": "preview.candidate_count.reported",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": 137,
+        "actual": 137,
+        "claimId": "preview.candidate_count.reported",
+        "status": "passed",
+        "verificationId": "issue-100-success",
+        "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+        "evidenceRefs": []
+      },
+      {
+        "id": "coordinate.anchors.within_tolerance",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": "<= 1 mm",
+        "actual": 0,
+        "claimId": "coordinate.anchors.within_tolerance",
+        "status": "passed",
+        "verificationId": "issue-100-success",
+        "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+        "evidenceRefs": []
+      }
+    ],
+    "coveredClaims": [
+      "source.reference.exists",
+      "preview.candidate_count.reported",
+      "coordinate.anchors.within_tolerance"
+    ],
+    "uncoveredClaims": [],
+    "rawPayload": {
+      "method": "mixed_claim_verification",
+      "checks": [
+        {
+          "id": "source.reference.exists",
+          "method": "reference_existence",
+          "passed": true,
+          "elementIds": [
+            13719035
+          ]
+        },
+        {
+          "id": "preview.candidate_count.reported",
+          "method": "result_assertion",
+          "passed": true,
+          "expected": 137,
+          "actual": 137
+        },
+        {
+          "id": "coordinate.anchors.within_tolerance",
+          "method": "result_assertion",
+          "passed": true,
+          "expected": "<= 1 mm",
+          "actual": 0
+        }
+      ]
+    }
+  },
+  "stageTrace": [
+    {
+      "stage": "client_input",
+      "status": "not_observed"
+    },
+    {
+      "stage": "agent_resolution",
+      "status": "not_observed"
+    },
+    {
+      "stage": "mcp_schema",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "stage": "typescript_dispatch",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z",
+      "durationMs": 390
+    },
+    {
+      "stage": "websocket_transport",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "stage": "revit_command",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "stage": "revit_transaction",
+      "status": "skipped"
+    },
+    {
+      "stage": "result_normalization",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "stage": "independent_verification",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:47:37.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "stage": "persistence",
+      "status": "pending"
+    }
+  ],
+  "warnings": [],
+  "generatedAtUtc": "2026-08-05T01:35:47.556Z"
+}

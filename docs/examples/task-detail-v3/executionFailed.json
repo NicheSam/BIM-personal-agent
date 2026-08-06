@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 3,
+  "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+  "requestId": "issue-100-execution-failed",
+  "tool": {
+    "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+    "publicTool": "run_bim_tool",
+    "kind": "builtin",
+    "version": "1.0.0",
+    "risk": "readOnly"
+  },
+  "domain": "dwg_block_family_placement",
+  "domainSchemaVersion": 1,
+  "domainData": {
+    "summary": {
+      "importInstanceId": 13719035,
+      "blockName": "B1F消防撒水.dwg.bt11_10"
+    },
+    "anchors": [],
+    "candidates": [],
+    "placements": []
+  },
+  "startedAtUtc": "2026-08-04T04:50:00.000Z",
+  "completedAtUtc": "2026-08-05T01:35:47.571Z",
+  "durationMs": 120,
+  "executionStatus": "failed",
+  "verificationStatus": "insufficient_evidence",
+  "status": "execution_failed",
+  "input": {
+    "arguments": {
+      "importInstanceId": 13719035,
+      "blockName": "B1F消防撒水.dwg.bt11_10"
+    }
+  },
+  "inputOrigins": {
+    "arguments.importInstanceId": {
+      "origin": "agent_resolved"
+    },
+    "arguments.blockName": {
+      "origin": "user_provided"
+    }
+  },
+  "rawResult": {
+    "importInstanceId": 13719035,
+    "blockName": "B1F消防撒水.dwg.bt11_10",
+    "transactionStarted": false,
+    "modelChanged": false
+  },
+  "normalizedResult": {
+    "normalizerId": "dwg_block_family_placement",
+    "normalizerVersion": 1,
+    "value": {
+      "summary": {
+        "importInstanceId": 13719035,
+        "blockName": "B1F消防撒水.dwg.bt11_10"
+      },
+      "collections": {
+        "anchors": 0,
+        "candidates": 0,
+        "placements": 0
+      }
+    },
+    "fieldMappings": [
+      {
+        "source": "rawResult..importInstanceId",
+        "target": "domainData.summary.importInstanceId"
+      },
+      {
+        "source": "rawResult..blockName",
+        "target": "domainData.summary.blockName"
+      }
+    ]
+  },
+  "modelBefore": {
+    "capturedAtUtc": "2026-08-04T04:50:00.000Z",
+    "scopeElementIds": []
+  },
+  "modelAfter": {
+    "capturedAtUtc": "2026-08-05T01:35:47.571Z",
+    "scopeElementIds": []
+  },
+  "changes": {
+    "transactionStarted": false,
+    "createdElementIds": [],
+    "modifiedElementIds": [],
+    "deletedElementIds": [],
+    "modelChanged": false
+  },
+  "lineage": {
+    "records": [],
+    "edges": []
+  },
+  "verification": {
+    "requested": true,
+    "status": "insufficient_evidence",
+    "passedCount": 0,
+    "failedCount": 0,
+    "verificationScope": "none",
+    "requiredClaims": [
+      {
+        "claimId": "source.reference.exists",
+        "description": "The selected linked/imported DWG reference exists.",
+        "required": true
+      }
+    ],
+    "claims": [],
+    "coveredClaims": [],
+    "uncoveredClaims": [
+      "source.reference.exists"
+    ]
+  },
+  "stageTrace": [
+    {
+      "stage": "client_input",
+      "status": "not_observed"
+    },
+    {
+      "stage": "agent_resolution",
+      "status": "not_observed"
+    },
+    {
+      "stage": "mcp_schema",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:50:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.571Z"
+    },
+    {
+      "stage": "typescript_dispatch",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T04:50:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.571Z",
+      "durationMs": 120
+    },
+    {
+      "stage": "websocket_transport",
+      "status": "not_observed"
+    },
+    {
+      "stage": "revit_command",
+      "status": "failed",
+      "startedAtUtc": "2026-08-04T04:50:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.571Z",
+      "errorCode": "REVIT_COMMAND_FAILED"
+    },
+    {
+      "stage": "revit_transaction",
+      "status": "skipped"
+    },
+    {
+      "stage": "result_normalization",
+      "status": "skipped"
+    },
+    {
+      "stage": "independent_verification",
+      "status": "skipped"
+    },
+    {
+      "stage": "persistence",
+      "status": "skipped"
+    }
+  ],
+  "warnings": [],
+  "error": {
+    "code": "REVIT_COMMAND_FAILED",
+    "errorLayer": "revit_command",
+    "technicalMessage": "The Revit command rejected the selected import instance.",
+    "engineeringMessage": "這次執行未產生可確認的工程結果。",
+    "suggestedAction": "依錯誤層檢查輸入、傳輸、Revit Transaction 或驗證紀錄後再決定是否重試。"
+  },
+  "generatedAtUtc": "2026-08-05T01:35:47.571Z"
+}

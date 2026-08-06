@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BIM Agent 活動紀錄</title>
+  <title>BIM Agent 工作台</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -11,55 +11,145 @@
     <div class="brand-block">
       <div class="brand-mark" aria-hidden="true">BA</div>
       <div>
-        <h1>BIM Agent 活動紀錄</h1>
-        <p id="last-updated">等待 Agent 事件</p>
+        <h1>BIM Agent 工作台</h1>
+        <p id="last-updated">等待任務事件</p>
       </div>
     </div>
-    <div class="bridge-state" id="bridge-state" data-connected="false">
-      <span class="state-dot" aria-hidden="true"></span>
-      <span id="bridge-label">檢查 Revit 連線</span>
+    <div class="header-status">
+      <div class="bridge-state" id="bridge-state" data-connected="false">
+        <span class="state-dot" aria-hidden="true"></span>
+        <span id="bridge-label">檢查 Revit 連線</span>
+      </div>
+      <span class="build-id" id="build-id">Build --</span>
     </div>
   </header>
 
   <main>
-    <section class="summary-strip" aria-label="活動摘要">
-      <div><span id="event-count">0</span><small>事件</small></div>
+    <section class="summary-strip" aria-label="任務摘要">
+      <div><span id="task-count">0</span><small>任務</small></div>
+      <div><span id="running-count">0</span><small>執行中</small></div>
       <div><span id="success-count">0</span><small>完成</small></div>
       <div><span id="attention-count">0</span><small>需注意</small></div>
-      <div><span id="average-duration">0 ms</span><small>平均耗時</small></div>
-      <div><span id="task-token-count">0</span><small>任務 Token</small></div>
     </section>
 
-    <nav class="filters" aria-label="篩選活動">
+    <nav class="filters" aria-label="篩選任務">
       <button type="button" class="filter-button is-active" data-filter="all">全部</button>
-      <button type="button" class="filter-button" data-filter="operation">模型操作</button>
+      <button type="button" class="filter-button" data-filter="running">執行中</button>
+      <button type="button" class="filter-button" data-filter="succeeded">完成</button>
       <button type="button" class="filter-button" data-filter="attention">需注意</button>
     </nav>
 
-    <section class="timeline" id="timeline" aria-live="polite"></section>
+    <section class="workspace" aria-label="BIM 任務與執行回報">
+      <aside class="task-pane" aria-label="任務清單">
+        <div class="pane-heading">
+          <h2>任務</h2>
+          <span id="visible-count">0</span>
+        </div>
+        <div class="task-list" id="task-list"></div>
+      </aside>
+
+      <section class="detail-pane" id="detail-pane" aria-live="polite">
+        <div class="empty-state" id="detail-empty">
+          <strong>尚未選擇任務</strong>
+          <span>執行 BIM 任務後，可在這裡查看 Agent 做了什麼與結果。</span>
+        </div>
+        <div class="task-detail" id="task-detail" hidden>
+          <header class="detail-header">
+            <div>
+              <span class="detail-kicker" id="detail-time"></span>
+              <h2 id="detail-title"></h2>
+            </div>
+            <span class="status-label" id="detail-status"></span>
+          </header>
+          <dl class="result-grid">
+            <div><dt>目前狀態</dt><dd id="detail-execution"></dd></div>
+            <div><dt>模型影響</dt><dd id="detail-impact"></dd></div>
+            <div><dt>總耗時</dt><dd id="detail-elapsed"></dd></div>
+            <div><dt>Revit 處理</dt><dd id="detail-processing"></dd></div>
+          </dl>
+          <div class="detail-action-row">
+            <div>
+              <strong>完整任務資訊</strong>
+              <span>查看執行結果、影響範圍、覆核狀態與例外項目。</span>
+            </div>
+            <button type="button" class="detail-open-button" id="open-result-detail">展開完整資訊</button>
+          </div>
+          <section class="event-section">
+            <h3>任務進度</h3>
+            <div class="event-timeline" id="event-timeline"></div>
+          </section>
+        </div>
+      </section>
+    </section>
   </main>
+
+  <div class="drawer-backdrop" id="detail-backdrop" hidden></div>
+  <aside class="result-drawer" id="result-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+    <header class="drawer-header">
+      <div class="drawer-title-block">
+        <span class="drawer-kicker" id="drawer-kicker">任務完整資訊</span>
+        <h2 id="drawer-title">任務詳細結果</h2>
+        <p id="drawer-tool"></p>
+      </div>
+      <div class="drawer-actions">
+        <label class="evidence-toggle" title="需要以 Developer Mode 啟動本機工作台">
+          <input type="checkbox" id="developer-mode" disabled>
+          <span>開發者資訊</span>
+        </label>
+        <button type="button" class="icon-button" id="close-result-detail" aria-label="關閉詳細結果" title="關閉">×</button>
+      </div>
+    </header>
+    <div class="execution-picker" id="execution-picker" hidden>
+      <label for="execution-select">本任務操作紀錄</label>
+      <select id="execution-select"></select>
+      <button type="button" id="compare-runs" class="developer-only">比較執行資料</button>
+    </div>
+    <section class="diff-panel" id="diff-panel" hidden>
+      <div>
+        <label for="diff-base">基準 Run / Base</label>
+        <select id="diff-base"></select>
+      </div>
+      <div>
+        <label for="diff-compare">比較 Run / Compare</label>
+        <select id="diff-compare"></select>
+      </div>
+      <button type="button" id="run-diff">執行比較 / Compare</button>
+      <button type="button" id="close-diff">關閉</button>
+    </section>
+    <nav class="detail-tabs" id="detail-tabs" aria-label="詳細結果頁籤">
+      <button type="button" data-section="summary" class="is-active">任務概覽</button>
+      <button type="button" data-section="result">執行結果</button>
+      <button type="button" data-section="verification">模型覆核</button>
+      <button type="button" data-section="input" class="developer-only">工具輸入</button>
+      <button type="button" data-section="raw" class="developer-only">原始資料</button>
+    </nav>
+    <div class="drawer-body" id="drawer-body" tabindex="-1"></div>
+  </aside>
+
+  <template id="task-template">
+    <button type="button" class="task-row">
+      <span class="task-state-dot" aria-hidden="true"></span>
+      <span class="task-copy">
+        <strong></strong>
+        <span class="task-meta"></span>
+      </span>
+      <span class="task-status"></span>
+    </button>
+  </template>
 
   <template id="event-template">
     <article class="event-row">
-      <div class="timeline-rail"><span class="event-dot"></span></div>
+      <div class="event-rail"><span class="event-dot"></span></div>
       <div class="event-content">
-        <div class="event-heading">
-          <div>
-            <time></time>
-            <h2></h2>
-          </div>
-          <span class="event-status"></span>
-        </div>
-        <p class="event-summary"></p>
+        <div class="event-heading"><strong></strong><time></time></div>
+        <p></p>
         <div class="event-scope"></div>
-        <footer>
-          <span class="event-tool"></span>
-          <span class="event-duration"></span>
-          <span class="event-transaction"></span>
-          <span class="event-tokens"></span>
-        </footer>
       </div>
     </article>
+  </template>
+
+  <template id="detail-loading-template">
+    <div class="detail-loading"><span></span><p>正在整理完整任務資訊</p></div>
   </template>
 
   <script src="/app.js" defer></script>

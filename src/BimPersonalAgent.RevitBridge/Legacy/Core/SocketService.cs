@@ -23,6 +23,7 @@ namespace RevitMCP.Core
         private bool _isRunning;
         private readonly ServiceSettings _settings;
         private CancellationTokenSource _cancellationTokenSource;
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
 
         public event EventHandler<RevitCommandRequest> CommandReceived;
         public bool IsRunning => _isRunning;
@@ -212,22 +213,37 @@ namespace RevitMCP.Core
         /// </summary>
         public async Task SendResponseAsync(RevitCommandResponse response)
         {
+            await SendMessageAsync(response, response.RequestId).ConfigureAwait(false);
+        }
+
+        public async Task SendProgressAsync(RevitProgressEvent progressEvent)
+        {
+            await SendMessageAsync(progressEvent, progressEvent.RequestId).ConfigureAwait(false);
+        }
+
+        private async Task SendMessageAsync(object payload, string requestId)
+        {
             if (!IsConnected)
             {
                 throw new InvalidOperationException("WebSocket 未連線");
             }
 
+            await _sendLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                string json = JsonConvert.SerializeObject(response);
+                string json = JsonConvert.SerializeObject(payload);
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
                 await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
-                Logger.Debug($"[Socket] 已發送回應 (RequestId: {response.RequestId})");
+                Logger.Debug($"[Socket] 已發送訊息 (RequestId: {requestId})");
             }
             catch (Exception ex)
             {
-                Logger.Error($"[Socket] 發送回應失敗 (RequestId: {response.RequestId})", ex);
+                Logger.Error($"[Socket] 發送訊息失敗 (RequestId: {requestId})", ex);
                 throw;
+            }
+            finally
+            {
+                _sendLock.Release();
             }
         }
 

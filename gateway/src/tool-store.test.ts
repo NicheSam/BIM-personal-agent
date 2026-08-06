@@ -9,6 +9,7 @@ import type { GeneratedToolManifestInput } from "./types.js";
 
 const manifest: GeneratedToolManifestInput = {
   toolId: "set-reviewed-mark",
+  capabilityKey: "parameters.set_reviewed_mark",
   name: "Set reviewed mark",
   description: "Sets a parameter supplied through validated inputs.",
   inputSchema: {
@@ -32,6 +33,32 @@ test("saved tools are versioned and active tools are discoverable", async () => 
     assert.equal(second.version, "1.0.1");
     assert.equal((await store.list()).length, 2);
     assert.equal((await store.get(manifest.toolId)).manifest.version, "1.0.1");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("identical source reuses the saved version instead of consuming another patch", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-store-"));
+  try {
+    const store = new ToolStore(root);
+    const first = await store.save("public class Command {}", manifest, "active");
+    const reused = await store.save("public class Command {}", manifest, "active");
+    assert.equal(reused.version, first.version);
+    assert.equal((await store.list(["active", "draft"])).length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("identical capability and source reuse the canonical saved tool id", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-store-"));
+  try {
+    const store = new ToolStore(root);
+    const first = await store.save("public class Command {}", manifest, "active");
+    const reused = await store.save("public class Command {}", { ...manifest, toolId: "set-reviewed-flag" }, "active");
+    assert.equal(reused.toolId, first.toolId);
+    assert.equal(reused.version, first.version);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "0.5.0",
+    [string]$Version = "0.8.0",
     [string]$NodeVersion = "24.15.0",
     [switch]$SkipBuild
 )
@@ -100,6 +100,12 @@ Copy-Item -LiteralPath (Join-Path $gatewayArtifacts "package-lock.json") -Destin
 Get-ChildItem -LiteralPath (Join-Path $gatewayArtifacts "console") | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination $runtimeConsole -Recurse -Force
 }
+$buildMetadataPath = Join-Path $runtimeConsole "build-metadata.json"
+if (-not (Test-Path -LiteralPath $buildMetadataPath -PathType Leaf)) {
+    throw "Build metadata was not found in the Console artifact."
+}
+Copy-Item -LiteralPath $buildMetadataPath -Destination (Join-Path $runtimeRoot "build-metadata.json") -Force
+$buildMetadata = Get-Content -LiteralPath $buildMetadataPath -Encoding UTF8 -Raw | ConvertFrom-Json
 
 Push-Location $runtimeGateway
 try {
@@ -126,6 +132,12 @@ $manifest = [ordered]@{
     platform = "win-x64"
     revitVersion = "2024"
     portableNodeVersion = $NodeVersion
+    buildId = $buildMetadata.buildId
+    buildHash = $buildMetadata.buildHash
+    commitHash = $buildMetadata.commitHash
+    buildTimeUtc = $buildMetadata.buildTimeUtc
+    gatewaySchemaVersion = $buildMetadata.gatewaySchemaVersion
+    consoleSchemaVersion = $buildMetadata.consoleSchemaVersion
     createdAtUtc = [DateTime]::UtcNow.ToString("o")
 }
 $manifestJson = $manifest | ConvertTo-Json

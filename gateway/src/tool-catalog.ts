@@ -81,17 +81,20 @@ function loadBuiltins(): ToolDescriptor[] {
 
 function score(tool: ToolDescriptor, query: string, tokens: string[], directoryTerms: string[]): number {
   const name = `${tool.name} ${tool.toolId}`.toLowerCase();
+  const capability = (tool.capabilityKey || "").replace(/[._-]+/g, " ").toLowerCase();
   const description = tool.description.toLowerCase();
   const tags = tool.tags.join(" ").toLowerCase();
   let value = 0;
   if (name === query || tool.toolId.toLowerCase() === query) value += 120;
+  if (tool.capabilityKey?.toLowerCase() === query) value += 140;
   if (name.includes(query) && query.length > 1) value += 50;
   for (const token of tokens) {
     if (name.includes(token)) value += 20;
+    if (capability.includes(token)) value += 24;
     if (tags.includes(token)) value += 10;
     if (description.includes(token)) value += 5;
   }
-  const directoryText = `${name} ${description} ${tags}`;
+  const directoryText = `${name} ${capability} ${description} ${tags}`;
   for (const term of directoryTerms) {
     if (directoryText.includes(term.toLowerCase())) value += 8;
   }

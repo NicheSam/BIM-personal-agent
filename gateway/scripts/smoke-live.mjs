@@ -3,10 +3,12 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const gatewayPath = resolve(process.env.BIM_AGENT_GATEWAY_PATH || resolve(sourceRoot, "build", "index.js"));
+const root = dirname(gatewayPath);
 const transport = new StdioClientTransport({
-  command: process.execPath,
-  args: [resolve(root, "build", "index.js")],
+  command: process.env.BIM_AGENT_NODE || process.execPath,
+  args: [gatewayPath],
   cwd: root,
   env: { ...process.env },
   stderr: "pipe",
@@ -34,12 +36,26 @@ try {
   }
 
   const context = await call("get_bim_context", { includeSchema: false, selectionLimit: 5 });
-  const search = await call("search_bim_tools", { query: "project information", limit: 5 });
-  const tool = search.data?.tools?.find((item) => item.toolId === "builtin:get_project_info");
+  const search = await call("search_bim_tools", {
+    task: {
+      goal: "Read project information without changing the Revit model",
+      actions: ["read"],
+      objects: ["project"],
+      steps: [{ action: "read", object: "project", outcome: "project information is returned" }],
+      mode: "assess",
+    },
+    limit: 5,
+  });
+  const tool = search.data?.recommendedTools?.find((item) => item.toolId === "builtin:get_project_info");
   if (!tool) {
     throw new Error("Validated get_project_info tool was not found.");
   }
-  const run = await call("run_bim_tool", { toolId: tool.toolId, version: tool.version, arguments: {} });
+  const run = await call("run_bim_tool", {
+    taskId: search.taskId,
+    toolId: tool.toolId,
+    version: tool.version,
+    arguments: {},
+  });
 
   console.log(JSON.stringify({
     gatewayVersion: status.data.gatewayVersion,
@@ -48,6 +64,8 @@ try {
     projectFingerprint: context.data?.ProjectFingerprint,
     activeView: context.data?.ActiveView,
     selection: context.data?.Selection,
+    taskId: run.taskId,
+    reportUrl: run.reportUrl,
     toolId: run.toolId,
     durationMs: run.durationMs,
   }));

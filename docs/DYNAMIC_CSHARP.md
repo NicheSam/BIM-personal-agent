@@ -21,7 +21,7 @@ public sealed class GeneratedCommand : IDynamicRevitCommand
 }
 ```
 
-Gateway 先用 manifest 的 JSON schema 驗證 `arguments`，Bridge 再把資料放入 `context.Inputs`。Source hash compilation cache 每個 Revit session 最多保留 24 筆，最多編譯 50 個不同 sources。
+Gateway 先用 manifest 的 JSON schema 驗證 `arguments`，Bridge 再把資料放入 `context.Inputs`。Source hash compilation cache 每個 Revit session 保留全部 50 筆已編譯 source；相同 source 不重複編譯或建立工具版本。
 
 ## Saved Tool
 

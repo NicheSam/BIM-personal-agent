@@ -1,7 +1,9 @@
 param(
     [string]$ConfigPath = (Join-Path $HOME ".codex\config.toml"),
     [string]$GatewayServerPath = (Join-Path ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))) "gateway\build\index.js"),
-    [string]$NodeCommand = "node"
+    [string]$NodeCommand = "node",
+    [int]$BridgePort = 9686,
+    [int]$ConsolePort = 4178
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,7 +35,7 @@ $section = @(
     '[mcp_servers."bim-personal-agent"]',
     ('command = "' + $escapedNode + '"'),
     ('args = ["' + $escapedServer + '"]'),
-    'env = { REVIT_VERSION = "2024", BIM_PERSONAL_AGENT_PORT = "9686" }'
+    ('env = { REVIT_VERSION = "2024", BIM_PERSONAL_AGENT_PORT = "' + $BridgePort + '", BIM_AGENT_CONSOLE_PORT = "' + $ConsolePort + '", BIM_PERSONAL_AGENT_CONSOLE_URL = "http://127.0.0.1:' + $ConsolePort + '" }')
 ) -join $newline
 $updated = $cleaned + $newline + $newline + $section + $newline
 

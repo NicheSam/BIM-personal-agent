@@ -14,7 +14,7 @@ if (-not $SkipBuild) {
 
 $artifactRoot = Join-Path $repoRoot "artifacts\BimPersonalAgent.Revit2024"
 $addinRoot = Join-Path $env:APPDATA "Autodesk\Revit\Addins\2024"
-$pluginRoot = Join-Path $addinRoot "BimPersonalAgent\0.5.0"
+$pluginRoot = Join-Path $addinRoot "BimPersonalAgent\current"
 
 New-Item -ItemType Directory -Path $pluginRoot -Force | Out-Null
 Get-ChildItem -LiteralPath $artifactRoot | Where-Object { $_.Name -ne "BimPersonalAgent.addin" } | ForEach-Object {

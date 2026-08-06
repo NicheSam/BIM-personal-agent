@@ -1,12 +1,13 @@
 {
-  "version": "0.5.0",
+  "version": "0.8.0",
   "mode": "agent-gateway",
   "source": {
     "repository": "https://github.com/shuotao/REVIT_MCP_study",
     "commit": "cfe0739",
     "catalog": "gateway/src/catalog/builtin-tools.json",
     "bridge": "src/BimPersonalAgent.RevitBridge",
-    "upstream_tool_count": 148
+    "upstream_tool_count": 146,
+    "agent_owned_tool_count": 2
   },
   "execution_policy": {
     "read": {

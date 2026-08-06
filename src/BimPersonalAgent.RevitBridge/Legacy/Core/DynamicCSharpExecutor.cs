@@ -88,7 +88,7 @@ namespace RevitMCP.Core
     {
         private const int MaximumCompilationsPerSession = 50;
         private const int MaximumAffectedElements = 5000;
-        private const int MaximumCachedCompilations = 24;
+        private const int MaximumCachedCompilations = MaximumCompilationsPerSession;
 
         private static int _compilationCount;
         private static readonly object CacheLock = new object();
@@ -279,6 +279,21 @@ namespace RevitMCP.Core
         }
 
         public static int CompilationCount => Volatile.Read(ref _compilationCount);
+
+        public static int MaximumCompilationCount => MaximumCompilationsPerSession;
+
+        public static int RemainingCompilationCount => Math.Max(0, MaximumCompilationsPerSession - CompilationCount);
+
+        public static int CachedCompilationCount
+        {
+            get
+            {
+                lock (CacheLock)
+                {
+                    return CompilationCache.Count;
+                }
+            }
+        }
 
     }
 

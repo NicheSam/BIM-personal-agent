@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 3,
+  "taskId": "11111111-1111-4111-8111-111111111111",
+  "requestId": "22222222-2222-4222-8222-222222222222",
+  "tool": {
+    "toolId": "agent:run_bim_plan",
+    "publicTool": "run_bim_plan",
+    "kind": "plan",
+    "version": "1.0.0",
+    "risk": "reversibleMutation"
+  },
+  "domain": "dwg_block_family_placement",
+  "domainSchemaVersion": 1,
+  "domainData": {
+    "summary": {
+      "familySymbolId": 13303914,
+      "levelId": 13289996,
+      "createdCount": 3,
+      "verifiedCreatedCount": 2
+    },
+    "anchors": [],
+    "candidates": [],
+    "placements": [
+      {
+        "candidateId": "DB-001",
+        "operationId": "create-DB-001",
+        "verificationId": "placement.DB-001.readback",
+        "createdElementId": 13727745,
+        "expectedPointMm": {
+          "x": 100,
+          "y": 200,
+          "z": 0
+        },
+        "actualPointMm": {
+          "x": 100,
+          "y": 200,
+          "z": 0
+        },
+        "positionDeltaMm": 0,
+        "expectedRotationDegrees": 0,
+        "actualRotationDegrees": 0,
+        "rotationDeltaDegrees": 0,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "verified",
+        "failureReason": null
+      },
+      {
+        "candidateId": "DB-002",
+        "operationId": "create-DB-002",
+        "verificationId": "placement.DB-002.readback",
+        "createdElementId": 13727746,
+        "expectedPointMm": {
+          "x": 300,
+          "y": 400,
+          "z": 0
+        },
+        "actualPointMm": {
+          "x": 300.5,
+          "y": 400,
+          "z": 0
+        },
+        "positionDeltaMm": 0.5,
+        "expectedRotationDegrees": 90,
+        "actualRotationDegrees": 90,
+        "rotationDeltaDegrees": 0,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "verified",
+        "failureReason": null
+      },
+      {
+        "candidateId": "DB-003",
+        "operationId": "create-DB-003",
+        "verificationId": "placement.DB-003.readback",
+        "createdElementId": 13727747,
+        "expectedPointMm": {
+          "x": 500,
+          "y": 600,
+          "z": 0
+        },
+        "actualPointMm": null,
+        "positionDeltaMm": null,
+        "expectedRotationDegrees": 0,
+        "actualRotationDegrees": null,
+        "rotationDeltaDegrees": null,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "failed",
+        "failureReason": "Element was not returned by independent readback"
+      }
+    ]
+  },
+  "startedAtUtc": "2026-08-04T05:00:00.000Z",
+  "completedAtUtc": "2026-08-05T01:35:47.567Z",
+  "durationMs": 850,
+  "executionStatus": "succeeded",
+  "verificationStatus": "failed",
+  "status": "verification_failed",
+  "input": {
+    "steps": [],
+    "verificationChecks": [
+      {
+        "id": "placement.DB-001.readback"
+      },
+      {
+        "id": "placement.DB-002.readback"
+      },
+      {
+        "id": "placement.DB-003.readback"
+      }
+    ]
+  },
+  "inputOrigins": {},
+  "rawResult": {
+    "transactionStarted": true,
+    "transactionName": "Create sprinkler family instances",
+    "modelChanged": true,
+    "createdElementIds": [
+      13727745,
+      13727746,
+      13727747
+    ],
+    "createdCount": 3,
+    "verifiedCreatedCount": 2,
+    "createVerifyResults": [
+      {
+        "candidateId": "DB-001",
+        "operationId": "create-DB-001",
+        "verificationId": "placement.DB-001.readback",
+        "createdElementId": 13727745,
+        "expectedPointMm": {
+          "x": 100,
+          "y": 200,
+          "z": 0
+        },
+        "actualPointMm": {
+          "x": 100,
+          "y": 200,
+          "z": 0
+        },
+        "positionDeltaMm": 0,
+        "expectedRotationDegrees": 0,
+        "actualRotationDegrees": 0,
+        "rotationDeltaDegrees": 0,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "verified",
+        "failureReason": null
+      },
+      {
+        "candidateId": "DB-002",
+        "operationId": "create-DB-002",
+        "verificationId": "placement.DB-002.readback",
+        "createdElementId": 13727746,
+        "expectedPointMm": {
+          "x": 300,
+          "y": 400,
+          "z": 0
+        },
+        "actualPointMm": {
+          "x": 300.5,
+          "y": 400,
+          "z": 0
+        },
+        "positionDeltaMm": 0.5,
+        "expectedRotationDegrees": 90,
+        "actualRotationDegrees": 90,
+        "rotationDeltaDegrees": 0,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "verified",
+        "failureReason": null
+      },
+      {
+        "candidateId": "DB-003",
+        "operationId": "create-DB-003",
+        "verificationId": "placement.DB-003.readback",
+        "createdElementId": 13727747,
+        "expectedPointMm": {
+          "x": 500,
+          "y": 600,
+          "z": 0
+        },
+        "actualPointMm": null,
+        "positionDeltaMm": null,
+        "expectedRotationDegrees": 0,
+        "actualRotationDegrees": null,
+        "rotationDeltaDegrees": null,
+        "levelId": 13289996,
+        "familySymbolId": 13303914,
+        "status": "failed",
+        "failureReason": "Element was not returned by independent readback"
+      }
+    ],
+    "verification": {
+      "method": "Independent Revit API readback",
+      "checks": [
+        {
+          "id": "placement.DB-001.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-001 created element",
+          "passed": true,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "elementIds": [
+            13727745
+          ]
+        },
+        {
+          "id": "placement.DB-002.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-002 created element",
+          "passed": true,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "elementIds": [
+            13727746
+          ]
+        },
+        {
+          "id": "placement.DB-003.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-003 created element",
+          "passed": false,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": null,
+          "elementIds": [
+            13727747
+          ]
+        }
+      ],
+      "passedCount": 2,
+      "failedCount": 1
+    }
+  },
+  "normalizedResult": {
+    "normalizerId": "dwg_block_family_placement",
+    "normalizerVersion": 1,
+    "value": {
+      "summary": {
+        "familySymbolId": 13303914,
+        "levelId": 13289996,
+        "createdCount": 3,
+        "verifiedCreatedCount": 2
+      },
+      "collections": {
+        "anchors": 0,
+        "candidates": 0,
+        "placements": 3
+      }
+    },
+    "fieldMappings": [
+      {
+        "source": "rawResult..familySymbolId",
+        "target": "domainData.summary.familySymbolId"
+      },
+      {
+        "source": "rawResult..levelId",
+        "target": "domainData.summary.levelId"
+      },
+      {
+        "source": "rawResult..createdCount",
+        "target": "domainData.summary.createdCount"
+      },
+      {
+        "source": "rawResult..verifiedCreatedCount",
+        "target": "domainData.summary.verifiedCreatedCount"
+      }
+    ]
+  },
+  "modelBefore": {
+    "capturedAtUtc": "2026-08-04T05:00:00.000Z",
+    "scopeElementIds": []
+  },
+  "modelAfter": {
+    "levelId": 13289996,
+    "capturedAtUtc": "2026-08-05T01:35:47.567Z",
+    "scopeElementIds": [
+      13727745
+    ],
+    "scopeHash": "dec75a5d3521f9abc53e8f46c8d47dd3618e7d88fd50c2a00f70be1a14fd6525"
+  },
+  "changes": {
+    "transactionStarted": true,
+    "transactionName": "Create sprinkler family instances",
+    "createdElementIds": [
+      13727745,
+      13727746,
+      13727747
+    ],
+    "modifiedElementIds": [],
+    "deletedElementIds": [],
+    "modelChanged": true
+  },
+  "lineage": {
+    "records": [
+      {
+        "candidateId": "DB-001",
+        "operationId": "create-DB-001",
+        "elementId": 13727745,
+        "verificationId": "placement.DB-001.readback",
+        "status": "verified"
+      },
+      {
+        "candidateId": "DB-002",
+        "operationId": "create-DB-002",
+        "elementId": 13727746,
+        "verificationId": "placement.DB-002.readback",
+        "status": "verified"
+      },
+      {
+        "candidateId": "DB-003",
+        "operationId": "create-DB-003",
+        "elementId": 13727747,
+        "verificationId": "placement.DB-003.readback",
+        "status": "failed"
+      }
+    ],
+    "edges": [
+      {
+        "from": "candidate:DB-001",
+        "to": "operation:create-DB-001",
+        "relation": "executed_by"
+      },
+      {
+        "from": "operation:create-DB-001",
+        "to": "element:13727745",
+        "relation": "created_or_modified"
+      },
+      {
+        "from": "element:13727745",
+        "to": "verification:placement.DB-001.readback",
+        "relation": "verified_by"
+      },
+      {
+        "from": "candidate:DB-002",
+        "to": "operation:create-DB-002",
+        "relation": "executed_by"
+      },
+      {
+        "from": "operation:create-DB-002",
+        "to": "element:13727746",
+        "relation": "created_or_modified"
+      },
+      {
+        "from": "element:13727746",
+        "to": "verification:placement.DB-002.readback",
+        "relation": "verified_by"
+      },
+      {
+        "from": "candidate:DB-003",
+        "to": "operation:create-DB-003",
+        "relation": "executed_by"
+      },
+      {
+        "from": "operation:create-DB-003",
+        "to": "element:13727747",
+        "relation": "created_or_modified"
+      },
+      {
+        "from": "element:13727747",
+        "to": "verification:placement.DB-003.readback",
+        "relation": "verified_by"
+      }
+    ]
+  },
+  "verification": {
+    "requested": true,
+    "status": "failed",
+    "method": "Independent Revit API readback",
+    "verifiedAtUtc": "2026-08-05T01:35:47.567Z",
+    "verificationRequestId": "22222222-2222-4222-8222-222222222222",
+    "checkedElementCount": 3,
+    "passedCount": 2,
+    "failedCount": 1,
+    "verificationScope": "full",
+    "requiredClaims": [
+      {
+        "claimId": "placement.DB-001.readback",
+        "description": "placement.DB-001.readback",
+        "required": true
+      },
+      {
+        "claimId": "placement.DB-002.readback",
+        "description": "placement.DB-002.readback",
+        "required": true
+      },
+      {
+        "claimId": "placement.DB-003.readback",
+        "description": "placement.DB-003.readback",
+        "required": true
+      }
+    ],
+    "claims": [
+      {
+        "id": "placement.DB-001.readback",
+        "method": "independent_revit_readback",
+        "target": "DB-001 created element",
+        "passed": true,
+        "expected": {
+          "levelId": 13289996,
+          "familySymbolId": 13303914
+        },
+        "actual": {
+          "levelId": 13289996,
+          "familySymbolId": 13303914
+        },
+        "elementIds": [
+          13727745
+        ],
+        "claimId": "placement.DB-001.readback",
+        "status": "passed",
+        "verificationId": "22222222-2222-4222-8222-222222222222",
+        "verifiedAtUtc": "2026-08-05T01:35:47.567Z",
+        "evidenceRefs": [
+          "element:13727745"
+        ]
+      },
+      {
+        "id": "placement.DB-002.readback",
+        "method": "independent_revit_readback",
+        "target": "DB-002 created element",
+        "passed": true,
+        "expected": {
+          "levelId": 13289996,
+          "familySymbolId": 13303914
+        },
+        "actual": {
+          "levelId": 13289996,
+          "familySymbolId": 13303914
+        },
+        "elementIds": [
+          13727746
+        ],
+        "claimId": "placement.DB-002.readback",
+        "status": "passed",
+        "verificationId": "22222222-2222-4222-8222-222222222222",
+        "verifiedAtUtc": "2026-08-05T01:35:47.567Z",
+        "evidenceRefs": [
+          "element:13727746"
+        ]
+      },
+      {
+        "id": "placement.DB-003.readback",
+        "method": "independent_revit_readback",
+        "target": "DB-003 created element",
+        "passed": false,
+        "expected": {
+          "levelId": 13289996,
+          "familySymbolId": 13303914
+        },
+        "actual": null,
+        "elementIds": [
+          13727747
+        ],
+        "claimId": "placement.DB-003.readback",
+        "status": "failed",
+        "verificationId": "22222222-2222-4222-8222-222222222222",
+        "verifiedAtUtc": "2026-08-05T01:35:47.567Z",
+        "evidenceRefs": [
+          "element:13727747"
+        ]
+      }
+    ],
+    "coveredClaims": [
+      "placement.DB-001.readback",
+      "placement.DB-002.readback",
+      "placement.DB-003.readback"
+    ],
+    "uncoveredClaims": [],
+    "rawPayload": {
+      "method": "Independent Revit API readback",
+      "checks": [
+        {
+          "id": "placement.DB-001.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-001 created element",
+          "passed": true,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "elementIds": [
+            13727745
+          ]
+        },
+        {
+          "id": "placement.DB-002.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-002 created element",
+          "passed": true,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "elementIds": [
+            13727746
+          ]
+        },
+        {
+          "id": "placement.DB-003.readback",
+          "method": "independent_revit_readback",
+          "target": "DB-003 created element",
+          "passed": false,
+          "expected": {
+            "levelId": 13289996,
+            "familySymbolId": 13303914
+          },
+          "actual": null,
+          "elementIds": [
+            13727747
+          ]
+        }
+      ],
+      "passedCount": 2,
+      "failedCount": 1
+    }
+  },
+  "stageTrace": [
+    {
+      "stage": "client_input",
+      "status": "not_observed"
+    },
+    {
+      "stage": "agent_resolution",
+      "status": "not_observed"
+    },
+    {
+      "stage": "mcp_schema",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "typescript_dispatch",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z",
+      "durationMs": 850
+    },
+    {
+      "stage": "websocket_transport",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "revit_command",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "revit_transaction",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "result_normalization",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "independent_verification",
+      "status": "completed",
+      "startedAtUtc": "2026-08-04T05:00:00.000Z",
+      "completedAtUtc": "2026-08-05T01:35:47.567Z"
+    },
+    {
+      "stage": "persistence",
+      "status": "pending"
+    }
+  ],
+  "warnings": [],
+  "generatedAtUtc": "2026-08-05T01:35:47.567Z"
+}

@@ -1,18 +1,20 @@
 $ErrorActionPreference = "Stop"
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $registryPath = Join-Path $repoRoot "config\tool-registry.json"
+$upstreamLockPath = Join-Path $repoRoot "config\upstream-lock.json"
 $catalogPath = Join-Path $repoRoot "gateway\src\catalog\builtin-tools.json"
 $sourcesPath = Join-Path $repoRoot "knowledge\revit\official-sources.md"
 $gatewaySourcePath = Join-Path $repoRoot "gateway\src\bridge-client.ts"
 $bridgeSettingsPath = Join-Path $repoRoot "src\BimPersonalAgent.RevitBridge\Legacy\Configuration\ServiceSettings.cs"
 
-foreach ($path in @($registryPath, $catalogPath, $sourcesPath, $gatewaySourcePath, $bridgeSettingsPath)) {
+foreach ($path in @($registryPath, $upstreamLockPath, $catalogPath, $sourcesPath, $gatewaySourcePath, $bridgeSettingsPath)) {
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Required Agent file is missing: $path"
     }
 }
 
 $registry = Get-Content -Raw -Encoding UTF8 -LiteralPath $registryPath | ConvertFrom-Json
+$upstreamLock = Get-Content -Raw -Encoding UTF8 -LiteralPath $upstreamLockPath | ConvertFrom-Json
 $catalog = Get-Content -Raw -Encoding UTF8 -LiteralPath $catalogPath | ConvertFrom-Json
 $catalogIds = @($catalog | ForEach-Object { $_.toolId })
 $uniqueCatalogIds = @($catalogIds | Sort-Object -Unique)
@@ -37,6 +39,11 @@ if ($registry.tool_policy.public_mcp_tools -ne 6) {
 
 if ($catalog.Count -ne 148 -or $uniqueCatalogIds.Count -ne 148) {
     throw "Built-in catalog must contain 148 unique tools."
+}
+
+if ($upstreamLock.integration.internalToolCount -ne $catalog.Count -or
+    ($upstreamLock.integration.upstreamToolCount + $upstreamLock.integration.agentOwnedToolCount) -ne $catalog.Count) {
+    throw "Pinned upstream and Agent-owned tool counts must match the internal catalog."
 }
 
 $classified = $registry.tool_policy.validated_tools +

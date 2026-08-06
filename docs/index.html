@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="用 BIM 工程人員能理解的方式，說明 BIM Personal Agent 如何把自然語言指令轉成 Revit 模型操作。">
-  <title>BIM Agent 怎麼工作</title>
+  <title>BIM Personal Agent v0.8.0｜怎麼工作</title>
   <style>
     :root {
       --ink: #172126;
@@ -156,14 +156,14 @@
   </style>
 </head>
 <body>
-  <header><div class="shell"><div class="brand">BIM Personal Agent</div><span>給 BIM 工程人員的運作說明</span></div></header>
+  <header><div class="shell"><div class="brand">BIM Personal Agent</div><span>v0.8.0 · 給 BIM 工程人員的運作說明</span></div></header>
 
   <main>
     <section class="hero">
       <div class="shell hero-grid">
         <div>
           <h1>你說要做什麼，Agent 幫你在 Revit 完成</h1>
-          <p class="lead">你不需要知道程式怎麼寫。Agent 會先看目前模型、找合適方法，再交給 Revit 執行；完成後告訴你改了什麼。</p>
+          <p class="lead">你不需要知道程式怎麼寫。Agent 會先看目前模型、重用現成或已保存工具，再交給 Revit 執行；完成後回報實際修改與覆核數量。</p>
         </div>
         <div class="hero-picture" aria-label="一句話變成模型結果">
           <div class="picture-block"><span class="big">01</span><strong>你輸入一句話</strong><span>說清楚對象與要做的事</span></div>
@@ -222,7 +222,7 @@
         <div class="section-head"><h2>工程人員最後會看到什麼？</h2><p>重點不是程式碼，而是「做了什麼、影響多少、是否成功、能不能復原」。</p></div>
         <div class="result-grid">
           <div class="result-panel"><h3>Codex 對話回覆</h3><div class="result-row"><span>結果</span><strong>已完成</strong></div><div class="result-row"><span>修改範圍</span><strong>12 支選取的風管</strong></div><div class="result-row"><span>執行內容</span><strong>備註改為「待檢查」</strong></div><div class="result-row"><span>復原方式</span><strong>可在 Revit 使用 Undo</strong></div></div>
-          <div class="result-panel attention"><h3>活動控制台</h3><div class="result-row"><span>時間</span><strong>依發生順序排列</strong></div><div class="result-row"><span>狀態</span><strong>完成、失敗或已取消</strong></div><div class="result-row"><span>影響</span><strong>物件數量與可公開範圍</strong></div><div class="result-row"><span>耗時</span><strong>這次操作花了多久</strong></div></div>
+          <div class="result-panel attention"><h3>活動控制台</h3><div class="result-row"><span>狀態</span><strong>完成、失敗或已取消</strong></div><div class="result-row"><span>模型影響</span><strong>實際修改元素數量</strong></div><div class="result-row"><span>模型覆核</span><strong>已讀回驗證元素數量</strong></div><div class="result-row"><span>工具記憶</span><strong>saved tool 版本與 cache 狀態</strong></div></div>
         </div>
       </div>
     </section>
@@ -230,13 +230,13 @@
     <section class="deploy" id="deploy">
       <div class="shell">
         <div class="section-head"><h2>如何部署與開始使用</h2><p>首次部署只做一次；完成後，BIM 工程人員每天只要開啟 Revit、啟動 Agent，再用自然語言下指令。</p></div>
-        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/latest">GitHub Releases</a> 下載 `BIMPersonalAgent-v0.5.0-win-x64.zip`，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
+        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/tag/v0.8.0">GitHub Release v0.8.0</a> 下載 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
         <div class="deploy-grid">
           <div class="deploy-column">
             <h3>首次部署：管理者執行</h3>
             <div class="deploy-step"><span class="deploy-index">1</span><div><strong>先關閉 Revit</strong><p>避免正在載入的 Add-in DLL 無法安全更新。Codex 安裝後再重新啟動即可。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 `BIMPersonalAgent-v0.5.0-win-x64.zip`，不要使用 Source code ZIP。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>雙擊 install.bat</strong><p>安裝器會自動檢查環境、建置、安裝 Revit Add-in、設定 Codex 並安裝 skill。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要使用 Source code ZIP。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>先檢查，再執行 install.bat</strong><p>Release 安裝器使用內附的 portable Node.js、預建 Gateway 與 Revit DLL；不會在使用者電腦重新建置原始碼。</p></div></div>
             <div class="deploy-step"><span class="deploy-index">4</span><div><strong>重新啟動 Revit 與 Codex</strong><p>之後就依右側的日常流程開始使用，不必再次安裝。</p></div></div>
             <details>
               <summary>顯示檢查與安裝指令</summary>
@@ -271,6 +271,18 @@ install.bat</div>
           <article class="rule"><span class="symbol">C</span><h3>失敗就不留下半成品</h3><p>同一批多步驟工作中途失敗時，整批退回，不保留只完成一半的模型狀態。</p></article>
         </div>
 
+        <details open>
+          <summary>目前功能邊界</summary>
+          <div class="tech">
+            <div class="tech-grid">
+              <div class="tech-item"><strong>支援版本</strong>僅 Revit 2024、單一 Revit session、單一 active document</div>
+              <div class="tech-item"><strong>模型安全</strong>可復原修改直接執行；刪除、清除與不可 Undo 操作需確認</div>
+              <div class="tech-item"><strong>Dynamic C#</strong>禁止檔案、網路、外部程序、反射、P/Invoke 與自行建立 Transaction</div>
+              <div class="tech-item"><strong>觀測邊界</strong>Console 非同步顯示；Bridge 回應與 Revit 實際狀態才是權威結果</div>
+            </div>
+          </div>
+        </details>
+
         <details>
           <summary>給想知道系統架構的人</summary>
           <div class="tech">
@@ -286,7 +298,7 @@ install.bat</div>
     </section>
   </main>
 
-  <footer><div class="shell">BIM Personal Agent V0.5 · <a href="https://github.com/NicheSam/BIM-personal-agent">查看 GitHub repository</a></div></footer>
+  <footer><div class="shell">BIM Personal Agent v0.8.0 · <a href="https://github.com/NicheSam/BIM-personal-agent">查看 GitHub repository</a></div></footer>
 
   <script>
     const routes = {

@@ -74,11 +74,15 @@ namespace BimPersonalAgent.RevitBridge
 
         private static void OnCommandReceived(object sender, RevitCommandRequest request)
         {
+            SendProgressAsync(CreateProgress(request, 1, "queued", "bridge.queued", "Waiting for the Revit UI thread."))
+                .GetAwaiter().GetResult();
             Enqueue(uiApplication =>
             {
                 RevitCommandResponse response;
                 try
                 {
+                    SendProgressAsync(CreateProgress(request, 2, "executing", "bridge.executing", "Executing in Revit."))
+                        .GetAwaiter().GetResult();
                     _uiApplication = uiApplication;
                     response = new CommandExecutor(uiApplication).ExecuteCommand(request);
                 }
@@ -89,12 +93,64 @@ namespace BimPersonalAgent.RevitBridge
                         Success = false,
                         Error = exception.Message,
                         ErrorCode = "REVIT_COMMAND_FAILED",
-                        RequestId = request.RequestId
+                        RequestId = request.RequestId,
+                        TaskId = request.TaskId,
+                        GatewayRequestId = request.GatewayRequestId
                     };
                 }
 
+                response.MessageType = "response";
+                response.RequestId = request.RequestId;
+                response.TaskId = request.TaskId;
+                response.GatewayRequestId = request.GatewayRequestId;
+                SendProgressAsync(CreateProgress(
+                    request,
+                    3,
+                    response.Success ? "completed" : "failed",
+                    response.Success ? "bridge.completed" : "bridge.failed",
+                    response.Success ? "Revit execution completed." : response.Error))
+                    .GetAwaiter().GetResult();
                 _ = SendResponseAsync(response);
             });
+        }
+
+        private static RevitProgressEvent CreateProgress(
+            RevitCommandRequest request,
+            int sequence,
+            string phase,
+            string eventType,
+            string message)
+        {
+            return new RevitProgressEvent
+            {
+                RequestId = request.RequestId,
+                TaskId = request.TaskId,
+                GatewayRequestId = request.GatewayRequestId,
+                Sequence = sequence,
+                TimestampUtc = DateTime.UtcNow.ToString("o"),
+                Phase = phase,
+                EventType = eventType,
+                Message = message,
+                Data = new { request.CommandName }
+            };
+        }
+
+        private static async Task SendProgressAsync(RevitProgressEvent progressEvent)
+        {
+            SocketService service = _socketService;
+            if (service == null || !service.IsConnected)
+            {
+                return;
+            }
+
+            try
+            {
+                await service.SendProgressAsync(progressEvent).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error("BIM Personal Agent progress send failed", exception);
+            }
         }
 
         private static async Task SendResponseAsync(RevitCommandResponse response)

@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { AgentError } from "./errors.js";
-import type { BridgeClient, BridgeResponse, JsonObject } from "./types.js";
+import type { BridgeClient, BridgeCommandContext, BridgeProgressEvent, BridgeResponse, JsonObject } from "./types.js";
 
 const DEFAULT_PORT = 9686;
 
@@ -12,19 +12,25 @@ export class RevitBridgeClient implements BridgeClient {
   constructor(
     private readonly host = "localhost",
     private readonly port = parsePort(process.env.BIM_PERSONAL_AGENT_PORT || process.env.REVIT_MCP_PORT),
+    private readonly onProgress?: (event: BridgeProgressEvent) => void | Promise<void>,
   ) {}
 
   isConnected(): boolean {
     return this.socket?.readyState === WebSocket.OPEN;
   }
 
-  async sendCommand(commandName: string, parameters: JsonObject = {}, timeoutMs = 30_000): Promise<BridgeResponse> {
+  async sendCommand(
+    commandName: string,
+    parameters: JsonObject = {},
+    timeoutMs = 30_000,
+    context: BridgeCommandContext = {},
+  ): Promise<BridgeResponse> {
     if (!commandName || commandName.length > 120) {
       throw new AgentError("VALIDATION_ERROR", "commandName is required and must be at most 120 characters.");
     }
     return this.enqueue(async () => {
       await this.connect();
-      return this.sendSingle(commandName, parameters, timeoutMs);
+      return this.sendSingle(commandName, parameters, timeoutMs, context);
     });
   }
 
@@ -82,7 +88,12 @@ export class RevitBridgeClient implements BridgeClient {
     return this.connectPromise;
   }
 
-  private sendSingle(commandName: string, parameters: JsonObject, timeoutMs: number): Promise<BridgeResponse> {
+  private sendSingle(
+    commandName: string,
+    parameters: JsonObject,
+    timeoutMs: number,
+    context: BridgeCommandContext,
+  ): Promise<BridgeResponse> {
     const socket = this.socket;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       throw new AgentError("REVIT_NOT_CONNECTED", "Revit Bridge is not connected.", true);
@@ -100,6 +111,22 @@ export class RevitBridgeClient implements BridgeClient {
           const raw = JSON.parse(payload.toString()) as Record<string, unknown>;
           const responseId = String(raw.RequestId ?? raw.requestId ?? "");
           if (responseId !== requestId) {
+            return;
+          }
+          const messageType = String(raw.MessageType ?? raw.messageType ?? "response").toLowerCase();
+          if (messageType === "event") {
+            const event: BridgeProgressEvent = {
+              requestId,
+              taskId: readOptionalString(raw.TaskId ?? raw.taskId) ?? context.taskId,
+              gatewayRequestId: readOptionalString(raw.GatewayRequestId ?? raw.gatewayRequestId) ?? context.gatewayRequestId,
+              sequence: readOptionalNumber(raw.Sequence ?? raw.sequence),
+              phase: String(raw.Phase ?? raw.phase ?? "unknown"),
+              eventType: readOptionalString(raw.EventType ?? raw.eventType),
+              timestampUtc: readOptionalString(raw.TimestampUtc ?? raw.timestampUtc),
+              message: readOptionalString(raw.Message ?? raw.message),
+              data: toJsonObject(raw.Data ?? raw.data),
+            };
+            void Promise.resolve(this.onProgress?.(event)).catch(() => undefined);
             return;
           }
           cleanup();
@@ -141,9 +168,27 @@ export class RevitBridgeClient implements BridgeClient {
       socket.on("message", onMessage);
       socket.once("close", onClose);
       socket.once("error", onError);
-      socket.send(JSON.stringify({ CommandName: commandName, Parameters: parameters, RequestId: requestId }));
+      socket.send(JSON.stringify({
+        CommandName: commandName,
+        Parameters: parameters,
+        RequestId: requestId,
+        TaskId: context.taskId,
+        GatewayRequestId: context.gatewayRequestId,
+      }));
     });
   }
+}
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function readOptionalNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function toJsonObject(value: unknown): JsonObject | undefined {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value as JsonObject : undefined;
 }
 
 function parsePort(value: string | undefined): number {

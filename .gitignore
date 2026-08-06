@@ -37,6 +37,7 @@ artifacts/
 .packages/
 gateway/node_modules/
 gateway/build/
+console/build-metadata.json
 logs/
 log/
 runtime/

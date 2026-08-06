@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 
 const TOOL_ID_PATTERN = /^[a-z][a-z0-9-]{2,63}$/;
+const CAPABILITY_KEY_PATTERN = /^[a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)+$/;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
 const ABSOLUTE_PATH_PATTERN = /["'](?:[a-zA-Z]:\\|\\\\)[^"']*["']/;
 const HARDCODED_ELEMENT_ID_PATTERN = /new\s+(?:Autodesk\.Revit\.DB\.)?ElementId\s*\(\s*\d+\s*\)/;
@@ -88,11 +89,29 @@ export class ToolStore {
     }
     validatePortableSource(source, input.binding);
     await this.assertRiskNotDowngraded(input.toolId, input.risk);
+    const sourceHash = createHash("sha256").update(source, "utf8").digest("hex");
+    const reusable = await this.findReusable(input.toolId, input.capabilityKey, sourceHash);
+    if (reusable) {
+      const promoted = status === "active" && reusable.status !== "active";
+      const manifest = promoted
+        ? { ...reusable, status: "active" as const, lastValidatedAt: new Date().toISOString() }
+        : reusable;
+      if (promoted) {
+        await writeFile(
+          join(this.root, manifest.toolId, manifest.version, "manifest.json"),
+          `${JSON.stringify(manifest, null, 2)}\n`,
+          "utf8",
+        );
+      }
+      await this.recordVerification(manifest.toolId, manifest.version, status === "active");
+      return manifest;
+    }
     const version = await this.nextVersion(input.toolId);
     const now = new Date().toISOString();
     const manifest: SavedToolManifest = {
       schemaVersion: 1,
       toolId: input.toolId,
+      capabilityKey: input.capabilityKey,
       name: input.name.trim(),
       version,
       description: input.description.trim(),
@@ -103,7 +122,7 @@ export class ToolStore {
       projectFingerprint: input.binding === "project" ? projectFingerprint : undefined,
       requiredContext: input.requiredContext ?? [],
       tags: [...new Set(["saved", ...(input.tags ?? [])])].slice(0, 20),
-      sourceHash: createHash("sha256").update(source, "utf8").digest("hex"),
+      sourceHash,
       revitVersions: ["2024"],
       createdAt: now,
       lastValidatedAt: status === "active" ? now : null,
@@ -119,6 +138,12 @@ export class ToolStore {
     await rename(staging, destination);
     await this.recordVerification(input.toolId, version, status === "active");
     return manifest;
+  }
+
+  private async findReusable(toolId: string, capabilityKey: string | undefined, sourceHash: string): Promise<SavedToolManifest | undefined> {
+    return (await this.list(["active", "draft"]))
+      .find((manifest) => manifest.sourceHash === sourceHash
+        && (manifest.toolId === toolId || Boolean(capabilityKey && manifest.capabilityKey === capabilityKey)));
   }
 
   async recordVerification(toolId: string, version: string, passed: boolean): Promise<void> {
@@ -188,6 +213,10 @@ function validateToolId(toolId: string): void {
 
 export function validateGeneratedToolManifest(input: GeneratedToolManifestInput): void {
   validateToolId(input.toolId);
+  if (input.capabilityKey !== undefined
+    && (input.capabilityKey.length > 120 || !CAPABILITY_KEY_PATTERN.test(input.capabilityKey))) {
+    throw new AgentError("VALIDATION_ERROR", "capabilityKey must be a stable dotted lowercase operation identifier.");
+  }
   if (!input.name?.trim() || input.name.length > 120 || !input.description?.trim() || input.description.length > 1000) {
     throw new AgentError("VALIDATION_ERROR", "Tool name and description are required and exceed no configured limits.");
   }

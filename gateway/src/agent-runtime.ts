@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { dirname } from "node:path";
 import { ActivityStore } from "./activity-store.js";
 import { ContextSnapshotStore } from "./context-snapshots.js";
@@ -10,11 +11,15 @@ import { TelemetryStore } from "./telemetry.js";
 import { ToolCatalog } from "./tool-catalog.js";
 import { directoryToolTerms, parseTaskUnderstanding, routeTask } from "./tool-directory.js";
 import { ToolStore, validateGeneratedToolManifest } from "./tool-store.js";
+import { TaskReporter } from "./task-reporter.js";
+import { createDeveloperTrace, createTaskExecutionDetail } from "./task-detail.js";
+import type { TaskExecutionDetailInput } from "./task-detail.js";
 import type {
   AgentResponse,
   AgentActivityEvent,
   AgentActivityKind,
   BridgeClient,
+  BridgeCommandContext,
   GeneratedToolManifestInput,
   JsonObject,
   LoopPhase,
@@ -23,14 +28,17 @@ import type {
   ToolDescriptor,
   ToolRisk,
   ToolSummary,
+  TaskInputParameter,
   VerificationCheck,
 } from "./types.js";
-import { requireObject, validateArguments } from "./validation.js";
+import { normalizeArguments, requireObject } from "./validation.js";
 import { parseVerificationChecks, sanitizeEvidence } from "./verification.js";
 
 export class AgentRuntime {
   private readonly loop: LoopController;
   private readonly snapshots: ContextSnapshotStore;
+  private observationTail: Promise<void> = Promise.resolve();
+  private readonly bridgeContext = new AsyncLocalStorage<BridgeCommandContext>();
 
   constructor(
     private readonly bridge: BridgeClient,
@@ -40,20 +48,51 @@ export class AgentRuntime {
     private readonly activity?: ActivityStore,
     loop?: LoopController,
     snapshots?: ContextSnapshotStore,
+    private readonly taskReporter?: TaskReporter,
   ) {
     this.loop = loop ?? new LoopController(new RunStore(dirname(store.root)));
     this.snapshots = snapshots ?? new ContextSnapshotStore();
   }
 
   async execute(name: string, input: JsonObject): Promise<AgentResponse> {
+    const requestId = randomUUID();
+    const taskId = resolveTaskId(name, input.taskId);
+    const title = taskActivityTitle(name, input);
+    if (taskId && this.taskReporter) {
+      this.observe(async () => {
+        await this.taskReporter?.ensure(taskId, title, requestId);
+        await this.taskReporter?.publish({
+          taskId,
+          requestId,
+          source: "gateway",
+          phase: "received",
+          eventType: "task.received",
+          title,
+          executionStatus: "pending",
+          verificationStatus: hasVerification(input) ? "pending" : "not_requested",
+        });
+      });
+    }
+    return this.bridgeContext.run({ taskId, gatewayRequestId: requestId }, () =>
+      this.executeInternal(name, input, requestId, taskId, title));
+  }
+
+  private async executeInternal(
+    name: string,
+    input: JsonObject,
+    requestId: string,
+    taskId: string | undefined,
+    taskTitle: string,
+  ): Promise<AgentResponse> {
     const startedAt = Date.now();
     const startedAtUtc = new Date(startedAt).toISOString();
-    const requestId = randomUUID();
     let toolId = `agent:${name}`;
     let title = publicActivityTitle(name, input);
     let risk: ToolRisk | undefined;
     let kind = publicActivityKind(name);
+    let inputParameters: Record<string, TaskInputParameter> = {};
     try {
+      inputParameters = await this.normalizeDetailParameters(name, input);
       let data: unknown;
       let version: string | undefined;
       if (name === "get_agent_status") {
@@ -72,7 +111,7 @@ export class AgentRuntime {
       } else if (name === "run_bim_plan") {
         data = await this.runPlan(input);
         title = `執行 ${Array.isArray(input.steps) ? input.steps.length : 0} 步 BIM 計畫`;
-        risk = "reversibleMutation";
+        risk = requestedPlanRisk(input);
       } else if (name === "execute_dynamic_csharp") {
         const result = await this.executeDynamic(input);
         data = result.data;
@@ -85,43 +124,138 @@ export class AgentRuntime {
       }
       const durationMs = Date.now() - startedAt;
       const response: AgentResponse = {
-        requestId, success: true, data, toolId, version, durationMs,
+        requestId, taskId, success: true, data, toolId, version, durationMs,
         cacheHit: readBoolean(data, "CompilationCacheHit", "cacheHit"),
         transactionName: readString(data, "TransactionName", "transactionName"),
+        executionStatus: "succeeded",
+        verificationStatus: taskVerificationStatus(input, data),
+        reportUrl: taskId ? this.taskReporter?.reportUrl(taskId) : undefined,
       };
-      await this.telemetry.record({
-        toolId, durationMs, success: true,
-        responseBytes: Buffer.byteLength(JSON.stringify(data ?? null), "utf8"),
-        cacheHit: response.cacheHit,
+      this.observe(async () => {
+        await this.telemetry.record({
+          toolId, durationMs, success: true,
+          responseBytes: Buffer.byteLength(JSON.stringify(data ?? null), "utf8"),
+          cacheHit: response.cacheHit,
+        });
+        await this.activity?.record(createActivityEvent({
+          requestId, startedAtUtc, kind, title, toolId, version, risk, durationMs, data,
+        }));
+        if (!taskId || !this.taskReporter) return;
+        const detailInput: TaskExecutionDetailInput = {
+          taskId,
+          requestId,
+          publicTool: name,
+          toolId,
+          version,
+          risk,
+          startedAtUtc,
+          durationMs,
+          executionStatus: "succeeded",
+          verificationStatus: response.verificationStatus || "not_requested",
+          input,
+          inputParameters,
+          result: data,
+        };
+        const detail = createTaskExecutionDetail(detailInput);
+        await this.taskReporter.saveDetail(detail, createDeveloperTrace(detailInput, detail));
+        await this.taskReporter.publish({
+          taskId,
+          requestId,
+          source: "gateway",
+          phase: "completed",
+          eventType: "task.completed",
+          title: taskTitle,
+          message: readString(unwrapExecution(data), "Summary", "summary"),
+          executionStatus: "succeeded",
+          verificationStatus: response.verificationStatus || "not_requested",
+          toolId,
+          version,
+          risk,
+          durationMs,
+          scope: toTaskScope(data),
+        });
       });
-      await this.activity?.record(createActivityEvent({
-        requestId, startedAtUtc, kind, title, toolId, version, risk, durationMs, data,
-      }));
       return response;
     } catch (error) {
       const normalized = normalizeError(error);
       await this.recordHarnessFailure(input, normalized);
       const durationMs = Date.now() - startedAt;
-      await this.telemetry.record({ toolId, durationMs, success: false, responseBytes: 0, errorCode: normalized.code });
-      await this.activity?.record(createActivityEvent({
-        requestId, startedAtUtc, kind, title, toolId, risk, durationMs,
+      this.observe(async () => {
+        await this.telemetry.record({ toolId, durationMs, success: false, responseBytes: 0, errorCode: normalized.code });
+        await this.activity?.record(createActivityEvent({
+          requestId, startedAtUtc, kind, title, toolId, risk, durationMs,
+          errorCode: normalized.code,
+          errorMessage: normalized.message,
+        }));
+        if (!taskId || !this.taskReporter) return;
+        const detailInput: TaskExecutionDetailInput = {
+          taskId,
+          requestId,
+          publicTool: name,
+          toolId,
+          risk,
+          startedAtUtc,
+          durationMs,
+          executionStatus: normalized.code === "REVIT_COMMAND_TIMEOUT_UNCERTAIN" ? "unknown" : "failed",
+          verificationStatus: hasVerification(input) ? "insufficient_evidence" : "not_requested",
+          input,
+          inputParameters,
+          errorCode: normalized.code,
+          errorMessage: normalized.message,
+          errorStack: error instanceof Error ? error.stack : undefined,
+        };
+        const detail = createTaskExecutionDetail(detailInput);
+        await this.taskReporter.saveDetail(detail, createDeveloperTrace(detailInput, detail));
+        await this.taskReporter.publish({
+          taskId,
+          requestId,
+          source: "gateway",
+          phase: normalized.code === "REVIT_COMMAND_TIMEOUT_UNCERTAIN" ? "unknown" : "failed",
+          eventType: "task.failed",
+          title: taskTitle,
+          message: normalized.message.slice(0, 500),
+          executionStatus: normalized.code === "REVIT_COMMAND_TIMEOUT_UNCERTAIN" ? "unknown" : "failed",
+          verificationStatus: hasVerification(input) ? "insufficient_evidence" : "not_requested",
+          toolId,
+          risk,
+          durationMs,
+          errorCode: normalized.code,
+        });
+      });
+      return {
+        requestId,
+        taskId,
+        success: false,
         errorCode: normalized.code,
         errorMessage: normalized.message,
-      }));
-      return { requestId, success: false, errorCode: normalized.code, errorMessage: normalized.message, toolId, durationMs };
+        toolId,
+        durationMs,
+        executionStatus: normalized.code === "REVIT_COMMAND_TIMEOUT_UNCERTAIN" ? "unknown" : "failed",
+        verificationStatus: hasVerification(input) ? "insufficient_evidence" : "not_requested",
+        reportUrl: taskId ? this.taskReporter?.reportUrl(taskId) : undefined,
+      };
     }
+  }
+
+  async flushObservations(): Promise<void> {
+    await this.observationTail;
+  }
+
+  private observe(operation: () => Promise<void>): void {
+    const next = this.observationTail.then(operation, operation);
+    this.observationTail = next.then(() => undefined, () => undefined);
   }
 
   private async getStatus(): Promise<unknown> {
     let bridge: unknown = { connected: this.bridge.isConnected() };
     try {
-      bridge = (await this.bridge.sendCommand("get_agent_status", {}, 10_000)).data;
+      bridge = (await this.sendCommand("get_agent_status", {}, 10_000)).data;
     } catch (error) {
       const normalized = normalizeError(error);
       bridge = { connected: false, errorCode: normalized.code, errorMessage: normalized.message };
     }
     return {
-      gatewayVersion: "0.5.0",
+      gatewayVersion: "0.8.0",
       bridge,
       catalog: await this.catalog.counts(),
       harness: {
@@ -138,7 +272,7 @@ export class AgentRuntime {
     const runId = optionalRunId(input.runId);
     const snapshotId = optionalRunId(input.snapshotId, "snapshotId");
     if (runId) await this.loop.consume(runId, snapshotId ? ["call", "contextDelta"] : ["call"]);
-    const raw = (await this.bridge.sendCommand("get_task_context", { includeSchema, maxSelectedElements: selectionLimit })).data;
+    const raw = (await this.sendCommand("get_task_context", { includeSchema, maxSelectedElements: selectionLimit })).data;
     if (!runId && !snapshotId) return raw;
     const data = this.snapshots.capture(raw, snapshotId);
     if (runId) {
@@ -243,7 +377,7 @@ export class AgentRuntime {
         "This legacy destructive tool cannot prove its actual scope before execution. Use dynamic C# with Describe() confirmation instead.",
       );
     }
-    const args = validateArguments(resolved.descriptor.inputSchema, input.arguments ?? {});
+    const args = normalizeArguments(resolved.descriptor.inputSchema, input.arguments ?? {}, readOriginHints(input.argumentOrigins)).arguments;
     await this.assertProjectBinding(resolved.descriptor);
     const runId = optionalRunId(input.runId);
     const checks = parseVerificationChecks(input.verificationChecks, false);
@@ -258,7 +392,7 @@ export class AgentRuntime {
     }
     const command = toolId.startsWith("builtin:") ? resolved.descriptor.name : "execute_dynamic_csharp";
     const parameters = toolId.startsWith("builtin:") ? args : { mode: "execute", source: resolved.source, inputs: args };
-    const data = (await this.bridge.sendCommand(command, parameters, command === "execute_dynamic_csharp" ? 120_000 : 30_000)).data;
+    const data = (await this.sendCommand(command, parameters, command === "execute_dynamic_csharp" ? 120_000 : 30_000)).data;
     return {
       data,
       toolId,
@@ -266,6 +400,37 @@ export class AgentRuntime {
       title: humanizeToolName(resolved.descriptor.name),
       risk: resolved.descriptor.risk,
     };
+  }
+
+  private async normalizeDetailParameters(name: string, input: JsonObject): Promise<Record<string, TaskInputParameter>> {
+    const result: Record<string, TaskInputParameter> = {};
+    const append = (prefix: string, values: Record<string, TaskInputParameter>) => {
+      for (const [path, detail] of Object.entries(values)) result[`${prefix}${path}`] = detail;
+    };
+    if (name === "execute_dynamic_csharp") {
+      const manifest = input.manifest && typeof input.manifest === "object" ? input.manifest as unknown as GeneratedToolManifestInput : undefined;
+      if (manifest?.inputSchema) append("arguments.", normalizeArguments(manifest.inputSchema, input.arguments ?? {}, readOriginHints(input.argumentOrigins)).parameters);
+      return result;
+    }
+    if (name === "run_bim_tool" && typeof input.toolId === "string") {
+      const resolved = await this.catalog.resolve(input.toolId, optionalVersion(input.version));
+      append("arguments.", normalizeArguments(resolved.descriptor.inputSchema, input.arguments ?? {}, readOriginHints(input.argumentOrigins)).parameters);
+      return result;
+    }
+    if (name !== "run_bim_plan" || !Array.isArray(input.steps)) return result;
+    for (let index = 0; index < input.steps.length; index += 1) {
+      const rawStep = input.steps[index];
+      if (!rawStep || typeof rawStep !== "object") continue;
+      const step = rawStep as JsonObject;
+      if (step.kind === "dynamic") {
+        const manifest = step.manifest && typeof step.manifest === "object" ? step.manifest as unknown as GeneratedToolManifestInput : undefined;
+        if (manifest?.inputSchema) append(`steps[${index}].arguments.`, normalizeArguments(manifest.inputSchema, step.arguments ?? {}, readOriginHints(step.argumentOrigins)).parameters);
+      } else if (typeof step.toolId === "string") {
+        const resolved = await this.catalog.resolve(step.toolId, optionalVersion(step.version));
+        append(`steps[${index}].arguments.`, normalizeArguments(resolved.descriptor.inputSchema, step.arguments ?? {}, readOriginHints(step.argumentOrigins)).parameters);
+      }
+    }
+    return result;
   }
 
   private async runPlan(input: JsonObject): Promise<unknown> {
@@ -313,7 +478,7 @@ export class AgentRuntime {
           if (runId) await this.loop.stop(runId, "DESTRUCTIVE_OPERATION");
           throw new AgentError("DESTRUCTIVE_PLAN_NOT_SUPPORTED", "Destructive Dynamic C# cannot run inside a correction loop.");
         }
-        const args = validateArguments(manifest.inputSchema, step.arguments ?? {});
+        const args = normalizeArguments(manifest.inputSchema, step.arguments ?? {}, readOriginHints(step.argumentOrigins)).arguments;
         if (manifest.binding === "project" && !projectFingerprint) projectFingerprint = await this.getProjectFingerprint();
         const bindingFingerprint = manifest.binding === "project" ? projectFingerprint : undefined;
         pendingDynamic.push({ source, manifest, projectFingerprint: bindingFingerprint, saveOnSuccess: step.saveOnSuccess !== false });
@@ -325,14 +490,14 @@ export class AgentRuntime {
       if (resolved.descriptor.risk === "destructive") {
         throw new AgentError("DESTRUCTIVE_PLAN_NOT_SUPPORTED", "Destructive built-in tools are not supported in atomic V1 plans.");
       }
-      const args = validateArguments(resolved.descriptor.inputSchema, step.arguments ?? {});
+      const args = normalizeArguments(resolved.descriptor.inputSchema, step.arguments ?? {}, readOriginHints(step.argumentOrigins)).arguments;
       await this.assertProjectBinding(resolved.descriptor);
       if (toolId.startsWith("saved:")) savedSteps.push({ stepId, toolId, version: resolved.descriptor.version });
       steps.push(toolId.startsWith("builtin:")
         ? { commandName: resolved.descriptor.name, parameters: args, toolId, stepId }
         : { commandName: "execute_dynamic_csharp", parameters: { mode: "execute", source: resolved.source, inputs: args }, toolId, stepId });
     }
-    const bridgeData = (await this.bridge.sendCommand("execute_agent_plan", {
+    const bridgeData = (await this.sendCommand("execute_agent_plan", {
       steps, verificationChecks: checks, runId, attempt,
     }, 120_000)).data;
     const verdict = readString(bridgeData, "Verdict", "verdict") ?? "unverified";
@@ -386,7 +551,7 @@ export class AgentRuntime {
     const source = requireString(input.source, "source", 60_000);
     const manifest = requireObject(input.manifest, "manifest") as unknown as GeneratedToolManifestInput;
     validateGeneratedToolManifest(manifest);
-    const args = validateArguments(manifest.inputSchema, input.arguments ?? {});
+    const args = normalizeArguments(manifest.inputSchema, input.arguments ?? {}, readOriginHints(input.argumentOrigins)).arguments;
     const saveOnSuccess = input.saveOnSuccess !== false;
     const runId = optionalRunId(input.runId);
     const checks = parseVerificationChecks(input.verificationChecks, false);
@@ -415,7 +580,7 @@ export class AgentRuntime {
       projectFingerprint = await this.getProjectFingerprint();
     }
     try {
-      const data = (await this.bridge.sendCommand(
+      const data = (await this.sendCommand(
         "execute_dynamic_csharp",
         { mode: "execute", source, inputs: args },
         120_000,
@@ -455,6 +620,10 @@ export class AgentRuntime {
     if (tool.binding === "project" && tool.projectFingerprint !== await this.getProjectFingerprint()) {
       throw new AgentError("PROJECT_BINDING_MISMATCH", `Saved tool belongs to a different Revit project: ${tool.toolId}`);
     }
+  }
+
+  private sendCommand(commandName: string, parameters: JsonObject = {}, timeoutMs = 30_000) {
+    return this.bridge.sendCommand(commandName, parameters, timeoutMs, this.bridgeContext.getStore());
   }
 
   private async getProjectFingerprint(): Promise<string> {
@@ -530,6 +699,88 @@ function optionalRunId(value: unknown, name = "runId"): string | undefined {
     throw new AgentError("VALIDATION_ERROR", `${name} must be a UUID.`);
   }
   return value;
+}
+
+function readOriginHints(value: unknown): Record<string, TaskInputParameter["origin"]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const allowed = new Set<TaskInputParameter["origin"]>([
+    "user_provided", "default", "agent_resolved", "tool_derived", "system_injected",
+  ]);
+  return Object.fromEntries(Object.entries(value as JsonObject).filter((entry): entry is [string, TaskInputParameter["origin"]] =>
+    typeof entry[1] === "string" && allowed.has(entry[1] as TaskInputParameter["origin"]))) as Record<string, TaskInputParameter["origin"]>;
+}
+
+function resolveTaskId(name: string, value: unknown): string | undefined {
+  if (value !== undefined) return optionalRunId(value, "taskId");
+  return isTaskOperation(name) ? randomUUID() : undefined;
+}
+
+function isTaskOperation(name: string): boolean {
+  return name === "search_bim_tools"
+    || name === "run_bim_tool"
+    || name === "run_bim_plan"
+    || name === "execute_dynamic_csharp";
+}
+
+function taskActivityTitle(name: string, input: JsonObject): string {
+  if (name === "search_bim_tools" && input.task && typeof input.task === "object") {
+    const task = input.task as JsonObject;
+    const displayTitle = task.displayTitle;
+    if (typeof displayTitle === "string" && displayTitle.trim()) return displayTitle.trim().slice(0, 120);
+    const goal = task.goal;
+    if (typeof goal === "string" && goal.trim()) return goal.trim().slice(0, 180);
+  }
+  if (name === "execute_dynamic_csharp" && input.manifest && typeof input.manifest === "object") {
+    const manifestName = (input.manifest as JsonObject).name;
+    if (typeof manifestName === "string" && manifestName.trim()) return manifestName.trim().slice(0, 180);
+  }
+  if (name === "run_bim_tool" && typeof input.toolId === "string") return humanizeToolName(input.toolId.replace(/^[^:]+:/, ""));
+  if (name === "run_bim_plan") return `Run ${Array.isArray(input.steps) ? input.steps.length : 0} BIM steps`;
+  return publicActivityTitle(name, input);
+}
+
+function hasVerification(input: JsonObject): boolean {
+  return Array.isArray(input.verificationChecks) && input.verificationChecks.length > 0;
+}
+
+function requestedPlanRisk(input: JsonObject): ToolRisk {
+  if (!Array.isArray(input.steps) || input.steps.length === 0) return "reversibleMutation";
+  let risk: ToolRisk = "readOnly";
+  for (const rawStep of input.steps) {
+    if (!rawStep || typeof rawStep !== "object") return "reversibleMutation";
+    const step = rawStep as JsonObject;
+    if (step.kind !== "dynamic") return "reversibleMutation";
+    const manifest = step.manifest && typeof step.manifest === "object" ? step.manifest as JsonObject : undefined;
+    const stepRisk = manifest?.risk;
+    if (stepRisk === "destructive") return "destructive";
+    if (stepRisk === "reversibleMutation") risk = "reversibleMutation";
+    if (stepRisk !== "readOnly" && stepRisk !== "reversibleMutation") return "reversibleMutation";
+  }
+  return risk;
+}
+
+function taskVerificationStatus(input: JsonObject, data: unknown): "not_requested" | "pending" | "passed" | "failed" | "insufficient_evidence" {
+  if (!hasVerification(input)) return "not_requested";
+  const verdict = readString(data, "verdict", "Verdict")
+    ?? readString(unwrapExecution(data), "verdict", "Verdict");
+  if (verdict === "passed") return "passed";
+  if (verdict === "failed") return "failed";
+  return "insufficient_evidence";
+}
+
+function toTaskScope(data: unknown) {
+  const execution = summarizeScope(unwrapExecution(data));
+  const harness = summarizeScope(data);
+  const merged = mergeScopes(execution, harness);
+  if (!merged) return undefined;
+  return {
+    elementIds: merged.elementIds,
+    createdElementIds: merged.createdElementIds,
+    deletedElementIds: merged.deletedElementIds,
+    stepCount: merged.stepCount,
+    transactionName: readString(unwrapExecution(data), "TransactionName", "transactionName"),
+    rolledBack: readBoolean(data, "rolledBack", "RolledBack"),
+  };
 }
 
 function readBoolean(value: unknown, ...keys: string[]): boolean | undefined {

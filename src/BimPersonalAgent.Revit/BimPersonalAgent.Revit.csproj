@@ -39,22 +39,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BimPersonalAgent.Core\BimPersonalAgent.Core.csproj">
-      <Project>{C71B0715-1D39-4783-BD93-E3FD32A1728E}</Project>
-      <Name>BimPersonalAgent.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\BimPersonalAgent.RevitBridge\BimPersonalAgent.RevitBridge.csproj">
       <Project>{27E34677-8ED9-4822-9BE3-9AA44D78572F}</Project>
       <Name>BimPersonalAgent.RevitBridge</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgentPane.cs" />
-    <Compile Include="AgentRequest.cs" />
     <Compile Include="App.cs" />
-    <Compile Include="OperationRow.cs" />
-    <Compile Include="RevitRequestHandler.cs" />
-    <Compile Include="ShowPaneCommand.cs" />
     <Compile Include="ToggleAgentBridgeCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -22,6 +22,10 @@ namespace RevitMCP.Models
         /// 請求 ID（用於追蹤回應）
         /// </summary>
         public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
     }
 
     /// <summary>
@@ -30,6 +34,8 @@ namespace RevitMCP.Models
     [Serializable]
     public class RevitCommandResponse
     {
+        public string MessageType { get; set; } = "response";
+
         /// <summary>
         /// 執行是否成功
         /// </summary>
@@ -54,5 +60,33 @@ namespace RevitMCP.Models
         /// 請求 ID
         /// </summary>
         public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
+    }
+
+    [Serializable]
+    public class RevitProgressEvent
+    {
+        public string MessageType { get; set; } = "event";
+
+        public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
+
+        public int Sequence { get; set; }
+
+        public string TimestampUtc { get; set; }
+
+        public string Phase { get; set; }
+
+        public string EventType { get; set; }
+
+        public string Message { get; set; }
+
+        public object Data { get; set; }
     }
 }

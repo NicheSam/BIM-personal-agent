@@ -9,15 +9,24 @@ import { publicTools } from "./public-tools.js";
 import { TelemetryStore } from "./telemetry.js";
 import { ToolCatalog } from "./tool-catalog.js";
 import { ToolStore } from "./tool-store.js";
+import { TaskReporter } from "./task-reporter.js";
+import { TaskStore } from "./task-store.js";
 import type { JsonObject } from "./types.js";
+import { getBuildMetadata } from "./build-metadata.js";
 
-const bridge = new RevitBridgeClient();
+const build = getBuildMetadata();
+
 const store = new ToolStore();
 const telemetry = new TelemetryStore();
 const activity = new ActivityStore();
-const runtime = new AgentRuntime(bridge, new ToolCatalog(store), store, telemetry, activity);
+const taskReporter = new TaskReporter(new TaskStore());
+const bridgePort = Number.parseInt(process.env.BIM_PERSONAL_AGENT_PORT || process.env.REVIT_MCP_PORT || "9686", 10);
+const bridge = new RevitBridgeClient("localhost", bridgePort, (event) => {
+  void taskReporter.publishBridge(event);
+});
+const runtime = new AgentRuntime(bridge, new ToolCatalog(store), store, telemetry, activity, undefined, undefined, taskReporter);
 const server = new Server(
-  { name: "bim-personal-agent", version: "0.5.0" },
+  { name: "bim-personal-agent", version: build.semanticVersion },
   { capabilities: { tools: {} } },
 );
 
@@ -39,4 +48,4 @@ process.on("SIGINT", () => void shutdown());
 process.on("SIGTERM", () => void shutdown());
 
 await server.connect(new StdioServerTransport());
-console.error("BIM Personal Agent Gateway 0.5.0 started with 6 MCP tools.");
+console.error(`BIM Personal Agent Gateway ${build.buildId} started with 6 MCP tools.`);

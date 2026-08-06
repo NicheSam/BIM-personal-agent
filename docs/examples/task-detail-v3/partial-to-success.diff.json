@@ -1,0 +1,407 @@
+{
+  "base": {
+    "schemaVersion": 3,
+    "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+    "requestId": "0f3bf16b-b962-43c0-ba50-3f195aadaaed",
+    "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+    "publicTool": "run_bim_tool",
+    "toolKind": "builtin",
+    "version": "1.0.0",
+    "risk": "readOnly",
+    "domain": "dwg_block_family_placement",
+    "domainSchemaVersion": 1,
+    "startedAtUtc": "2026-08-04T04:47:37.000Z",
+    "completedAtUtc": "2026-08-05T01:35:47.564Z",
+    "durationMs": 390,
+    "executionStatus": "succeeded",
+    "verificationStatus": "insufficient_evidence",
+    "status": "completed_partially_verified",
+    "engineeringStatus": "completed_partially_verified",
+    "warningCount": 0,
+    "model": {
+      "projectName": "Issue 100 model",
+      "projectFingerprint": "issue100-fixture-fingerprint",
+      "revitVersion": "2024",
+      "activeView": "{3D}",
+      "activeViewId": 11061843,
+      "capturedAtUtc": "2026-08-05T01:35:47.564Z",
+      "scopeElementIds": [
+        13719035
+      ],
+      "scopeHash": "12bcaccbfae1caf0e9521676368de7be4db695347583d80bfa5987ccc866e9e3"
+    },
+    "changes": {
+      "transactionStarted": false,
+      "createdElementIds": [],
+      "modifiedElementIds": [],
+      "deletedElementIds": [],
+      "modelChanged": false
+    },
+    "developerTraceAvailable": false
+  },
+  "compare": {
+    "schemaVersion": 3,
+    "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+    "requestId": "issue-100-success",
+    "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+    "publicTool": "run_bim_tool",
+    "toolKind": "builtin",
+    "version": "1.0.0",
+    "risk": "readOnly",
+    "domain": "dwg_block_family_placement",
+    "domainSchemaVersion": 1,
+    "startedAtUtc": "2026-08-04T04:47:37.000Z",
+    "completedAtUtc": "2026-08-05T01:35:47.556Z",
+    "durationMs": 390,
+    "executionStatus": "succeeded",
+    "verificationStatus": "passed",
+    "status": "verified",
+    "engineeringStatus": "verified",
+    "warningCount": 0,
+    "model": {
+      "projectName": "Issue 100 model",
+      "projectFingerprint": "issue100-fixture-fingerprint",
+      "revitVersion": "2024",
+      "activeView": "{3D}",
+      "activeViewId": 11061843,
+      "capturedAtUtc": "2026-08-05T01:35:47.556Z",
+      "scopeElementIds": [
+        13719035
+      ],
+      "scopeHash": "12bcaccbfae1caf0e9521676368de7be4db695347583d80bfa5987ccc866e9e3"
+    },
+    "changes": {
+      "transactionStarted": false,
+      "createdElementIds": [],
+      "modifiedElementIds": [],
+      "deletedElementIds": [],
+      "modelChanged": false
+    },
+    "developerTraceAvailable": false
+  },
+  "changeCount": 46,
+  "sectionCounts": {
+    "identity": 1,
+    "input": 3,
+    "result": 9,
+    "model": 1,
+    "lineage": 0,
+    "verification": 26,
+    "diagnostics": 6
+  },
+  "truncated": false,
+  "changes": [
+    {
+      "section": "identity",
+      "path": "status",
+      "before": "completed_partially_verified",
+      "after": "verified"
+    },
+    {
+      "section": "input",
+      "path": "input.verificationChecks[0].description",
+      "before": "The linked DWG reference exists"
+    },
+    {
+      "section": "input",
+      "path": "input.verificationChecks[1].description",
+      "before": "The candidate count is reported"
+    },
+    {
+      "section": "input",
+      "path": "input.verificationChecks[2].description",
+      "before": "The coordinate anchors are within tolerance"
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[0].pathAPointMm",
+      "before": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[0].pathBPointMm",
+      "before": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[0].status",
+      "after": "passed"
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[1].pathAPointMm",
+      "before": {
+        "x": 1000,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[1].pathBPointMm",
+      "before": {
+        "x": 1000,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[1].status",
+      "after": "passed"
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[2].pathAPointMm",
+      "before": {
+        "x": 0,
+        "y": 1000,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[2].pathBPointMm",
+      "before": {
+        "x": 0,
+        "y": 1000,
+        "z": 0
+      }
+    },
+    {
+      "section": "result",
+      "path": "domainData.anchors[2].status",
+      "after": "passed"
+    },
+    {
+      "section": "model",
+      "path": "modelAfter.capturedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "verification",
+      "path": "verification.status",
+      "before": "insufficient_evidence",
+      "after": "passed"
+    },
+    {
+      "section": "verification",
+      "path": "verification.method",
+      "before": "Revit Bridge deterministic verification",
+      "after": "mixed_claim_verification"
+    },
+    {
+      "section": "verification",
+      "path": "verification.verifiedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "verification",
+      "path": "verification.verificationRequestId",
+      "before": "0f3bf16b-b962-43c0-ba50-3f195aadaaed",
+      "after": "issue-100-success"
+    },
+    {
+      "section": "verification",
+      "path": "verification.passedCount",
+      "before": 1,
+      "after": 3
+    },
+    {
+      "section": "verification",
+      "path": "verification.verificationScope",
+      "before": "partial",
+      "after": "full"
+    },
+    {
+      "section": "verification",
+      "path": "verification.requiredClaims[0].description",
+      "before": "The linked DWG reference exists",
+      "after": "source.reference.exists"
+    },
+    {
+      "section": "verification",
+      "path": "verification.requiredClaims[1].description",
+      "before": "The candidate count is reported",
+      "after": "preview.candidate_count.reported"
+    },
+    {
+      "section": "verification",
+      "path": "verification.requiredClaims[2].description",
+      "before": "The coordinate anchors are within tolerance",
+      "after": "coordinate.anchors.within_tolerance"
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[0].target",
+      "before": "Linked DWG reference"
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[0].actual",
+      "before": {
+        "existing": 1
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[0].verificationId",
+      "before": "0f3bf16b-b962-43c0-ba50-3f195aadaaed",
+      "after": "issue-100-success"
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[0].verifiedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[1]",
+      "after": {
+        "id": "preview.candidate_count.reported",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": 137,
+        "actual": 137,
+        "claimId": "preview.candidate_count.reported",
+        "status": "passed",
+        "verificationId": "issue-100-success",
+        "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+        "evidenceRefs": []
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.claims[2]",
+      "after": {
+        "id": "coordinate.anchors.within_tolerance",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": "<= 1 mm",
+        "actual": 0,
+        "claimId": "coordinate.anchors.within_tolerance",
+        "status": "passed",
+        "verificationId": "issue-100-success",
+        "verifiedAtUtc": "2026-08-05T01:35:47.556Z",
+        "evidenceRefs": []
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.coveredClaims[1]",
+      "after": "preview.candidate_count.reported"
+    },
+    {
+      "section": "verification",
+      "path": "verification.coveredClaims[2]",
+      "after": "coordinate.anchors.within_tolerance"
+    },
+    {
+      "section": "verification",
+      "path": "verification.uncoveredClaims[0]",
+      "before": "preview.candidate_count.reported"
+    },
+    {
+      "section": "verification",
+      "path": "verification.uncoveredClaims[1]",
+      "before": "coordinate.anchors.within_tolerance"
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.method",
+      "before": "Revit Bridge deterministic verification",
+      "after": "mixed_claim_verification"
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.checks[0].target",
+      "before": "Linked DWG reference"
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.checks[0].actual",
+      "before": {
+        "existing": 1
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.checks[1]",
+      "after": {
+        "id": "preview.candidate_count.reported",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": 137,
+        "actual": 137
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.checks[2]",
+      "after": {
+        "id": "coordinate.anchors.within_tolerance",
+        "method": "result_assertion",
+        "passed": true,
+        "expected": "<= 1 mm",
+        "actual": 0
+      }
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.passedCount",
+      "before": 1
+    },
+    {
+      "section": "verification",
+      "path": "verification.rawPayload.failedCount",
+      "before": 0
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[2].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[3].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[4].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[5].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[7].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    },
+    {
+      "section": "diagnostics",
+      "path": "stageTrace[8].completedAtUtc",
+      "before": "2026-08-05T01:35:47.564Z",
+      "after": "2026-08-05T01:35:47.556Z"
+    }
+  ]
+}

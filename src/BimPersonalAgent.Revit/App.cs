@@ -9,21 +9,13 @@ namespace BimPersonalAgent.Revit
     public sealed class App : IExternalApplication
     {
         private const string RibbonTabName = "BIM Personal";
-        private const string RibbonPanelName = "個人作業台";
-
-        internal static readonly DockablePaneId PaneId =
-            new DockablePaneId(new Guid("5ef2deaa-5bc3-4dc0-911d-d20ff04c3050"));
+        private const string RibbonPanelName = "Agent 服務";
 
         public Result OnStartup(UIControlledApplication application)
         {
             try
             {
-                var pane = new AgentPane();
-                var handler = new RevitRequestHandler(pane);
                 BridgeHost.Initialize();
-                pane.Initialize(request => BridgeHost.Enqueue(uiApplication => handler.Execute(uiApplication, request)));
-
-                application.RegisterDockablePane(PaneId, "BIM Personal Agent", pane);
                 RegisterRibbon(application);
                 return Result.Succeeded;
             }
@@ -56,24 +48,13 @@ namespace BimPersonalAgent.Revit
                 ?? application.CreateRibbonPanel(RibbonTabName, RibbonPanelName);
 
             string assemblyPath = Assembly.GetExecutingAssembly().Location;
-            var buttonData = new PushButtonData(
-                "BimPersonalAgent.ShowPane",
-                "開啟\n作業台",
-                assemblyPath,
-                typeof(ShowPaneCommand).FullName)
-            {
-                ToolTip = "開啟選取檢查與安全批次參數作業台"
-            };
-
-            panel.AddItem(buttonData);
-
             var bridgeButtonData = new PushButtonData(
                 "BimPersonalAgent.ToggleBridge",
                 "Agent服務\n開/關",
                 assemblyPath,
                 typeof(ToggleAgentBridgeCommand).FullName)
             {
-                ToolTip = "啟動或停止 BIM Personal Agent 本機連線服務"
+                ToolTip = "啟動或停止 BIM Personal Agent 本機連線服務。任務請從 Codex 輸入，執行紀錄顯示於瀏覽器工作台。"
             };
             panel.AddItem(bridgeButtonData);
         }

@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 
-echo BIM Personal Agent V0.5 Installer
+echo BIM Personal Agent V0.7 Installer
 echo.
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\install-all.ps1" %*

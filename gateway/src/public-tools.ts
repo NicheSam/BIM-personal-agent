@@ -1,11 +1,17 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 const objectSchema = { type: "object", additionalProperties: true } as const;
+const argumentOriginsSchema = {
+  type: "object",
+  additionalProperties: { type: "string", enum: ["user_provided", "default", "agent_resolved", "tool_derived", "system_injected"] },
+  description: "Optional JSON-path origin hints produced during argument resolution.",
+} as const;
 const taskUnderstandingSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
     goal: { type: "string", minLength: 1, maxLength: 500 },
+    displayTitle: { type: "string", minLength: 1, maxLength: 120, description: "Concise task title in the user's language for the BIM engineer workbench." },
     actions: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
     objects: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
     constraints: { type: "array", maxItems: 12, items: { type: "string", minLength: 1, maxLength: 200 } },
@@ -35,6 +41,12 @@ const manifestSchema = {
   additionalProperties: false,
   properties: {
     toolId: { type: "string", pattern: "^[a-z][a-z0-9-]{2,63}$" },
+    capabilityKey: {
+      type: "string",
+      pattern: "^[a-z][a-z0-9_-]*(?:\\.[a-z][a-z0-9_-]*)+$",
+      maxLength: 120,
+      description: "Stable operation capability, independent of element IDs, quantities, colors, levels, or project-specific values. Reuse an existing capability before generating new C#.",
+    },
     name: { type: "string", minLength: 1, maxLength: 120 },
     description: { type: "string", minLength: 1, maxLength: 1000 },
     inputSchema: { type: "object" },
@@ -73,7 +85,10 @@ export const publicTools: Tool[] = [
   {
     name: "get_agent_status",
     description: "Get BIM Personal Agent Gateway, Revit Bridge, active document, and tool catalog status.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    inputSchema: {
+      type: "object", additionalProperties: false,
+      properties: { taskId: { type: "string", format: "uuid", description: "Optional task correlation ID." } },
+    },
   },
   {
     name: "get_bim_context",
@@ -81,6 +96,7 @@ export const publicTools: Tool[] = [
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
+        taskId: { type: "string", format: "uuid", description: "Optional task correlation ID." },
         includeSchema: { type: "boolean", default: true },
         selectionLimit: { type: "integer", minimum: 1, maximum: 50, default: 20 },
         runId: { type: "string", format: "uuid" },
@@ -94,6 +110,7 @@ export const publicTools: Tool[] = [
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
+        taskId: { type: "string", format: "uuid", description: "Reuse this ID in later execution calls for one workbench task." },
         task: taskUnderstandingSchema,
         runId: { type: "string", format: "uuid", description: "Reuse the existing runId only for the single allowed refinement search." },
         startLoop: { type: "boolean", default: false, description: "Opt into Harness state and budgets. Gateway rollout mode decides observe or bounded correction." },
@@ -110,9 +127,12 @@ export const publicTools: Tool[] = [
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
+        taskId: { type: "string", format: "uuid", description: "Reuse the taskId returned by search_bim_tools when available." },
         toolId: { type: "string", maxLength: 140 },
         version: { type: "string", minLength: 1, maxLength: 80 },
         arguments: objectSchema,
+        argumentOrigins: argumentOriginsSchema,
+        developerMode: { type: "boolean", default: false, description: "Opt in to a private seven-day local developer trace." },
         runId: { type: "string", format: "uuid" },
         attempt: { type: "integer", minimum: 1, maximum: 3 },
         verificationChecks: verificationChecksSchema,
@@ -126,6 +146,7 @@ export const publicTools: Tool[] = [
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
+        taskId: { type: "string", format: "uuid", description: "Reuse the taskId returned by search_bim_tools when available." },
         steps: {
           type: "array", minItems: 1, maxItems: 20,
           items: { oneOf: [
@@ -137,6 +158,7 @@ export const publicTools: Tool[] = [
                 toolId: { type: "string", maxLength: 140 },
                 version: { type: "string", minLength: 1, maxLength: 80 },
                 arguments: objectSchema,
+                argumentOrigins: argumentOriginsSchema,
               },
               required: ["kind", "stepId", "toolId", "arguments"],
             },
@@ -148,6 +170,7 @@ export const publicTools: Tool[] = [
                 source: { type: "string", minLength: 1, maxLength: 60000 },
                 manifest: manifestSchema,
                 arguments: objectSchema,
+                argumentOrigins: argumentOriginsSchema,
                 saveOnSuccess: { type: "boolean", default: true },
               },
               required: ["kind", "stepId", "source", "manifest", "arguments"],
@@ -158,6 +181,7 @@ export const publicTools: Tool[] = [
         attempt: { type: "integer", minimum: 1, maximum: 3 },
         verificationChecks: verificationChecksSchema,
         loopBudget: loopBudgetSchema,
+        developerMode: { type: "boolean", default: false, description: "Opt in to a private seven-day local developer trace." },
       },
       required: ["steps"],
     },
@@ -168,13 +192,16 @@ export const publicTools: Tool[] = [
     inputSchema: {
       type: "object", additionalProperties: false,
       properties: {
+        taskId: { type: "string", format: "uuid", description: "Reuse the taskId returned by search_bim_tools when available." },
         source: { type: "string", minLength: 1, maxLength: 60000 },
         arguments: objectSchema,
+        argumentOrigins: argumentOriginsSchema,
         manifest: manifestSchema,
         saveOnSuccess: { type: "boolean", default: true },
         runId: { type: "string", format: "uuid" },
         attempt: { type: "integer", minimum: 1, maximum: 3 },
         verificationChecks: verificationChecksSchema,
+        developerMode: { type: "boolean", default: false, description: "Opt in to a private seven-day local developer trace." },
       },
       required: ["source", "arguments", "manifest"],
     },

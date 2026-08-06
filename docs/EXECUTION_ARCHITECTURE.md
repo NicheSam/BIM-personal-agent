@@ -5,13 +5,13 @@
 - Codex：自然語言、任務拆解、C# 生成。
 - Gateway：六個 MCP tools、schema validation、catalog search、saved-tool store、telemetry。
 - RevitBridge：single-flight queue、`ExternalEvent`、Revit API、Transaction、Undo、動態編譯與破壞性確認。
-- Dockable Pane：共用同一 Bridge queue；V1 的文字 parser 只作離線 fallback。
+- Revit Ribbon：只負責啟動或停止 Bridge。任務輸入與回報分別由 Codex 與瀏覽器工作台負責，不在 Revit 內建立第二套執行介面。
 
 Gateway 的早期驗證不能降低 Bridge 判定的風險。所有模型相關資料必須來自同回合 live Revit response。
 
 ## Tool Catalog
 
-`gateway/src/catalog/builtin-tools.json` 固定保存 148 個 internal descriptors，建置時驗證唯一性。Codex 不直接載入這些 schemas，而是先搜尋，再以 `toolId + arguments` 執行。
+`gateway/src/catalog/builtin-tools.json` 目前固定保存148個 internal descriptors：146個固定上游工具加2個 Agent 自有工具。建置時驗證唯一性；Codex 不直接載入這些 schemas，而是先搜尋，再以 `toolId + arguments` 執行。
 
 狀態：
 

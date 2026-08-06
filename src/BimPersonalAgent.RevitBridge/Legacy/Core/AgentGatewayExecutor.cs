@@ -45,12 +45,19 @@ namespace RevitMCP.Core
             return new
             {
                 Connected = true,
-                BridgeVersion = "0.5.0",
+                BridgeVersion = "0.8.0",
                 RevitVersion = _uiApp.Application.VersionNumber,
                 HasActiveDocument = document != null,
                 ProjectName = document?.Title,
                 ProjectFingerprint = document == null ? null : ComputeProjectFingerprint(document),
-                PendingCommands = ExternalEventManager.Instance.PendingCount
+                PendingCommands = ExternalEventManager.Instance.PendingCount,
+                DynamicCSharp = new
+                {
+                    Compiled = DynamicCSharpRuntime.CompilationCount,
+                    Maximum = DynamicCSharpRuntime.MaximumCompilationCount,
+                    Remaining = DynamicCSharpRuntime.RemainingCompilationCount,
+                    Cached = DynamicCSharpRuntime.CachedCompilationCount
+                }
             };
         }
 

@@ -6,7 +6,7 @@
 使用者自然語言
   -> Codex
   -> bim-personal-agent（6 MCP tools）
-  -> Agent Runtime（148-tool catalog + saved tools）
+  -> Agent Runtime（146 upstream + 2 Agent tools + saved tools）
   -> localhost:9686
   -> BimPersonalAgent.RevitBridge.dll
   -> queued ExternalEvent / Transaction
@@ -17,7 +17,7 @@ Codex 是 V1 唯一 LLM。Gateway 不接模型 API，也不自行理解未結構
 
 ## 啟動
 
-1. 安裝 V0.5 Add-in 並重新啟動 Revit 2024。
+1. 安裝 V0.6 Add-in 並重新啟動 Revit 2024。
 2. 開啟測試模型，在 `BIM Personal` 按「Agent服務 開/關」。
 3. 執行 `python scripts\configure-codex-agent.py`，重新啟動 Codex 或建立新 task。
 4. 呼叫 `get_agent_status`，確認 Bridge version、active document 與 catalog count。
@@ -43,3 +43,9 @@ Codex 是 V1 唯一 LLM。Gateway 不接模型 API，也不自行理解未結構
 - Dynamic C# 可放在任一未覆蓋步驟；Loop 內通過驗證才成為 active，Loop 外維持成功即保存。
 
 同一個 Revit session 只允許一個 Gateway client。不要同時啟用 `revit-mcp` 與 `bim-personal-agent`。
+
+## 任務回報
+
+- `search_bim_tools` 會建立或沿用 `taskId`；後續 `run_bim_tool`、`run_bim_plan` 或 `execute_dynamic_csharp` 應沿用同一個 `taskId`。
+- Gateway 回應包含 `executionStatus`、`verificationStatus` 與 `reportUrl`，Codex 只需回傳工程師需要的摘要。
+- Revit Bridge 在排隊、執行、完成或失敗時送出進度事件；完整事件保存在本機工作台，不增加 MCP 工具數量。

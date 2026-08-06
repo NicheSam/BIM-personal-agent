@@ -8,6 +8,8 @@ import { AgentError } from "./errors.js";
 import { LoopController } from "./loop-controller.js";
 import { RunStore } from "./run-store.js";
 import { TelemetryStore } from "./telemetry.js";
+import { TaskReporter } from "./task-reporter.js";
+import { TaskStore } from "./task-store.js";
 import { ToolCatalog } from "./tool-catalog.js";
 import { ToolStore } from "./tool-store.js";
 import type { BridgeClient, BridgeResponse, JsonObject, ToolDescriptor } from "./types.js";
@@ -94,6 +96,83 @@ const builtin: ToolDescriptor = {
   binding: "portable",
   tags: ["project"],
 };
+
+test("search and execution can share one workbench task", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const toolStore = new ToolStore(root);
+    const taskStore = new TaskStore(root);
+    const reporter = new TaskReporter(taskStore);
+    const runtime = new AgentRuntime(
+      new FakeBridge(),
+      new ToolCatalog(toolStore, [builtin]),
+      toolStore,
+      new TelemetryStore(root),
+      undefined,
+      undefined,
+      undefined,
+      reporter,
+    );
+    const taskId = "11111111-1111-4111-8111-111111111111";
+    const search = await runtime.execute("search_bim_tools", {
+      taskId,
+      task: {
+        goal: "Read project information",
+        actions: ["read"],
+        objects: ["project"],
+        steps: [{ action: "read", object: "project", outcome: "project information is returned" }],
+        mode: "execute",
+      },
+    });
+    const run = await runtime.execute("run_bim_tool", { taskId, toolId: builtin.toolId, arguments: {} });
+    await runtime.flushObservations();
+    assert.equal(search.taskId, taskId);
+    assert.equal(run.taskId, taskId);
+    assert.match(run.reportUrl || "", new RegExp(taskId));
+    assert.equal((await taskStore.get(taskId))?.eventCount, 4);
+    assert.deepEqual((await taskStore.events(taskId)).map((event) => event.phase), ["received", "completed", "received", "completed"]);
+    const details = await taskStore.details(taskId);
+    assert.equal(details.length, 2);
+    assert.equal(details.at(-1)?.tool.toolId, builtin.toolId);
+    assert.deepEqual(details.at(-1)?.input, { toolId: builtin.toolId, arguments: {} });
+    assert.equal((await taskStore.get(taskId))?.detailCount, 2);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("simple execution returns before asynchronous observation storage completes", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  let releaseObservation!: () => void;
+  const observationReleased = new Promise<void>((resolve) => { releaseObservation = resolve; });
+  class BlockingTelemetry extends TelemetryStore {
+    override async record(): Promise<void> {
+      await observationReleased;
+    }
+  }
+  try {
+    const toolStore = new ToolStore(root);
+    const bridge = new FakeBridge();
+    const runtime = new AgentRuntime(
+      bridge,
+      new ToolCatalog(toolStore, [builtin]),
+      toolStore,
+      new BlockingTelemetry(root),
+    );
+    const response = await Promise.race([
+      runtime.execute("run_bim_tool", { toolId: builtin.toolId, arguments: {} }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("execution waited for observation storage")), 100)),
+    ]);
+    assert.equal(response.success, true);
+    assert.deepEqual(bridge.calls.map((call) => call.commandName), ["get_project_info"]);
+    assert.equal(response.verificationStatus, "not_requested");
+    releaseObservation();
+    await runtime.flushObservations();
+  } finally {
+    releaseObservation();
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test("dynamic C# is saved and reusable without becoming a new MCP tool", async () => {
   const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));

@@ -1,5 +1,6 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
@@ -12,16 +13,20 @@ let args;
 try {
   const json = rawArguments.startsWith("base64:")
     ? Buffer.from(rawArguments.slice("base64:".length), "base64").toString("utf8")
-    : rawArguments;
+    : rawArguments.startsWith("file:")
+      ? readFileSync(resolve(rawArguments.slice("file:".length)), "utf8")
+      : rawArguments;
   args = JSON.parse(json);
 } catch (error) {
   throw new Error(`Arguments must be valid JSON: ${error.message}`);
 }
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const gatewayPath = resolve(process.env.BIM_AGENT_GATEWAY_PATH || resolve(sourceRoot, "build", "index.js"));
+const root = dirname(gatewayPath);
 const transport = new StdioClientTransport({
-  command: process.execPath,
-  args: [resolve(root, "build", "index.js")],
+  command: process.env.BIM_AGENT_NODE || process.execPath,
+  args: [gatewayPath],
   cwd: root,
   env: { ...process.env },
   stderr: "pipe",

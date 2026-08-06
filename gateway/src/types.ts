@@ -11,6 +11,7 @@ export type VerificationKind = "elementExists" | "elementCount" | "parameterEqua
 
 export interface ToolDescriptor {
   toolId: string;
+  capabilityKey?: string;
   name: string;
   version: string;
   description: string;
@@ -33,6 +34,7 @@ export interface BimTaskStep {
 
 export interface BimTaskUnderstanding {
   goal: string;
+  displayTitle?: string;
   actions: string[];
   objects: string[];
   constraints?: string[];
@@ -103,6 +105,7 @@ export type ToolSummary = Omit<ToolDescriptor, "inputSchema" | "source" | "proje
 
 export interface GeneratedToolManifestInput {
   toolId: string;
+  capabilityKey?: string;
   name: string;
   description: string;
   inputSchema: JsonSchema;
@@ -129,14 +132,32 @@ export interface BridgeResponse {
   requestId?: string;
 }
 
+export interface BridgeCommandContext {
+  taskId?: string;
+  gatewayRequestId?: string;
+}
+
+export interface BridgeProgressEvent {
+  requestId: string;
+  taskId?: string;
+  gatewayRequestId?: string;
+  sequence?: number;
+  phase: string;
+  eventType?: string;
+  timestampUtc?: string;
+  message?: string;
+  data?: JsonObject;
+}
+
 export interface BridgeClient {
   isConnected(): boolean;
-  sendCommand(commandName: string, parameters?: JsonObject, timeoutMs?: number): Promise<BridgeResponse>;
+  sendCommand(commandName: string, parameters?: JsonObject, timeoutMs?: number, context?: BridgeCommandContext): Promise<BridgeResponse>;
   disconnect(): Promise<void>;
 }
 
 export interface AgentResponse {
   requestId: string;
+  taskId?: string;
   success: boolean;
   data?: unknown;
   errorCode?: string;
@@ -146,6 +167,9 @@ export interface AgentResponse {
   durationMs: number;
   cacheHit?: boolean;
   transactionName?: string;
+  executionStatus?: TaskExecutionStatus;
+  verificationStatus?: TaskVerificationStatus;
+  reportUrl?: string;
 }
 
 export interface ToolPerformanceRecord {
@@ -199,4 +223,212 @@ export interface AgentActivityEvent {
   summary?: string;
   scope?: AgentActivityScope;
   errorCode?: string;
+}
+
+export type TaskEventSource = "gateway" | "bridge" | "tool" | "verifier";
+export type TaskPhase = "received" | "preparing" | "routing" | "queued" | "executing" | "verifying" | "completed" | "stopped" | "failed" | "rolled_back" | "unknown";
+export type TaskExecutionStatus = "pending" | "running" | "succeeded" | "failed" | "stopped" | "unknown";
+export type TaskVerificationStatus = "not_requested" | "pending" | "passed" | "failed" | "insufficient_evidence";
+export type TaskEngineeringStatus = "verified" | "completed_partially_verified" | "verification_failed" | "not_verified" | "execution_failed" | "rolled_back";
+export type TaskInputOrigin = "user_provided" | "default" | "agent_resolved" | "tool_derived" | "system_injected";
+export type TaskVerificationScope = "none" | "partial" | "full";
+export type TaskErrorLayer = "client_input" | "agent_resolution" | "mcp_schema" | "typescript_dispatch" | "websocket_transport" | "revit_command" | "revit_transaction" | "result_normalization" | "independent_verification" | "ui_rendering";
+
+export interface TaskInputParameter {
+  origin: TaskInputOrigin;
+  defaultValue?: unknown;
+  unit?: string;
+  resolver?: string;
+}
+
+export interface TaskVerificationClaim extends JsonObject {
+  claimId: string;
+  target?: string;
+  expected?: unknown;
+  actual?: unknown;
+  status: "passed" | "failed" | "not_checked";
+  method?: "reference_existence" | "result_assertion" | "independent_revit_readback" | string;
+  verificationId?: string;
+  verifiedAtUtc?: string;
+  source?: string;
+  evidenceRefs: string[];
+}
+
+export interface TaskRequiredClaim extends JsonObject {
+  claimId: string;
+  description: string;
+  required: boolean;
+}
+
+export interface TaskEventScope {
+  elementIds?: number[];
+  createdElementIds?: number[];
+  deletedElementIds?: number[];
+  stepId?: string;
+  stepNumber?: number;
+  stepCount?: number;
+  transactionName?: string;
+  rolledBack?: boolean;
+}
+
+export interface AgentTaskEvent {
+  schemaVersion: 2;
+  eventId: string;
+  taskId: string;
+  requestId: string;
+  bridgeRequestId?: string;
+  sequence: number;
+  timestampUtc: string;
+  source: TaskEventSource;
+  phase: TaskPhase;
+  eventType: string;
+  title: string;
+  message?: string;
+  executionStatus: TaskExecutionStatus;
+  verificationStatus: TaskVerificationStatus;
+  toolId?: string;
+  version?: string;
+  risk?: ToolRisk;
+  durationMs?: number;
+  scope?: TaskEventScope;
+  evidence?: JsonObject;
+  errorCode?: string;
+}
+
+export interface AgentTaskSummary {
+  schemaVersion: 2;
+  taskId: string;
+  title: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+  firstRequestId: string;
+  lastRequestId: string;
+  phase: TaskPhase;
+  executionStatus: TaskExecutionStatus;
+  verificationStatus: TaskVerificationStatus;
+  eventCount: number;
+  toolIds: string[];
+  durationMs?: number;
+  errorCode?: string;
+  reportUrl: string;
+  detailCount?: number;
+  engineeringStatus?: TaskEngineeringStatus;
+}
+
+export interface TaskModelIdentity {
+  projectName?: string;
+  projectFingerprint?: string;
+  revitVersion?: string;
+  activeView?: string;
+  activeViewId?: number;
+  level?: string;
+  levelId?: number;
+  capturedAtUtc?: string;
+  scopeElementIds?: number[];
+  scopeHash?: string;
+}
+
+export interface TaskModelChanges {
+  transactionStarted?: boolean;
+  transactionName?: string;
+  createdElementIds: number[];
+  modifiedElementIds: number[];
+  deletedElementIds: number[];
+  modelChanged?: boolean;
+  rolledBack?: boolean;
+}
+
+export interface TaskVerificationDetail {
+  requested: boolean;
+  status: TaskVerificationStatus;
+  method?: string;
+  verifiedAtUtc?: string;
+  verificationRequestId?: string;
+  checkedElementCount?: number;
+  passedCount?: number;
+  failedCount?: number;
+  verificationScope: TaskVerificationScope;
+  requiredClaims: TaskRequiredClaim[];
+  claims: TaskVerificationClaim[];
+  coveredClaims: string[];
+  uncoveredClaims: string[];
+  rawPayload?: unknown;
+}
+
+export interface TaskLineageRecord extends JsonObject {
+  sourceId?: string;
+  candidateId?: string;
+  previewId?: string;
+  operationId?: string;
+  elementId?: number;
+  verificationId?: string;
+  status?: string;
+}
+
+export interface TaskLineageEdge {
+  from: string;
+  to: string;
+  relation: string;
+}
+
+export interface TaskStageTrace {
+  stage: TaskErrorLayer | "persistence";
+  status: "pending" | "completed" | "failed" | "skipped" | "not_observed";
+  startedAtUtc?: string;
+  completedAtUtc?: string;
+  durationMs?: number;
+  errorCode?: string;
+}
+
+export interface TaskNormalizedResult {
+  normalizerId: string;
+  normalizerVersion: number;
+  value: unknown;
+  fieldMappings: Array<{ source: string; target: string }>;
+}
+
+export interface TaskExecutionDetail {
+  schemaVersion: 3;
+  taskId: string;
+  requestId: string;
+  runId?: string;
+  tool: {
+    toolId: string;
+    publicTool: string;
+    name?: string;
+    kind: "builtin" | "saved" | "dynamic" | "plan" | "agent";
+    version?: string;
+    sourceHash?: string;
+    risk?: ToolRisk;
+  };
+  domain: string;
+  domainSchemaVersion: number;
+  domainData: JsonObject;
+  startedAtUtc: string;
+  completedAtUtc: string;
+  durationMs: number;
+  executionStatus: TaskExecutionStatus;
+  verificationStatus: TaskVerificationStatus;
+  status: TaskEngineeringStatus;
+  input: unknown;
+  inputOrigins: Record<string, TaskInputParameter>;
+  rawResult?: unknown;
+  normalizedResult: TaskNormalizedResult;
+  verification: TaskVerificationDetail;
+  modelBefore: TaskModelIdentity;
+  modelAfter: TaskModelIdentity;
+  changes: TaskModelChanges;
+  lineage: { records: TaskLineageRecord[]; edges: TaskLineageEdge[] };
+  stageTrace: TaskStageTrace[];
+  warnings: unknown[];
+  error?: {
+    code: string;
+    errorLayer: TaskErrorLayer;
+    technicalMessage: string;
+    engineeringMessage: string;
+    suggestedAction: string;
+    stack?: string;
+  };
+  developerTraceRef?: string;
+  generatedAtUtc: string;
 }

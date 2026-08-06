@@ -4,6 +4,8 @@
 
 Portions of `src/BimPersonalAgent.RevitBridge/Legacy` are derived from `shuotao/REVIT_MCP_study`, commit `cfe073951fa1e43792f9d93f015d7b82416df621`, with local Agent Gateway, queue, dynamic C# and policy changes.
 
+The exact vendored baseline, Agent-owned overlay and source hashes are recorded in `config/upstream-lock.json`. Upstream updates are audited before integration and are not merged or published automatically.
+
 Upstream repository: https://github.com/shuotao/REVIT_MCP_study
 
 License declared by upstream: MIT License.

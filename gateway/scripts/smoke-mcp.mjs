@@ -5,11 +5,13 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const gatewayPath = resolve(process.env.BIM_AGENT_GATEWAY_PATH || resolve(sourceRoot, "build", "index.js"));
+const root = dirname(gatewayPath);
 const home = await mkdtemp(resolve(tmpdir(), "bpa-mcp-smoke-"));
 const transport = new StdioClientTransport({
-  command: process.execPath,
-  args: [resolve(root, "build", "index.js")],
+  command: process.env.BIM_AGENT_NODE || process.execPath,
+  args: [gatewayPath],
   cwd: root,
   env: {
     PATH: process.env.PATH || "",
@@ -32,12 +34,21 @@ try {
     const startedAt = performance.now();
     const response = await client.callTool({
       name: "search_bim_tools",
-      arguments: { query: "project information", limit: 5 },
+      arguments: {
+        task: {
+          goal: "Read project information",
+          actions: ["read"],
+          objects: ["project"],
+          steps: [{ action: "read", object: "project", outcome: "project information is returned" }],
+          mode: "assess",
+        },
+        limit: 5,
+      },
     });
     durations.push(performance.now() - startedAt);
     const text = response.content?.find((item) => item.type === "text")?.text;
     const envelope = JSON.parse(text || "null");
-    if (!envelope?.success || !Array.isArray(envelope?.data?.tools) || envelope.data.tools.length === 0) {
+    if (!envelope?.success || !Array.isArray(envelope?.data?.workflow) || envelope.data.workflow.length === 0) {
       throw new Error("Tool search did not return a successful catalog result.");
     }
   }

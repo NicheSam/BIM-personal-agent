@@ -1,15 +1,20 @@
-# BIM Personal Agent v0.5.0
+# BIM Personal Agent v0.6.0
 
-First installable Windows test release for Revit 2024 and Codex Desktop.
+Executor and reporter release for Revit 2024 and Codex Desktop.
 
-## Included
+## Added
 
-- Prebuilt BIM Personal Agent Revit 2024 Add-in.
-- Six-tool MCP Gateway with 148 internal Revit tools.
-- Dynamic C# execution and saved-tool reuse.
-- BIM activity console and `$bim-agent` Codex skill.
-- Portable Node.js 24.15.0 and production Gateway dependencies.
-- `install.bat` for environment check and user installation.
+- One `taskId` across tool search, execution, verification, and reporting.
+- Revit Bridge progress events for queued, executing, completed, and failed states.
+- Local Task Store with one summary and ordered event stream per BIM task.
+- Task-oriented BIM Agent Workbench with live SSE updates.
+- Background Codex token attribution that does not block live execution status.
+
+## Compatibility
+
+- The six public MCP tools remain unchanged; optional `taskId` correlation was added.
+- V1 activity events remain available for older console and audit consumers.
+- Existing built-in tools, saved tools, Dynamic C#, policy, and Harness behavior remain available.
 
 ## User requirements
 
@@ -21,7 +26,7 @@ Node.js, npm, Python, .NET SDK, and administrator permissions are not required f
 
 ## Install
 
-1. Download `BIMPersonalAgent-v0.5.0-win-x64.zip`.
+1. Download `BIMPersonalAgent-v0.6.0-win-x64.zip`.
 2. Extract the ZIP and close Revit and Codex Desktop.
 3. Run `install.bat -CheckOnly`.
 4. Run `install.bat`.

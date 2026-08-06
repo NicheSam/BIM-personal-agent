@@ -1,7 +1,7 @@
 param(
     [switch]$CheckOnly,
     [switch]$TestMode,
-    [string]$InstallRoot = (Join-Path $env:APPDATA "BIMPersonalAgent\runtime\0.5.0"),
+    [string]$InstallRoot = (Join-Path $env:APPDATA "BIMPersonalAgent\runtime\current"),
     [string]$RevitAddinRoot = (Join-Path $env:APPDATA "Autodesk\Revit\Addins\2024"),
     [string]$CodexConfig = (Join-Path $HOME ".codex\config.toml"),
     [string]$SkillRoot = (Join-Path $HOME ".codex\skills")
@@ -55,11 +55,14 @@ if ($TestMode) {
 Assert-Leaf $revitApi "Revit 2024"
 Assert-Leaf (Join-Path $runtimeSource "node\node.exe") "Portable Node.js"
 Assert-Leaf (Join-Path $runtimeSource "gateway\build\index.js") "Gateway"
+Assert-Leaf (Join-Path $runtimeSource "build-metadata.json") "Build metadata"
 Assert-Leaf (Join-Path $revitSource "BimPersonalAgent.Revit.dll") "Revit Add-in"
 Assert-Leaf (Join-Path $revitSource "BimPersonalAgent.addin") "Revit manifest"
 Assert-Directory $skillSource "BIM Agent skill"
 Assert-Leaf $configureScript "Codex configuration script"
 Assert-Leaf $configPath "Codex Desktop config"
+$buildMetadata = Get-Content -LiteralPath (Join-Path $runtimeSource "build-metadata.json") -Encoding UTF8 -Raw | ConvertFrom-Json
+$productVersion = if ($buildMetadata.semanticVersion) { [string]$buildMetadata.semanticVersion } else { "unknown" }
 
 $revitRunning = @(Get-Process -Name Revit -ErrorAction SilentlyContinue).Count -gt 0
 Write-Host "BIM Personal Agent release package: ready"
@@ -75,11 +78,15 @@ if ($revitRunning -and -not $TestMode) {
     throw "Close Revit before installation so the Add-in can be replaced safely."
 }
 
+$legacyRuntimePath = Join-Path (Split-Path $installPath -Parent) "0.6.0"
+if ($legacyRuntimePath -ne $installPath) { Backup-Directory $legacyRuntimePath }
 Backup-Directory $installPath
 New-Item -ItemType Directory -Path (Split-Path $installPath -Parent) -Force | Out-Null
 Copy-Item -LiteralPath $runtimeSource -Destination $installPath -Recurse
 
-$pluginPath = Join-Path $addinPath "BimPersonalAgent\0.5.0"
+$pluginPath = Join-Path $addinPath "BimPersonalAgent\current"
+$legacyPluginPath = Join-Path $addinPath "BimPersonalAgent\0.6.0"
+if ($legacyPluginPath -ne $pluginPath) { Backup-Directory $legacyPluginPath }
 Backup-Directory $pluginPath
 New-Item -ItemType Directory -Path $pluginPath -Force | Out-Null
 Get-ChildItem -LiteralPath $revitSource | Where-Object { $_.Name -ne "BimPersonalAgent.addin" } | ForEach-Object {
@@ -97,7 +104,7 @@ Copy-Item -LiteralPath $skillSource -Destination $skillTarget -Recurse
 Get-ChildItem -LiteralPath $installPath,$pluginPath -Recurse -File | Unblock-File -ErrorAction SilentlyContinue
 
 Write-Host ""
-Write-Host "BIM Personal Agent V0.5.0 is installed."
+Write-Host "BIM Personal Agent V$productVersion is installed."
 Write-Host "1. Start Revit 2024 and open the intended model."
 Write-Host "2. Click BIM Personal > Agent service."
 Write-Host "3. Restart Codex Desktop and enter `$bim-agent in a new task."
