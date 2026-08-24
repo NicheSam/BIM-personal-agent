@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用 BIM 工程人員能理解的方式，說明 BIM Personal Agent 如何把自然語言指令轉成 Revit 模型操作。">
+  <title>BIM Personal Agent v0.8.0｜怎麼工作</title>
+  <style>
+    :root {
+      --ink: #172126;
+      --muted: #5d6a70;
+      --line: #d9dfe1;
+      --soft: #f4f7f6;
+      --paper: #fff;
+      --green: #087a70;
+      --green-soft: #e7f4f1;
+      --blue: #306b91;
+      --blue-soft: #eaf2f7;
+      --amber: #a96018;
+      --amber-soft: #fff3e5;
+      --red: #ae3f3c;
+      --red-soft: #fbeceb;
+      --max: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif; line-height: 1.6; }
+    button { font: inherit; }
+    .shell { width: min(var(--max), calc(100% - 36px)); margin: 0 auto; }
+    header { border-bottom: 1px solid var(--line); background: #fff; }
+    header .shell { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { font-weight: 800; }
+    header span { color: var(--muted); font-size: 14px; }
+
+    .hero { padding: 66px 0 58px; background: linear-gradient(180deg, #f5faf8 0%, #fff 100%); }
+    .hero-grid { display: grid; grid-template-columns: 1fr 420px; gap: 64px; align-items: center; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 18px; font-size: clamp(38px, 5vw, 64px); line-height: 1.1; letter-spacing: 0; }
+    h2 { margin-bottom: 10px; font-size: 30px; line-height: 1.25; letter-spacing: 0; }
+    h3 { margin-bottom: 6px; font-size: 19px; letter-spacing: 0; }
+    .lead { max-width: 650px; color: #445258; font-size: 19px; }
+    .hero-picture { display: grid; grid-template-columns: 1fr 42px 1fr; align-items: center; }
+    .picture-block { min-height: 156px; padding: 24px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    .picture-block .big { display: block; margin-bottom: 18px; color: var(--green); font-size: 42px; font-weight: 850; line-height: 1; }
+    .picture-block strong, .picture-block span { display: block; }
+    .picture-block span { color: var(--muted); font-size: 14px; }
+    .hero-arrow { color: var(--green); text-align: center; font-size: 28px; font-weight: 800; }
+
+    section { padding: 62px 0; }
+    .section-head { max-width: 720px; margin-bottom: 30px; }
+    .section-head p { margin-bottom: 0; color: var(--muted); font-size: 17px; }
+
+    .story { background: var(--soft); border-block: 1px solid var(--line); }
+    .story-line { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+    .story-step { position: relative; min-height: 230px; padding: 22px 20px; border: 1px solid var(--line); border-right: 0; background: #fff; }
+    .story-step:first-child { border-radius: 6px 0 0 6px; }
+    .story-step:last-child { border-right: 1px solid var(--line); border-radius: 0 6px 6px 0; }
+    .story-step:not(:last-child)::after { content: "→"; position: absolute; z-index: 2; top: 44px; right: -15px; display: grid; place-items: center; width: 30px; height: 30px; color: var(--green); background: #fff; border: 1px solid var(--line); border-radius: 50%; font-weight: 850; }
+    .story-number { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 35px; border-radius: 50%; color: #fff; background: var(--green); font-size: 17px; font-weight: 850; }
+    .story-step p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+
+    .demo-grid { display: grid; grid-template-columns: 340px 1fr; gap: 34px; align-items: start; }
+    .request-box { padding: 24px; border: 1px solid var(--line); border-left: 5px solid var(--green); border-radius: 6px; background: #fff; }
+    .request-label { margin-bottom: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .request-text { margin-bottom: 16px; font-size: 21px; font-weight: 760; line-height: 1.45; }
+    .request-note { margin: 0; color: var(--muted); font-size: 13px; }
+    .demo-flow { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: stretch; }
+    .demo-node { padding: 20px; border-radius: 6px; }
+    .demo-node.look { background: var(--blue-soft); }
+    .demo-node.act { background: var(--amber-soft); }
+    .demo-node.done { background: var(--green-soft); }
+    .demo-node span { display: block; color: var(--muted); font-size: 13px; }
+    .demo-arrow { display: grid; place-items: center; color: var(--green); font-size: 24px; font-weight: 850; }
+
+    .routes { background: #172126; color: #f6f8f8; }
+    .routes .section-head p { color: #b3bec3; }
+    .route-tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+    .route-tabs button { padding: 10px 15px; border: 1px solid #455158; border-radius: 4px; color: #c9d2d6; background: transparent; cursor: pointer; }
+    .route-tabs button[aria-pressed="true"] { border-color: #79c8bd; color: #fff; background: #155a54; }
+    .route-view { display: grid; grid-template-columns: .8fr 1.2fr; border: 1px solid #455158; border-radius: 6px; overflow: hidden; }
+    .route-summary { padding: 30px; background: #202c31; }
+    .route-summary strong { display: block; margin-bottom: 14px; font-size: 28px; }
+    .route-summary p { margin-bottom: 0; color: #bdc7cb; }
+    .route-visual { display: grid; grid-template-columns: repeat(3, 1fr); align-items: stretch; background: #2b373c; }
+    .route-piece { display: grid; place-content: center; min-height: 210px; padding: 22px; border-left: 1px solid #455158; text-align: center; }
+    .route-piece .mark { display: block; margin-bottom: 12px; color: #81d1c6; font-size: 34px; font-weight: 850; }
+    .route-piece span { color: #bdc7cb; font-size: 14px; }
+
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .result-panel { border-top: 5px solid var(--green); padding: 24px 0; }
+    .result-panel.attention { border-color: var(--amber); }
+    .result-row { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .result-row span { color: var(--muted); }
+    .result-row strong { font-size: 15px; }
+
+    .deploy { border-top: 1px solid var(--line); }
+    .deploy-note { margin-bottom: 26px; padding: 16px 18px; border-left: 5px solid var(--amber); background: var(--amber-soft); }
+    .deploy-note strong { display: block; }
+    .deploy-note span { color: var(--muted); font-size: 14px; }
+    .deploy-note a { color: var(--green); font-weight: 750; }
+    .deploy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
+    .deploy-column { padding-top: 20px; border-top: 5px solid var(--blue); }
+    .deploy-column.daily { border-color: var(--green); }
+    .deploy-step { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .deploy-step:last-of-type { border-bottom: 0; }
+    .deploy-index { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); background: var(--blue-soft); border-radius: 50%; font-weight: 850; }
+    .daily .deploy-index { color: var(--green); background: var(--green-soft); }
+    .deploy-step p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+    .command-block { margin-top: 18px; padding: 16px; overflow-x: auto; border-radius: 5px; color: #d6efeb; background: #172126; font: 13px/1.7 Consolas, monospace; white-space: pre; }
+    .ready-line { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 24px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .ready-item { padding: 16px; border-right: 1px solid var(--line); background: var(--soft); }
+    .ready-item:last-child { border-right: 0; }
+    .ready-item strong, .ready-item span { display: block; }
+    .ready-item span { color: var(--muted); font-size: 13px; }
+
+    .rules { background: var(--soft); border-top: 1px solid var(--line); }
+    .rule-strip { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .rule { padding: 24px; border-right: 1px solid var(--line); background: #fff; }
+    .rule:last-child { border-right: 0; }
+    .rule .symbol { display: block; width: 46px; margin-bottom: 16px; padding: 8px 0; color: var(--green); border-bottom: 4px solid var(--green); font-size: 21px; font-weight: 850; }
+    .rule p { margin-bottom: 0; color: var(--muted); font-size: 14px; }
+
+    details { margin-top: 30px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    summary { padding: 18px 20px; cursor: pointer; font-weight: 750; }
+    .tech { padding: 0 20px 20px; color: var(--muted); }
+    .tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .tech-item { padding: 15px; background: var(--soft); }
+    .tech-item strong { display: block; color: var(--ink); }
+    footer { padding: 30px 0; color: var(--muted); border-top: 1px solid var(--line); font-size: 13px; }
+    footer a { color: var(--green); font-weight: 700; }
+
+    @media (max-width: 900px) {
+      .hero-grid, .demo-grid, .route-view, .deploy-grid { grid-template-columns: 1fr; }
+      .story-line { grid-template-columns: 1fr; }
+      .story-step, .story-step:first-child, .story-step:last-child { min-height: 0; border-right: 1px solid var(--line); border-bottom: 0; border-radius: 0; }
+      .story-step:first-child { border-radius: 6px 6px 0 0; }
+      .story-step:last-child { border-bottom: 1px solid var(--line); border-radius: 0 0 6px 6px; }
+      .story-step:not(:last-child)::after { top: auto; right: 28px; bottom: -15px; transform: rotate(90deg); }
+      .story-number { margin-bottom: 14px; }
+      .route-piece:first-child { border-left: 0; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: calc(100% - 24px); }
+      header span { display: none; }
+      .hero { padding-top: 42px; }
+      h1 { font-size: 40px; }
+      .hero-grid { gap: 30px; }
+      .hero-picture { grid-template-columns: 1fr; }
+      .hero-arrow { transform: rotate(90deg); }
+      .demo-flow, .route-visual, .result-grid, .rule-strip, .tech-grid, .ready-line { grid-template-columns: 1fr; }
+      .demo-arrow { transform: rotate(90deg); }
+      .route-piece, .rule { border-left: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .route-piece:last-child, .rule:last-child, .ready-item:last-child { border-bottom: 0; }
+      .ready-item { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <header><div class="shell"><div class="brand">BIM Personal Agent</div><span>v0.8.0 · 給 BIM 工程人員的運作說明</span></div></header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <h1>你說要做什麼，Agent 幫你在 Revit 完成</h1>
+          <p class="lead">你不需要知道程式怎麼寫。Agent 會先看目前模型、重用現成或已保存工具，再交給 Revit 執行；完成後回報實際修改與覆核數量。</p>
+        </div>
+        <div class="hero-picture" aria-label="一句話變成模型結果">
+          <div class="picture-block"><span class="big">01</span><strong>你輸入一句話</strong><span>說清楚對象與要做的事</span></div>
+          <div class="hero-arrow">→</div>
+          <div class="picture-block"><span class="big">02</span><strong>Revit 顯示結果</strong><span>模型完成變更並可復原</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="story">
+      <div class="shell">
+        <div class="section-head"><h2>中間其實只經過五件事</h2><p>把 Agent 想成一位會先看現場、選工具、再施工並回報的 BIM 助理。</p></div>
+        <div class="story-line">
+          <article class="story-step"><div class="story-number">1</div><h3>你說需求</h3><p>例如：「把選取的風管備註改成待檢查。」</p></article>
+          <article class="story-step"><div class="story-number">2</div><h3>Agent 看模型</h3><p>確認目前專案、視圖、選取物件和可用資料。</p></article>
+          <article class="story-step"><div class="story-number">3</div><h3>設計工作流程</h3><p>先拆解步驟，再為每一步安排合適工具；缺少的部分才建立新做法。</p></article>
+          <article class="story-step"><div class="story-number">4</div><h3>Revit 執行</h3><p>在模型內完成查詢、建立或修改，並保留 Undo。</p></article>
+          <article class="story-step"><div class="story-number">5</div><h3>回報結果</h3><p>顯示成功與否、改了哪些物件、花了多久。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="section-head"><h2>用一個實際指令來看</h2><p>Agent 不會看到「風管」兩個字就立刻亂改，而是先確認你目前選到了什麼。</p></div>
+        <div class="demo-grid">
+          <div class="request-box"><div class="request-label">你的指令</div><div class="request-text">「把選取風管的備註改成待檢查」</div><p class="request-note">一般參數修改，不需要另外確認。</p></div>
+          <div class="demo-flow">
+            <div class="demo-node look"><h3>先確認</h3><span>選到 12 支風管<br>都有「備註」欄位</span></div>
+            <div class="demo-arrow">→</div>
+            <div class="demo-node act"><h3>再修改</h3><span>將 12 支風管的備註<br>改為「待檢查」</span></div>
+            <div class="demo-arrow">→</div>
+            <div class="demo-node done"><h3>最後回報</h3><span>完成 12 個物件<br>Revit 可按 Undo</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="routes">
+      <div class="shell">
+        <div class="section-head"><h2>Agent 有三種工作方式</h2><p>你不需要指定要用哪一種。Agent 會先找最直接的方法；只有現有方法做不到時，才建立新工具。</p></div>
+        <div class="route-tabs" role="group" aria-label="選擇工作方式">
+          <button type="button" data-route="known" aria-pressed="true">有現成工具</button>
+          <button type="button" data-route="new" aria-pressed="false">沒有現成工具</button>
+          <button type="button" data-route="danger" aria-pressed="false">刪除或破壞性操作</button>
+        </div>
+        <div class="route-view">
+          <div class="route-summary"><strong id="routeTitle"></strong><p id="routeText"></p></div>
+          <div class="route-visual" id="routeVisual"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="section-head"><h2>工程人員最後會看到什麼？</h2><p>重點不是程式碼，而是「做了什麼、影響多少、是否成功、能不能復原」。</p></div>
+        <div class="result-grid">
+          <div class="result-panel"><h3>Codex 對話回覆</h3><div class="result-row"><span>結果</span><strong>已完成</strong></div><div class="result-row"><span>修改範圍</span><strong>12 支選取的風管</strong></div><div class="result-row"><span>執行內容</span><strong>備註改為「待檢查」</strong></div><div class="result-row"><span>復原方式</span><strong>可在 Revit 使用 Undo</strong></div></div>
+          <div class="result-panel attention"><h3>活動控制台</h3><div class="result-row"><span>狀態</span><strong>完成、失敗或已取消</strong></div><div class="result-row"><span>模型影響</span><strong>實際修改元素數量</strong></div><div class="result-row"><span>模型覆核</span><strong>已讀回驗證元素數量</strong></div><div class="result-row"><span>工具記憶</span><strong>saved tool 版本與 cache 狀態</strong></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="deploy" id="deploy">
+      <div class="shell">
+        <div class="section-head"><h2>如何部署與開始使用</h2><p>首次部署只做一次；完成後，BIM 工程人員每天只要開啟 Revit、啟動 Agent，再用自然語言下指令。</p></div>
+        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/tag/v0.8.0">GitHub Release v0.8.0</a> 下載 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
+        <div class="deploy-grid">
+          <div class="deploy-column">
+            <h3>首次部署：管理者執行</h3>
+            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>先關閉 Revit</strong><p>避免正在載入的 Add-in DLL 無法安全更新。Codex 安裝後再重新啟動即可。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要使用 Source code ZIP。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>先檢查，再執行 install.bat</strong><p>Release 安裝器使用內附的 portable Node.js、預建 Gateway 與 Revit DLL；不會在使用者電腦重新建置原始碼。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>重新啟動 Revit 與 Codex</strong><p>之後就依右側的日常流程開始使用，不必再次安裝。</p></div></div>
+            <details>
+              <summary>顯示檢查與安裝指令</summary>
+              <div class="command-block">install.bat -CheckOnly
+install.bat</div>
+            </details>
+          </div>
+
+          <div class="deploy-column daily">
+            <h3>每天使用：BIM 工程人員</h3>
+            <div class="deploy-step"><span class="deploy-index">1</span><div><strong>開啟 Revit 2024 與工作模型</strong><p>確認目前 active document 就是要操作的模型。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>啟動 Agent 服務</strong><p>在 Revit 的 BIM Personal 頁籤按「Agent服務 開/關」。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">3</span><div><strong>在新 Codex task 輸入 $bim-agent</strong><p>Skill 會檢查 Revit 連線、讀取目前模型並開啟活動控制台。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">4</span><div><strong>直接描述工作</strong><p>例如：「把目前視圖的風管依樓層分類，並回報數量。」</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">5</span><div><strong>查看結果</strong><p>在 Revit 檢查模型；在 Codex 與活動控制台查看執行內容。</p></div></div>
+          </div>
+        </div>
+        <div class="ready-line">
+          <div class="ready-item"><strong>Revit 已開啟</strong><span>且有 active model</span></div>
+          <div class="ready-item"><strong>Agent 服務已啟動</strong><span>localhost:9686</span></div>
+          <div class="ready-item"><strong>Codex 使用 $bim-agent</strong><span>即可開始自然語言操作</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="rules">
+      <div class="shell">
+        <div class="section-head"><h2>三個你需要知道的安全規則</h2><p>正常建立與修改直接執行；只有高風險行為需要你在 Revit 再確認。</p></div>
+        <div class="rule-strip">
+          <article class="rule"><span class="symbol">A</span><h3>一般修改直接做</h3><p>建立、移動、修改參數等可復原工作，不會每一步都跳確認視窗。</p></article>
+          <article class="rule"><span class="symbol">B</span><h3>刪除前一定問</h3><p>刪除、清除、覆寫等操作，先在 Revit 顯示實際影響範圍，再由你決定。</p></article>
+          <article class="rule"><span class="symbol">C</span><h3>失敗就不留下半成品</h3><p>同一批多步驟工作中途失敗時，整批退回，不保留只完成一半的模型狀態。</p></article>
+        </div>
+
+        <details open>
+          <summary>目前功能邊界</summary>
+          <div class="tech">
+            <div class="tech-grid">
+              <div class="tech-item"><strong>支援版本</strong>僅 Revit 2024、單一 Revit session、單一 active document</div>
+              <div class="tech-item"><strong>模型安全</strong>可復原修改直接執行；刪除、清除與不可 Undo 操作需確認</div>
+              <div class="tech-item"><strong>Dynamic C#</strong>禁止檔案、網路、外部程序、反射、P/Invoke 與自行建立 Transaction</div>
+              <div class="tech-item"><strong>觀測邊界</strong>Console 非同步顯示；Bridge 回應與 Revit 實際狀態才是權威結果</div>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>給想知道系統架構的人</summary>
+          <div class="tech">
+            <div class="tech-grid">
+              <div class="tech-item"><strong>Codex</strong>理解指令與決定做法</div>
+              <div class="tech-item"><strong>Agent Runtime</strong>找工具、驗證與記錄</div>
+              <div class="tech-item"><strong>Revit Bridge</strong>排隊並進入 Revit 執行</div>
+              <div class="tech-item"><strong>Revit 2024</strong>唯一真正修改模型的地方</div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="shell">BIM Personal Agent v0.8.0 · <a href="https://github.com/NicheSam/BIM-personal-agent">查看 GitHub repository</a></div></footer>
+
+  <script>
+    const routes = {
+      known: {
+        title: "直接使用現成工具",
+        text: "這是最快、最常見的路線。Agent 找到符合需求的工具，檢查輸入後交給 Revit 執行。",
+        pieces: [["1", "找到工具"], ["2", "檢查資料"], ["3", "Revit 執行"]]
+      },
+      new: {
+        title: "建立新做法，成功後保存",
+        text: "現有工具做不到時，Codex 才會寫新的 C# 方法。第一次成功後保存，下次遇到同類工作可直接重用。",
+        pieces: [["1", "建立方法"], ["2", "測試執行"], ["3", "保存重用"]]
+      },
+      danger: {
+        title: "先顯示範圍，由你確認",
+        text: "遇到刪除、清除或覆寫，Agent 必須先算出實際影響範圍。你在 Revit 按下確認後才會執行。",
+        pieces: [["1", "計算範圍"], ["2", "Revit 詢問"], ["3", "確認才執行"]]
+      }
+    };
+
+    function renderRoute(name) {
+      const route = routes[name];
+      document.querySelector("#routeTitle").textContent = route.title;
+      document.querySelector("#routeText").textContent = route.text;
+      const visual = document.querySelector("#routeVisual");
+      visual.replaceChildren();
+      route.pieces.forEach(piece => {
+        const item = document.createElement("div");
+        item.className = "route-piece";
+        const mark = document.createElement("strong");
+        mark.className = "mark";
+        mark.textContent = piece[0];
+        const label = document.createElement("span");
+        label.textContent = piece[1];
+        item.append(mark, label);
+        visual.append(item);
+      });
+    }
+
+    document.querySelectorAll("[data-route]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-route]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+        renderRoute(button.dataset.route);
+      });
+    });
+    renderRoute("known");
+  </script>
+</body>
+</html>

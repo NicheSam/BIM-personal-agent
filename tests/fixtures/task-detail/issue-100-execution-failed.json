@@ -1,0 +1,22 @@
+{
+  "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+  "requestId": "issue-100-execution-failed",
+  "publicTool": "run_bim_tool",
+  "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+  "version": "1.0.0",
+  "risk": "readOnly",
+  "startedAtUtc": "2026-08-04T04:50:00.000Z",
+  "durationMs": 120,
+  "executionStatus": "failed",
+  "verificationStatus": "not_requested",
+  "input": { "arguments": { "importInstanceId": 13719035, "blockName": "B1F消防撒水.dwg.bt11_10" } },
+  "inputParameters": {
+    "arguments.importInstanceId": { "origin": "agent_resolved" },
+    "arguments.blockName": { "origin": "user_provided" }
+  },
+  "result": { "importInstanceId": 13719035, "blockName": "B1F消防撒水.dwg.bt11_10", "transactionStarted": false, "modelChanged": false },
+  "errorCode": "REVIT_COMMAND_FAILED",
+  "errorMessage": "The Revit command rejected the selected import instance.",
+  "errorLayer": "revit_command",
+  "errorStack": "Fixture stack for Developer Mode only"
+}

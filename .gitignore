@@ -7,6 +7,7 @@
 *secret*
 *credential*
 *token*
+!docs/decisions/ADR-002-thin-harness-and-local-token-attribution.md
 *.pem
 *.p12
 *.pfx
@@ -32,10 +33,16 @@ obj/
 *.cache
 
 # Logs and runtime outputs
+artifacts/
+.packages/
+gateway/node_modules/
+gateway/build/
+console/build-metadata.json
 logs/
 log/
 runtime/
 outputs/
+output/
 *.log
 *.tmp
 

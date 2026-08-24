@@ -1,0 +1,29 @@
+{
+  "name": "bim-personal-agent-gateway",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-assets.mjs",
+    "test": "npm run build && node --test \"build/*.test.js\" \"../console/*.test.mjs\"",
+    "start": "node build/index.js",
+    "smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "smoke:live": "node scripts/smoke-live.mjs",
+    "call:live": "node scripts/call-agent.mjs",
+    "console:start": "node ../console/server.mjs",
+    "upstream:verify": "node ../scripts/audit-revit-mcp-upstream.mjs --baseline-only",
+    "upstream:audit": "node ../scripts/audit-revit-mcp-upstream.mjs",
+    "import-catalog": "node scripts/import-revit-catalog.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "ajv": "^8.20.0",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.9.3"
+  }
+}

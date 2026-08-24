@@ -1,0 +1,53 @@
+{
+  "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+  "requestId": "issue-100-success",
+  "publicTool": "run_bim_tool",
+  "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+  "version": "1.0.0",
+  "risk": "readOnly",
+  "startedAtUtc": "2026-08-04T04:47:37.000Z",
+  "durationMs": 390,
+  "executionStatus": "succeeded",
+  "verificationStatus": "passed",
+  "input": {
+    "arguments": { "importInstanceId": 13719035, "blockName": "B1F消防撒水.dwg.bt11_10", "duplicateToleranceMm": 10 },
+    "verificationChecks": [
+      { "id": "source.reference.exists" },
+      { "id": "preview.candidate_count.reported" },
+      { "id": "coordinate.anchors.within_tolerance" }
+    ]
+  },
+  "inputParameters": {
+    "arguments.importInstanceId": { "origin": "agent_resolved" },
+    "arguments.blockName": { "origin": "user_provided" },
+    "arguments.duplicateToleranceMm": { "origin": "default", "defaultValue": 10, "unit": "mm" }
+  },
+  "result": {
+    "projectName": "Issue 100 model",
+    "projectFingerprint": "issue100-fixture-fingerprint",
+    "revitVersion": "2024",
+    "activeView": { "id": 11061843, "name": "{3D}" },
+    "linkedDwgName": "B1F消防撒水.dwg",
+    "importInstanceId": 13719035,
+    "blockName": "B1F消防撒水.dwg.bt11_10",
+    "candidateCount": 137,
+    "anchors": [
+      { "candidateId": "DB-001", "residualMm": 0, "toleranceMm": 1, "status": "passed" },
+      { "candidateId": "DB-068", "residualMm": 0, "toleranceMm": 1, "status": "passed" },
+      { "candidateId": "DB-137", "residualMm": 0, "toleranceMm": 1, "status": "passed" }
+    ],
+    "anchorMaxResidualMm": 0,
+    "anchorAverageResidualMm": 0,
+    "anchorResidualToleranceMm": 1,
+    "transactionStarted": false,
+    "modelChanged": false,
+    "verification": {
+      "method": "mixed_claim_verification",
+      "checks": [
+        { "id": "source.reference.exists", "method": "reference_existence", "passed": true, "elementIds": [13719035] },
+        { "id": "preview.candidate_count.reported", "method": "result_assertion", "passed": true, "expected": 137, "actual": 137 },
+        { "id": "coordinate.anchors.within_tolerance", "method": "result_assertion", "passed": true, "expected": "<= 1 mm", "actual": 0 }
+      ]
+    }
+  }
+}

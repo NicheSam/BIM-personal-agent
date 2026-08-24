@@ -1,0 +1,92 @@
+using System;
+
+namespace RevitMCP.Models
+{
+    /// <summary>
+    /// Revit 命令請求模型
+    /// </summary>
+    [Serializable]
+    public class RevitCommandRequest
+    {
+        /// <summary>
+        /// 命令名稱
+        /// </summary>
+        public string CommandName { get; set; }
+
+        /// <summary>
+        /// 命令參數（JSON 字串）
+        /// </summary>
+        public object Parameters { get; set; }
+
+        /// <summary>
+        /// 請求 ID（用於追蹤回應）
+        /// </summary>
+        public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
+    }
+
+    /// <summary>
+    /// Revit 命令回應模型
+    /// </summary>
+    [Serializable]
+    public class RevitCommandResponse
+    {
+        public string MessageType { get; set; } = "response";
+
+        /// <summary>
+        /// 執行是否成功
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// 回應資料
+        /// </summary>
+        public object Data { get; set; }
+
+        /// <summary>
+        /// 錯誤訊息
+        /// </summary>
+        public string Error { get; set; }
+
+        /// <summary>
+        /// Stable machine-readable error code.
+        /// </summary>
+        public string ErrorCode { get; set; }
+
+        /// <summary>
+        /// 請求 ID
+        /// </summary>
+        public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
+    }
+
+    [Serializable]
+    public class RevitProgressEvent
+    {
+        public string MessageType { get; set; } = "event";
+
+        public string RequestId { get; set; }
+
+        public string TaskId { get; set; }
+
+        public string GatewayRequestId { get; set; }
+
+        public int Sequence { get; set; }
+
+        public string TimestampUtc { get; set; }
+
+        public string Phase { get; set; }
+
+        public string EventType { get; set; }
+
+        public string Message { get; set; }
+
+        public object Data { get; set; }
+    }
+}

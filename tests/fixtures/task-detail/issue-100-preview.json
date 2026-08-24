@@ -1,0 +1,59 @@
+{
+  "taskId": "95855e7e-d6d0-4d84-bc01-968ded9446e0",
+  "requestId": "0f3bf16b-b962-43c0-ba50-3f195aadaaed",
+  "publicTool": "run_bim_tool",
+  "toolId": "builtin:preview_family_instances_from_dwg_blocks",
+  "version": "1.0.0",
+  "risk": "readOnly",
+  "startedAtUtc": "2026-08-04T04:47:37.000Z",
+  "durationMs": 390,
+  "executionStatus": "succeeded",
+  "verificationStatus": "passed",
+  "input": {
+    "arguments": {
+      "importInstanceId": 13719035,
+      "blockName": "B1F消防撒水.dwg.bt11_10",
+      "duplicateToleranceMm": 10
+    },
+    "verificationChecks": [
+      { "id": "source.reference.exists", "description": "The linked DWG reference exists" },
+      { "id": "preview.candidate_count.reported", "description": "The candidate count is reported" },
+      { "id": "coordinate.anchors.within_tolerance", "description": "The coordinate anchors are within tolerance" }
+    ]
+  },
+  "inputParameters": {
+    "arguments.importInstanceId": { "origin": "agent_resolved" },
+    "arguments.blockName": { "origin": "user_provided" },
+    "arguments.duplicateToleranceMm": { "origin": "default", "defaultValue": 10, "unit": "mm" }
+  },
+  "result": {
+    "projectName": "Issue 100 model",
+    "projectFingerprint": "issue100-fixture-fingerprint",
+    "revitVersion": "2024",
+    "activeView": { "id": 11061843, "name": "{3D}" },
+    "linkedDwgName": "B1F消防撒水.dwg",
+    "importInstanceId": 13719035,
+    "blockName": "B1F消防撒水.dwg.bt11_10",
+    "candidateCount": 137,
+    "anchors": [
+      { "candidateId": "DB-001", "pathAPointMm": { "x": 0, "y": 0, "z": 0 }, "pathBPointMm": { "x": 0, "y": 0, "z": 0 }, "residualMm": 0, "toleranceMm": 1 },
+      { "candidateId": "DB-068", "pathAPointMm": { "x": 1000, "y": 0, "z": 0 }, "pathBPointMm": { "x": 1000, "y": 0, "z": 0 }, "residualMm": 0, "toleranceMm": 1 },
+      { "candidateId": "DB-137", "pathAPointMm": { "x": 0, "y": 1000, "z": 0 }, "pathBPointMm": { "x": 0, "y": 1000, "z": 0 }, "residualMm": 0, "toleranceMm": 1 }
+    ],
+    "anchorMaxResidualMm": 0,
+    "anchorAverageResidualMm": 0,
+    "anchorResidualToleranceMm": 1,
+    "transactionStarted": false,
+    "modelChanged": false,
+    "createdElementIds": [],
+    "deletedElementIds": [],
+    "verification": {
+      "method": "Revit Bridge deterministic verification",
+      "checks": [
+        { "id": "source.reference.exists", "method": "reference_existence", "target": "Linked DWG reference", "passed": true, "actual": { "existing": 1 }, "elementIds": [13719035] }
+      ],
+      "passedCount": 1,
+      "failedCount": 0
+    }
+  }
+}

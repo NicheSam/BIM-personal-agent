@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bim-personal-agent.local/schemas/task-execution-envelope-v3.schema.json",
+  "title": "BIM Personal Agent execution envelope",
+  "type": "object",
+  "required": [
+    "schemaVersion", "taskId", "requestId", "tool", "domain", "domainSchemaVersion",
+    "domainData", "startedAtUtc", "completedAtUtc", "durationMs", "executionStatus",
+    "verificationStatus", "status", "input", "inputOrigins", "normalizedResult",
+    "modelBefore", "modelAfter", "changes", "lineage", "verification", "stageTrace",
+    "warnings", "generatedAtUtc"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 3 },
+    "taskId": { "type": "string" },
+    "requestId": { "type": "string" },
+    "runId": { "type": "string" },
+    "tool": {
+      "type": "object",
+      "required": ["toolId", "publicTool", "kind"],
+      "properties": {
+        "toolId": { "type": "string" },
+        "publicTool": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["builtin", "saved", "dynamic", "plan", "agent"] },
+        "version": { "type": "string" },
+        "sourceHash": { "type": "string" },
+        "risk": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "domain": { "type": "string" },
+    "domainSchemaVersion": { "type": "integer", "minimum": 1 },
+    "domainData": { "type": "object" },
+    "startedAtUtc": { "type": "string", "format": "date-time" },
+    "completedAtUtc": { "type": "string", "format": "date-time" },
+    "durationMs": { "type": "number", "minimum": 0 },
+    "executionStatus": { "enum": ["pending", "running", "succeeded", "failed", "stopped", "unknown"] },
+    "verificationStatus": { "enum": ["not_requested", "pending", "passed", "failed", "insufficient_evidence"] },
+    "status": { "enum": ["verified", "completed_partially_verified", "verification_failed", "not_verified", "execution_failed", "rolled_back"] },
+    "input": {},
+    "inputOrigins": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["origin"],
+        "properties": {
+          "origin": { "enum": ["user_provided", "default", "agent_resolved", "tool_derived", "system_injected"] },
+          "defaultValue": {},
+          "unit": { "type": "string" },
+          "resolver": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rawResult": {},
+    "normalizedResult": {
+      "type": "object",
+      "required": ["normalizerId", "normalizerVersion", "value", "fieldMappings"],
+      "properties": {
+        "normalizerId": { "type": "string" },
+        "normalizerVersion": { "type": "integer", "minimum": 1 },
+        "value": {},
+        "fieldMappings": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "modelBefore": { "$ref": "#/$defs/modelIdentity" },
+    "modelAfter": { "$ref": "#/$defs/modelIdentity" },
+    "changes": {
+      "type": "object",
+      "required": ["createdElementIds", "modifiedElementIds", "deletedElementIds"],
+      "properties": {
+        "createdElementIds": { "$ref": "#/$defs/elementIds" },
+        "modifiedElementIds": { "$ref": "#/$defs/elementIds" },
+        "deletedElementIds": { "$ref": "#/$defs/elementIds" },
+        "transactionStarted": { "type": "boolean" },
+        "transactionName": { "type": "string" },
+        "modelChanged": { "type": "boolean" },
+        "rolledBack": { "type": "boolean" }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["records", "edges"],
+      "properties": {
+        "records": { "type": "array", "items": { "type": "object" } },
+        "edges": { "type": "array", "items": { "type": "object", "required": ["from", "to", "relation"] } }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["requested", "status", "verificationScope", "requiredClaims", "claims", "coveredClaims", "uncoveredClaims"],
+      "properties": {
+        "requested": { "type": "boolean" },
+        "status": { "type": "string" },
+        "verificationScope": { "enum": ["none", "partial", "full"] },
+        "requiredClaims": { "type": "array", "items": { "type": "object" } },
+        "claims": { "type": "array", "items": { "type": "object" } },
+        "coveredClaims": { "type": "array", "items": { "type": "string" } },
+        "uncoveredClaims": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "stageTrace": { "type": "array", "items": { "type": "object" } },
+    "warnings": { "type": "array" },
+    "error": { "type": "object" },
+    "developerTraceRef": { "type": "string" },
+    "generatedAtUtc": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "elementIds": { "type": "array", "items": { "type": "integer" } },
+    "modelIdentity": {
+      "type": "object",
+      "properties": {
+        "projectName": { "type": "string" },
+        "projectFingerprint": { "type": "string" },
+        "revitVersion": { "type": "string" },
+        "activeView": { "type": "string" },
+        "activeViewId": { "type": "integer" },
+        "level": { "type": "string" },
+        "levelId": { "type": "integer" },
+        "capturedAtUtc": { "type": "string", "format": "date-time" },
+        "scopeElementIds": { "$ref": "#/$defs/elementIds" },
+        "scopeHash": { "type": "string" }
+      }
+    }
+  }
+}

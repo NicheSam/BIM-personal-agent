@@ -2,6 +2,10 @@
 
 Date: 2026-07-09
 
+> Historical evaluation. The implemented V0.5 scope is now defined in
+> [`docs/PRODUCT.md`](docs/PRODUCT.md). Do not use the broad tool list below as
+> the current build backlog.
+
 ## Conclusion
 
 Decision: Narrow scope and build a validation MVP.

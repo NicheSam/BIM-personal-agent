@@ -1,0 +1,60 @@
+{
+  "version": "0.8.0",
+  "mode": "agent-gateway",
+  "source": {
+    "repository": "https://github.com/shuotao/REVIT_MCP_study",
+    "commit": "cfe0739",
+    "catalog": "gateway/src/catalog/builtin-tools.json",
+    "bridge": "src/BimPersonalAgent.RevitBridge",
+    "upstream_tool_count": 146,
+    "agent_owned_tool_count": 2
+  },
+  "execution_policy": {
+    "read": {
+      "show_scope": false,
+      "requires_confirmation": false
+    },
+    "reversible_create_or_modify": {
+      "show_scope": false,
+      "requires_confirmation": false
+    },
+    "destructive": {
+      "show_scope": true,
+      "requires_confirmation": true
+    }
+  },
+  "performance": {
+    "telemetry": "%APPDATA%\\BIMPersonalAgent\\telemetry\\tool-performance.jsonl",
+    "guidance_only": true,
+    "baseline_samples": 3,
+    "reference_p95_ms": 3000,
+    "reference_success_rate": 0.95,
+    "suggested_routes": [
+      "existing_tool",
+      "operation_plan",
+      "generated_csharp_runtime"
+    ]
+  },
+  "tool_policy": {
+    "mode": "internal_searchable_catalog",
+    "public_mcp_tools": 6,
+    "builtin_tools": 148,
+    "validated_tools": 21,
+    "experimental_tools": 120,
+    "disabled_tools": 7,
+    "required_tools": [
+      "get_task_context",
+      "execute_dynamic_csharp"
+    ],
+    "blocked_tools": [
+      "copy_sheets_from_file",
+      "dedup_detail_elements_in_view",
+      "delete_element",
+      "door-window-legend-tools",
+      "export_families",
+      "import_excel_to_drafting_views",
+      "read_excel_tables"
+    ],
+    "blocked_reason": "Known cross-file, destructive, or capacity-heavy tools remain disabled. Any built-in classified as destructive is also refused at runtime until it can prove actual scope before Revit confirmation."
+  }
+}

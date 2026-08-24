@@ -1,0 +1,6215 @@
+[
+  {
+    "toolId": "builtin:get_task_context",
+    "name": "get_task_context",
+    "version": "upstream-cfe0739-local",
+    "description": "Get the current project, active view, levels, bounded selection summary, and optional active-view category schema in one call. Use this as the default first call for a natural-language task.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "includeSchema": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include category counts for the active view."
+        },
+        "maxSelectedElements": {
+          "type": "number",
+          "default": 20,
+          "description": "Maximum selected elements to return (1-50)."
+        }
+      }
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:inspect_element_context",
+    "name": "inspect_element_context",
+    "version": "bim-agent-element-context-v1",
+    "description": "Inspect one Revit element from elementId or the current single selection. Returns identity, category, type, level, instance/type parameters, lightweight geometry, location, relationships, and view/sheet context. Read-only; no Revit transaction is opened. Use this when BIM Agent needs stronger object perception before deciding or explaining.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "Optional Revit ElementId. If omitted, the current Revit selection must contain exactly one element."
+        },
+        "detail": {
+          "type": "string",
+          "enum": [
+            "summary",
+            "parameters",
+            "geometry",
+            "location",
+            "relationships",
+            "viewSheet",
+            "full"
+          ],
+          "default": "summary",
+          "description": "Depth of inspection. summary returns object identity, lightweight geometry/location/relationship hints; full includes all supported sections."
+        },
+        "maxParameters": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum instance and type parameter records returned per scope. Clamped to 1-500."
+        },
+        "includeDocumentPath": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include the local Revit document path. Default false to avoid exposing local paths in normal activity evidence."
+        },
+        "maxViewsScanned": {
+          "type": "number",
+          "default": 0,
+          "description": "Reserved for a future bounded visibility scan. Current implementation reports active, owner, viewport, and sheet context only."
+        }
+      }
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "capabilityKey": "element.context.inspect",
+    "tags": [
+      "revit",
+      "builtin",
+      "element",
+      "parameter",
+      "selection",
+      "context"
+    ],
+    "source": "BIMPersonalAgent.ElementContext@local"
+  },
+  {
+    "toolId": "builtin:get_project_info",
+    "name": "get_project_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得目前開啟的 Revit 專案基本資訊，包括專案名稱、建築物名稱、業主等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_all_levels",
+    "name": "get_all_levels",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有樓層的清單，包括樓層名稱和標高。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_level",
+    "name": "create_level",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中建立一個新的樓層 (Level)。指定標高（公釐）與可選名稱；若名稱已存在 Revit 會自動附加尾號。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elevation": {
+          "type": "number",
+          "description": "樓層標高（公釐，會自動轉成 Revit 內部單位 feet）"
+        },
+        "name": {
+          "type": "string",
+          "description": "樓層名稱（選填，例如 '3F'、'RF'）。未填則使用 Revit 預設名稱"
+        }
+      },
+      "required": [
+        "elevation"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_element_info",
+    "name": "get_element_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得指定元素的詳細資訊，包括參數、幾何資訊等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "元素 ID"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:delete_element",
+    "name": "delete_element",
+    "version": "upstream-cfe0739-local",
+    "description": "依 Element ID 刪除 Revit 元素。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要刪除的元素 ID"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "disabled",
+    "risk": "destructive",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:modify_element_parameter",
+    "name": "modify_element_parameter",
+    "version": "upstream-cfe0739-local",
+    "description": "修改 Revit 元素的參數值。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "元素 ID"
+        },
+        "parameterName": {
+          "type": "string",
+          "description": "參數名稱"
+        },
+        "value": {
+          "type": "string",
+          "description": "新的參數值"
+        }
+      },
+      "required": [
+        "elementId",
+        "parameterName",
+        "value"
+      ]
+    },
+    "status": "validated",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_selected_elements",
+    "name": "get_selected_elements",
+    "version": "upstream-cfe0739-local",
+    "description": "取得使用者目前在 Revit 中選取的所有元素的基本資訊（ID、名稱、品類）。若是視圖或剖面標記，會一併回傳 Origin (X,Y,Z) 供空間排序使用。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_all_views",
+    "name": "get_all_views",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有視圖的清單，包含平面圖、天花圖、3D視圖、剖面圖等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewType": {
+          "type": "string",
+          "description": "視圖類型篩選：FloorPlan、CeilingPlan、ThreeD、Section、Elevation"
+        },
+        "levelName": {
+          "type": "string",
+          "description": "樓層名稱篩選（選填）"
+        }
+      }
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_active_view",
+    "name": "get_active_view",
+    "version": "upstream-cfe0739-local",
+    "description": "取得目前開啟的視圖資訊，包含視圖名稱、類型、樓層等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:set_active_view",
+    "name": "set_active_view",
+    "version": "upstream-cfe0739-local",
+    "description": "切換至指定的視圖。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "要切換的視圖 Element ID"
+        }
+      },
+      "required": [
+        "viewId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:rename_view",
+    "name": "rename_view",
+    "version": "upstream-cfe0739-local",
+    "description": "重新命名指定的 Revit 視圖（包含剖面圖、平面圖等），此工具不受軟體語系本地化影響。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "視圖的 Element ID"
+        },
+        "newName": {
+          "type": "string",
+          "description": "新的視圖名稱"
+        }
+      },
+      "required": [
+        "viewId",
+        "newName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:select_element",
+    "name": "select_element",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中選取指定的元素，讓使用者可以視覺化確認目標元素。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要選取的元素 ID (單選)"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要選取的元素 ID 列表 (多選)"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:zoom_to_element",
+    "name": "zoom_to_element",
+    "version": "upstream-cfe0739-local",
+    "description": "將視圖縮放至指定元素，讓使用者可以快速定位。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要縮放至的元素 ID"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:measure_distance",
+    "name": "measure_distance",
+    "version": "upstream-cfe0739-local",
+    "description": "測量兩個點之間的距離。回傳距離（公釐）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "point1X": {
+          "type": "number",
+          "description": "第一點 X 座標（公釐）"
+        },
+        "point1Y": {
+          "type": "number",
+          "description": "第一點 Y 座標（公釐）"
+        },
+        "point1Z": {
+          "type": "number",
+          "description": "第一點 Z 座標（公釐），預設 0",
+          "default": 0
+        },
+        "point2X": {
+          "type": "number",
+          "description": "第二點 X 座標（公釐）"
+        },
+        "point2Y": {
+          "type": "number",
+          "description": "第二點 Y 座標（公釐）"
+        },
+        "point2Z": {
+          "type": "number",
+          "description": "第二點 Z 座標（公釐），預設 0",
+          "default": 0
+        }
+      },
+      "required": [
+        "point1X",
+        "point1Y",
+        "point2X",
+        "point2Y"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:query_elements",
+    "name": "query_elements",
+    "version": "upstream-cfe0739-local",
+    "description": "查詢 Revit 專案中的元素。可依類別、族群、類型、樓層等條件篩選。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "元素類別（如：Walls, Rooms, Doors, Windows, Floors, Columns）"
+        },
+        "family": {
+          "type": "string",
+          "description": "族群名稱（選填）"
+        },
+        "type": {
+          "type": "string",
+          "description": "類型名稱（選填）"
+        },
+        "level": {
+          "type": "string",
+          "description": "樓層名稱（選填）"
+        },
+        "maxCount": {
+          "type": "number",
+          "description": "最大回傳數量（預設 100）",
+          "default": 100
+        }
+      },
+      "required": [
+        "category"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_active_schema",
+    "name": "get_active_schema",
+    "version": "upstream-cfe0739-local",
+    "description": "[Phase 1: Exploration] Get all categories and their element counts in the active view. ALWAYS run this first to confirm if the target category exists.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "The view Element ID (Optional, defaults to active view)"
+        }
+      }
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_category_fields",
+    "name": "get_category_fields",
+    "version": "upstream-cfe0739-local",
+    "description": "[Phase 2: Alignment] Get all parameter names for a specific category. MANDATORY: Run this before 'query_elements_with_filter' to identify exact localized parameter names.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "The category internal name (e.g., 'Walls', 'Windows')"
+        }
+      },
+      "required": [
+        "category"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_field_values",
+    "name": "get_field_values",
+    "version": "upstream-cfe0739-local",
+    "description": "[Optional Phase 2.5] Get the distribution of existing values for a specific parameter.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "The category internal name"
+        },
+        "fieldName": {
+          "type": "string",
+          "description": "The parameter name"
+        },
+        "maxSamples": {
+          "type": "number",
+          "description": "Max samples to analyze (Default: 500)",
+          "default": 500
+        }
+      },
+      "required": [
+        "category",
+        "fieldName"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:query_elements_with_filter",
+    "name": "query_elements_with_filter",
+    "version": "upstream-cfe0739-local",
+    "description": "[Phase 3: Retrieval] Query elements with multi-filter support. NOTE: The 'field' name MUST match names from 'get_category_fields'.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "The category internal name"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "The view Element ID (Optional)"
+        },
+        "filters": {
+          "type": "array",
+          "description": "List of filter conditions",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Parameter name (MUST be from get_category_fields)"
+              },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "equals",
+                  "contains",
+                  "less_than",
+                  "greater_than",
+                  "not_equals"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "description": "Comparison value"
+              }
+            },
+            "required": [
+              "field",
+              "operator",
+              "value"
+            ]
+          }
+        },
+        "returnFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "指定要回傳的參數欄位清單"
+        },
+        "maxCount": {
+          "type": "number",
+          "description": "最大回傳數量 (預設 100)",
+          "default": 100
+        }
+      },
+      "required": [
+        "category"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:move_element",
+    "name": "move_element",
+    "version": "upstream-cfe0739-local",
+    "description": "移動指定的 Revit 元素（依 dx, dy, dz 指定位移量）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要移動的元素 ID"
+        },
+        "dx": {
+          "type": "number",
+          "description": "X 軸移動距離 (mm)",
+          "default": 0
+        },
+        "dy": {
+          "type": "number",
+          "description": "Y 軸移動距離 (mm)",
+          "default": 0
+        },
+        "dz": {
+          "type": "number",
+          "description": "Z 軸移動距離 (mm)",
+          "default": 0
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "validated",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:flip_element",
+    "name": "flip_element",
+    "version": "upstream-cfe0739-local",
+    "description": "翻轉指定的 Revit 建築元素（例如門或窗）。可以選擇翻轉面向(facing)或開向(hand)。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要翻轉的元素 ID"
+        },
+        "flipType": {
+          "type": "string",
+          "description": "翻轉類型: 'facing' (預設，依牆為軸翻轉) 或是 'hand' (左右翻轉)",
+          "default": "facing"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:adjust_section_datums",
+    "name": "adjust_section_datums",
+    "version": "upstream-cfe0739-local",
+    "description": "自動調整剖面視圖的網格線 (Grids) 與樓層線 (Levels) 2D 範圍與氣泡顯示。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要調整的剖面視圖或剖面標記的 Element ID 列表"
+        }
+      },
+      "required": [
+        "viewIds"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:analyze_floor_slopes",
+    "name": "analyze_floor_slopes",
+    "version": "upstream-cfe0739-local",
+    "description": "分析樓板頂面排水坡度：以 Solid→PlanarFace 法向量與 Z 軸夾角計算每片朝上頂面的坡度百分比，回傳每片樓板的 Min/Max 坡度，並可回寫至指定參數（預設 Comments）。未指定 elementIds 時自動收集 Function=Exterior 的樓板。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要分析的樓板 Element ID 陣列；省略則自動收集所有 Function=Exterior 樓板"
+        },
+        "paramName": {
+          "type": "string",
+          "description": "坡度回寫的目標參數名稱，預設 Comments"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_categories",
+    "name": "list_categories",
+    "version": "upstream-cfe0739-local",
+    "description": "列舉專案中所有品類 (Category) 及其 CategoryType (Model / Annotation / Internal / AnalyticalModel / Invalid)。回傳每個品類的 Name、CategoryType、Id、子品類數量，並附各 CategoryType 的統計。唯讀查詢。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "categoryType": {
+          "type": "string",
+          "description": "只列出指定 CategoryType 的品類 (Model / Annotation / Internal / AnalyticalModel / Invalid)；省略則全部列出。"
+        },
+        "includeSubcategories": {
+          "type": "boolean",
+          "description": "是否連同各品類的子品類名稱一併回傳 (預設 false，僅回傳子品類數量)。"
+        }
+      }
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_wall",
+    "name": "create_wall",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中建立一面牆。需要指定起點、終點座標和高度。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "startX": {
+          "type": "number",
+          "description": "起點 X 座標（公釐）"
+        },
+        "startY": {
+          "type": "number",
+          "description": "起點 Y 座標（公釐）"
+        },
+        "endX": {
+          "type": "number",
+          "description": "終點 X 座標（公釐）"
+        },
+        "endY": {
+          "type": "number",
+          "description": "終點 Y 座標（公釐）"
+        },
+        "height": {
+          "type": "number",
+          "description": "牆高度（公釐）",
+          "default": 3000
+        },
+        "wallType": {
+          "type": "string",
+          "description": "牆類型名稱（選填）"
+        }
+      },
+      "required": [
+        "startX",
+        "startY",
+        "endX",
+        "endY"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_floor",
+    "name": "create_floor",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中建立樓板。需要指定邊界點座標。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "array",
+          "description": "樓板邊界點陣列",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "levelName": {
+          "type": "string",
+          "description": "樓層名稱",
+          "default": "Level 1"
+        },
+        "floorType": {
+          "type": "string",
+          "description": "樓板類型名稱（選填）"
+        }
+      },
+      "required": [
+        "points"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_door",
+    "name": "create_door",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定的牆上建立門。可指定 sourceElementId 來複製現有門的類型、instance 參數與 facing/hand 朝向。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "要放置門的牆 ID"
+        },
+        "locationX": {
+          "type": "number",
+          "description": "門在牆上的位置 X 座標（公釐）"
+        },
+        "locationY": {
+          "type": "number",
+          "description": "門在牆上的位置 Y 座標（公釐）"
+        },
+        "doorType": {
+          "type": "string",
+          "description": "門類型名稱（選填）"
+        },
+        "sourceElementId": {
+          "type": "number",
+          "description": "來源門 ID（選填，用於複製其類型、參數與朝向）"
+        }
+      },
+      "required": [
+        "wallId",
+        "locationX",
+        "locationY"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_window",
+    "name": "create_window",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定的牆上建立窗。可指定 sourceElementId 來複製現有窗的類型、instance 參數與 facing/hand 朝向。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "要放置窗的牆 ID"
+        },
+        "locationX": {
+          "type": "number",
+          "description": "窗在牆上的位置 X 座標（公釐）"
+        },
+        "locationY": {
+          "type": "number",
+          "description": "窗在牆上的位置 Y 座標（公釐）"
+        },
+        "windowType": {
+          "type": "string",
+          "description": "窗類型名稱（選填）"
+        },
+        "sourceElementId": {
+          "type": "number",
+          "description": "來源窗 ID（選填，用於複製其類型、參數與朝向）"
+        }
+      },
+      "required": [
+        "wallId",
+        "locationX",
+        "locationY"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_wall_info",
+    "name": "get_wall_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得牆的詳細資訊，包含厚度、長度、高度、位置線座標等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "牆的 Element ID"
+        }
+      },
+      "required": [
+        "wallId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_dimension",
+    "name": "create_dimension",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定視圖中建立尺寸標註。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "要建立標註的視圖 ID"
+        },
+        "startX": {
+          "type": "number",
+          "description": "起點 X 座標（公釐）"
+        },
+        "startY": {
+          "type": "number",
+          "description": "起點 Y 座標（公釐）"
+        },
+        "endX": {
+          "type": "number",
+          "description": "終點 X 座標（公釐）"
+        },
+        "endY": {
+          "type": "number",
+          "description": "終點 Y 座標（公釐）"
+        },
+        "offset": {
+          "type": "number",
+          "description": "標註線偏移距離（公釐）",
+          "default": 500
+        }
+      },
+      "required": [
+        "viewId",
+        "startX",
+        "startY",
+        "endX",
+        "endY"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_corridor_dimension",
+    "name": "create_corridor_dimension",
+    "version": "upstream-cfe0739-local",
+    "description": "走廊寬度標註 — 自動偵測房間邊界的平行牆對，建立精確的牆到牆尺寸標註。回傳每個區段的實測寬度與合規判定。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "number",
+          "description": "走廊房間的 Element ID"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "要建立標註的平面視圖 ID"
+        }
+      },
+      "required": [
+        "roomId",
+        "viewId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:query_walls_by_location",
+    "name": "query_walls_by_location",
+    "version": "upstream-cfe0739-local",
+    "description": "查詢指定座標附近的牆體，回傳牆厚度、位置線與牆面座標。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "搜尋中心 X 座標"
+        },
+        "y": {
+          "type": "number",
+          "description": "搜尋中心 Y 座標"
+        },
+        "searchRadius": {
+          "type": "number",
+          "description": "搜尋半徑 (mm)"
+        },
+        "level": {
+          "type": "string",
+          "description": "樓層名稱 (選填)"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "searchRadius"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:unjoin_wall_joins",
+    "name": "unjoin_wall_joins",
+    "version": "upstream-cfe0739-local",
+    "description": "取消牆體與柱子等元素的幾何接合關係。常用於元素上色前的前置作業。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要取消接合的牆體 Element ID 列表"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:rejoin_wall_joins",
+    "name": "rejoin_wall_joins",
+    "version": "upstream-cfe0739-local",
+    "description": "恢復先前由 unjoin_wall_joins / unjoin_column_joins / unjoin_element_joins 取消的接合關係（共用 pair 儲存，限同一 Revit session）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:unjoin_column_joins",
+    "name": "unjoin_column_joins",
+    "version": "upstream-cfe0739-local",
+    "description": "以柱子為中心解除其與鄰近元素的幾何接合，涵蓋牆、樓板、結構樑。未指定 columnIds 時預設整個專案所有柱（或 viewId 內的柱）。可用 rejoin_wall_joins 還原（限同一 Revit session）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "columnIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要處理的柱子 Element ID 列表（選填，預設為全部柱）"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（選填，未給 columnIds 時用來限縮範圍）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:unjoin_element_joins",
+    "name": "unjoin_element_joins",
+    "version": "upstream-cfe0739-local",
+    "description": "通用版：以任一類別為中心解除其與指定 target 類別的幾何接合。預設 target 為 8 類（Walls、Floors、Columns、StructuralColumns、StructuralFraming、StructuralFoundation、Roofs、Ceilings）。共用 _unjoinedPairs，可用 rejoin_wall_joins 還原（限同一 Revit session）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sourceCategory": {
+          "type": "string",
+          "description": "來源類別名稱（不含 OST_ 前綴，例如 StructuralFraming、Walls、Floors）"
+        },
+        "targetCategories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "目標類別名稱陣列（選填，預設 8 類：Walls、Floors、Columns、StructuralColumns、StructuralFraming、StructuralFoundation、Roofs、Ceilings）"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要處理的來源 Element ID 列表（選填，預設為該類別全部）"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（選填，未給 elementIds 時用來限縮範圍）"
+        }
+      },
+      "required": [
+        "sourceCategory"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:join_wall_tops",
+    "name": "join_wall_tops",
+    "version": "upstream-cfe0739-local",
+    "description": "將指定樓層的牆，其頂部與上方的樓板、天花板、結構樑做幾何接合 (JoinGeometry)。回傳成功接合/已接合跳過/失敗的統計與各樓層明細。常用於樓層牆體建模後的批次頂接合。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要處理的樓層名稱列表，例如 [\"2F\", \"3F\"]。省略或空陣列代表處理全部樓層。"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_all_grids",
+    "name": "get_all_grids",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有網格線（Grid）的資訊。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_column_types",
+    "name": "get_column_types",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有可用的柱類型。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "material": {
+          "type": "string",
+          "description": "篩選材質（選填）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_column",
+    "name": "create_column",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定位置建立柱子。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X 座標（公釐）"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y 座標（公釐）"
+        },
+        "bottomLevel": {
+          "type": "string",
+          "description": "底部樓層名稱",
+          "default": "Level 1"
+        },
+        "topLevel": {
+          "type": "string",
+          "description": "頂部樓層名稱（選填）"
+        },
+        "columnType": {
+          "type": "string",
+          "description": "柱類型名稱（選填）"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_furniture_types",
+    "name": "get_furniture_types",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中已載入的家具類型清單。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "家具類別篩選（選填）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:place_furniture",
+    "name": "place_furniture",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定位置放置家具實例。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X 座標（公釐）"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y 座標（公釐）"
+        },
+        "furnitureType": {
+          "type": "string",
+          "description": "家具類型名稱"
+        },
+        "level": {
+          "type": "string",
+          "description": "樓層名稱",
+          "default": "Level 1"
+        },
+        "rotation": {
+          "type": "number",
+          "description": "旋轉角度（度）",
+          "default": 0
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "furnitureType"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_wall_types",
+    "name": "get_wall_types",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有可用的牆類型，包含名稱和 Element ID。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "search": {
+          "type": "string",
+          "description": "關鍵字篩選（選填）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:change_element_type",
+    "name": "change_element_type",
+    "version": "upstream-cfe0739-local",
+    "description": "變更 Revit 元素的類型（例如將牆從 Type A 改為 Type B）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "元素 ID"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "元素 ID 列表（用於批量變更）"
+        },
+        "typeId": {
+          "type": "number",
+          "description": "目標類型的 Element ID"
+        }
+      },
+      "required": [
+        "typeId"
+      ]
+    },
+    "status": "validated",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_line_styles",
+    "name": "get_line_styles",
+    "version": "upstream-cfe0739-local",
+    "description": "取得目前專案中可用的線型 (GraphicsStyles)，例如：虛線、細線等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:trace_stair_geometry",
+    "name": "trace_stair_geometry",
+    "version": "upstream-cfe0739-local",
+    "description": "自動分析視圖中的樓梯幾何，偵測被牆、版等物件遮擋的邊緣線段，回傳座標以供後續繪製虛線。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_room_info",
+    "name": "get_room_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得房間詳細資訊，包含中心點座標和邊界範圍。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "number",
+          "description": "房間 Element ID（選填）"
+        },
+        "roomName": {
+          "type": "string",
+          "description": "房間名稱（選填）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_rooms_by_level",
+    "name": "get_rooms_by_level",
+    "version": "upstream-cfe0739-local",
+    "description": "取得指定樓層的所有房間清單，包含名稱、編號、面積、用途等。可用於容積檢討。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "樓層名稱（如：1F、Level 1）"
+        },
+        "includeUnnamed": {
+          "type": "boolean",
+          "description": "是否包含未命名的房間",
+          "default": true
+        }
+      },
+      "required": [
+        "level"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_room_daylight_info",
+    "name": "get_room_daylight_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得房間的採光資訊，包含居室面積、外牆開口面積、採光比例。用於建築技術規則居室採光檢討。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "樓層名稱（選填）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:check_exterior_wall_openings",
+    "name": "check_exterior_wall_openings",
+    "version": "upstream-cfe0739-local",
+    "description": "依據台灣建築技術規則第45條及第110條檢討外牆開口。自動讀取地界線計算距離，以顏色標示違規。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "checkArticle45": {
+          "type": "boolean",
+          "description": "檢查第45條",
+          "default": true
+        },
+        "checkArticle110": {
+          "type": "boolean",
+          "description": "檢查第110條",
+          "default": true
+        },
+        "colorizeViolations": {
+          "type": "boolean",
+          "description": "以顏色標示",
+          "default": true
+        },
+        "exportReport": {
+          "type": "boolean",
+          "description": "匯出 JSON 報表",
+          "default": false
+        },
+        "reportPath": {
+          "type": "string",
+          "description": "報表輸出路徑"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_room_surface_areas",
+    "name": "get_room_surface_areas",
+    "version": "upstream-cfe0739-local",
+    "description": "計算房間內部表面積（牆面、地板、天花板），支援門窗開口扣除。即使模型中無實體天花板或地板元素，仍會以房間平面面積估算。回傳含 EstimatedSurfaces 欄位標示哪些為估算值。用於材料估算、塗裝面積計算、聲學分析。啟用 includeFinishLayers 可偵測房間內非邊界粉刷層，自動寫入房間飾面參數、建立明細表、匯出 Excel。【兩次呼叫工作流程】當 includeFinishLayers=true 時，建議分兩次呼叫：第一次不帶 defaultXxxFinish 參數，取得分析結果後檢查哪些房間/表面缺少粉刷層（FloorFinishLayers / CeilingFinishLayers / Breakdown.FinishLayers 為 null），詢問使用者要統一填入什麼預設類型標記（地板/牆面/天花各一種，留空=不填），再以 defaultFloorFinish / defaultWallFinish / defaultCeilingFinish 參數第二次呼叫產出最終明細表與 Excel。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "number",
+          "description": "房間 Element ID（選填）"
+        },
+        "roomName": {
+          "type": "string",
+          "description": "房間名稱篩選（選填）"
+        },
+        "level": {
+          "type": "string",
+          "description": "樓層名稱 — 計算該層所有房間（選填）"
+        },
+        "includeBreakdown": {
+          "type": "boolean",
+          "description": "是否包含各牆面詳細資訊（預設 true）",
+          "default": true
+        },
+        "subtractOpenings": {
+          "type": "boolean",
+          "description": "是否扣除門窗開口面積（預設 true）",
+          "default": true
+        },
+        "includeFinishLayers": {
+          "type": "boolean",
+          "description": "是否偵測房間內的粉刷層/面飾層並建立明細表、匯出 Excel。必須明確指定 true 或 false。"
+        },
+        "outputPath": {
+          "type": "string",
+          "description": "Excel 匯出路徑（選填，預設為專案目錄）"
+        },
+        "defaultFloorFinish": {
+          "type": "string",
+          "description": "未偵測到地板粉刷層時的預設類型標記（Type Mark）。留空表示不填。"
+        },
+        "defaultWallFinish": {
+          "type": "string",
+          "description": "未偵測到牆面粉刷層時的預設類型標記（Type Mark）。留空表示不填。"
+        },
+        "defaultCeilingFinish": {
+          "type": "string",
+          "description": "未偵測到天花粉刷層時的預設類型標記（Type Mark）。留空表示不填。"
+        }
+      },
+      "required": [
+        "includeFinishLayers"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_finish_legend",
+    "name": "create_finish_legend",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中自動建立粉刷／油漆材料填滿圖例。同時偵測兩種資料來源：(1) 全專案房間的粉刷層（CompoundStructure Function=Finish）、(2) 被「油漆工具」塗在 Wall/Floor/Ceiling 的材料（依面法向量分類牆/地/天）。為每種材料建立 FilledRegionType 並在 Legend 視圖中繪製三張表（地坪/牆面/天花）。每張表三欄：編號 | 圖例 | 說明；粉刷類型使用 TypeMark/TypeName，油漆材料使用 Material.Mark/Description（空值顯示『(未填)』）。粉刷列在上、油漆列在下，中間以分隔列隔開。前提：專案必須已有任一 Legend 視圖（即使空白）作為複製模板，因 Revit API 不允許直接建立 Legend。版面固定（1:100 比例，欄寬 130/120/650 cm、列高 50 cm）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "legendName": {
+          "type": "string",
+          "description": "新 Legend 視圖名稱（選填，預設『粉刷圖例_yyyyMMdd』）"
+        },
+        "legendTemplateName": {
+          "type": "string",
+          "description": "指定要複製的 Legend 名稱（選填，預設取專案第一個 Legend）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:batch_set_room_height",
+    "name": "batch_set_room_height",
+    "version": "upstream-cfe0739-local",
+    "description": "批次依房間名稱或用途分組，設定 Room 的 Upper Limit（ROOM_UPPER_LEVEL）與 Limit Offset（ROOM_UPPER_OFFSET）。不動樓層，只改 Room 參數。對 Model Group 內的 Room 會自動進入 EditGroup 模式（每個 GroupType 只編輯一次，變更同步到所有 instance），避免「modified outside group edit mode」警告。Transaction 內註冊 WarningSwallower 吞掉其他警告。單一 Transaction，可 Ctrl+Z 整批還原。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "groups": {
+          "type": "array",
+          "description": "分組規則陣列。每個 group 指定一個房間名稱/用途關鍵字與目標高度(mm)。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "nameMatch": {
+                "type": "string",
+                "description": "房間名稱/用途關鍵字（不區分大小寫，部分比對）。例：'居室'、'浴室'、'走廊'"
+              },
+              "heightMm": {
+                "type": "number",
+                "description": "目標高度（mm，絕對值）。即 Upper Limit 對應樓層之上的 Limit Offset。範圍 1~10000。"
+              },
+              "upperLevelName": {
+                "type": "string",
+                "description": "選填：指定 Upper Limit 要使用的樓層名稱。若留空則使用 Room 的 Base Level（房間高度 = Limit Offset = heightMm）。"
+              }
+            },
+            "required": [
+              "nameMatch",
+              "heightMm"
+            ]
+          }
+        },
+        "levelName": {
+          "type": "string",
+          "description": "選填：限制只修改某一樓層的 Room。留空則全專案。"
+        },
+        "matchField": {
+          "type": "string",
+          "enum": [
+            "name",
+            "department"
+          ],
+          "description": "比對欄位：'name' (ROOM_NAME) 或 'department' (ROOM_DEPARTMENT)。預設 'name'。",
+          "default": "name"
+        },
+        "summaryOnly": {
+          "type": "boolean",
+          "description": "true（預設）=只回計數與錯誤列表，避免 500+ Room 時 payload 爆炸；false=附帶每個 Room 的 OriginalValues 與 Modifications 明細（供 audit）。",
+          "default": true
+        }
+      },
+      "required": [
+        "groups"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:analyze_corridor_width",
+    "name": "analyze_corridor_width",
+    "version": "upstream-cfe0739-local",
+    "description": "分析走廊寬度。使用 Revit 端的房間邊界線段找出平行牆對，回傳實測寬度、最小寬度與各區段檢討結果。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "number",
+          "description": "房間 Element ID（選填）"
+        },
+        "roomName": {
+          "type": "string",
+          "description": "房間名稱（選填）"
+        },
+        "minWidth": {
+          "type": "number",
+          "description": "最小寬度門檻（mm）",
+          "default": 1200
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:override_element_graphics",
+    "name": "override_element_graphics",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定視圖中覆寫元素的圖形顯示（填滿顏色、圖樣、線條顏色等）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要覆寫的元素 ID"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（若不指定則使用當前視圖）"
+        },
+        "surfaceFillColor": {
+          "type": "object",
+          "description": "表面填滿顏色 RGB (0-255)",
+          "properties": {
+            "r": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "surfacePatternId": {
+          "type": "number",
+          "description": "表面填充圖樣 ID（-1 = 實心填滿）",
+          "default": -1
+        },
+        "lineColor": {
+          "type": "object",
+          "description": "線條顏色 RGB（可選）",
+          "properties": {
+            "r": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "transparency": {
+          "type": "number",
+          "description": "透明度 (0-100)",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0
+        },
+        "patternMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "surface",
+            "cut"
+          ],
+          "description": "填滿層：auto（依視圖類型自動，樓板/屋頂於平面圖自動用表面）、surface（強制表面樣式，立面/剖面/3D 或平面圖樓板）、cut（強制切割樣式，平面圖被剖切的牆/柱/門窗）",
+          "default": "auto"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:clear_element_override",
+    "name": "clear_element_override",
+    "version": "upstream-cfe0739-local",
+    "description": "清除元素在指定視圖中的圖形覆寫。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要清除覆寫的元素 ID"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "批次操作"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_view_templates",
+    "name": "get_view_templates",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有視圖樣版的完整設定。可用於視圖樣版比對與整併分析。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "includeDetails": {
+          "type": "boolean",
+          "description": "是否包含詳細設定",
+          "default": true
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:set_category_visibility",
+    "name": "set_category_visibility",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定視圖中隱藏或顯示整個類別（同時影響主模型與連結模型）。使用 View.SetCategoryHidden() API。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "類別名稱（如 Planting, Furniture, Doors, 或 OST_Planting）"
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "true = 隱藏, false = 顯示",
+          "default": true
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（若不指定則使用當前視圖）"
+        }
+      },
+      "required": [
+        "category"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:hide_elements",
+    "name": "hide_elements",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定視圖中隱藏元素。使用 View.HideElements() API，支援單一或批次操作。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要隱藏的單一元素 ID"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "批次隱藏的元素 ID 陣列"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（若不指定則使用當前視圖）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:unhide_elements",
+    "name": "unhide_elements",
+    "version": "upstream-cfe0739-local",
+    "description": "在指定視圖中取消隱藏元素。使用 View.UnhideElements() API，支援單一或批次操作。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要取消隱藏的單一元素 ID"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "批次取消隱藏的元素 ID 陣列"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID（若不指定則使用當前視圖）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_types_by_category",
+    "name": "get_types_by_category",
+    "version": "upstream-cfe0739-local",
+    "description": "查詢指定類別中所有元素類型及其目前材質資訊。回傳每個 Type 的 ID、名稱、族群、實例數量、目前材質。用於在批次修改材質前，讓使用者確認要修改哪些類型。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "類別名稱：Walls, Floors, Columns, StructuralFraming"
+        },
+        "excludeCurtainWalls": {
+          "type": "boolean",
+          "description": "是否排除帷幕牆（預設 true，僅對 Walls 類別有效）",
+          "default": true
+        }
+      },
+      "required": [
+        "category"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:assign_existing_material",
+    "name": "assign_existing_material",
+    "version": "upstream-cfe0739-local",
+    "description": "將既有材質（透過名稱查找）套用到指定的 Type。不建立新材質。用於復原或批次指派既有材質（例如把 9 個柱子從 'White_MCP' 改回 '鋼 AISI 1015'）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "typeIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要套用材質的 Type Element ID 陣列"
+        },
+        "materialName": {
+          "type": "string",
+          "description": "既有材質名稱（必須已存在於專案中）"
+        }
+      },
+      "required": [
+        "typeIds",
+        "materialName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:batch_set_material",
+    "name": "batch_set_material",
+    "version": "upstream-cfe0739-local",
+    "description": "批次修改指定 Type 的材質（複製原材質模式）。為每個 Type 的原材質建立複本 '{原名}_{suffix}'，只修改複本的 Appearance Asset（diffuse color），保留 Graphics 顏色與原材質其他屬性。影響 Enscape/V-Ray 等渲染引擎，但平面圖切割填充和 Revit Shaded 3D 維持原材質外觀。牆/樓板只修改 CompoundStructure 最外層（Layer 0），其他層保留。已含 suffix 的材質會被冪等跳過。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "typeIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "要修改材質的 Type Element ID 陣列（從 get_types_by_category 取得）"
+        },
+        "color": {
+          "type": "object",
+          "description": "目標 Appearance diffuse 顏色 RGB (0-255)",
+          "properties": {
+            "r": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "materialName": {
+          "type": "string",
+          "description": "材質名稱 suffix（後綴）。例如 '護眼白_MCP' 會把原材質 '鋼 AISI 1015' 複製成 '鋼 AISI 1015_護眼白_MCP'。預設 'White_MCP'。",
+          "default": "White_MCP"
+        },
+        "roughness": {
+          "type": "number",
+          "description": "Appearance roughness（選填）。0.0=鏡面反射，1.0=完全啞光。若值 > 1 會被當成百分比（除以 100）。不設則維持原值。建議白模用 1.0 避免金屬感反光。"
+        }
+      },
+      "required": [
+        "typeIds",
+        "color"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_view_schedule",
+    "name": "create_view_schedule",
+    "version": "upstream-cfe0739-local",
+    "description": "在 Revit 中建立一個新的視圖明細表（Schedule/Quantities）。可以指定名稱、品類以及要包含的欄位。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "明細表名稱"
+        },
+        "category": {
+          "type": "string",
+          "description": "品類名稱（如：'Walls', 'Rooms', 'Pipes'）"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "欄位名稱列表"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_schedules",
+    "name": "list_schedules",
+    "version": "upstream-cfe0739-local",
+    "description": "列出目前專案中所有可讀取的明細表（排除樣板、圖框修訂表）。回傳每張表的 ElementId、名稱、品類、列數與欄數，供儀錶板分類與展開使用。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:read_schedule",
+    "name": "read_schedule",
+    "version": "upstream-cfe0739-local",
+    "description": "讀取單一明細表的完整表格內容（欄位標頭 + 逐格 body 資料，忠實呈現 Revit 畫面顯示的文字）。用 scheduleId 或 scheduleName 指定。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "scheduleId": {
+          "type": "number",
+          "description": "明細表 ElementId（建議；由 list_schedules 取得）"
+        },
+        "scheduleName": {
+          "type": "string",
+          "description": "明細表名稱（scheduleId 未提供時使用，支援部分比對）"
+        },
+        "maxRows": {
+          "type": "number",
+          "description": "最多回傳的資料列數（預設 2000，避免回應過大）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_connector_info",
+    "name": "get_connector_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得 MEP 元素（管、風管、線管等）的接頭（Connector）資訊，包含座標、連接狀態、形狀等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要查詢的 MEP 元素 ID"
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:add_pipe_cap",
+    "name": "add_pipe_cap",
+    "version": "upstream-cfe0739-local",
+    "description": "在管件的未連線端安裝管帽或法蘭。自動尋找開放的接頭並連接。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pipeId": {
+          "type": "number",
+          "description": "管件的元素 ID"
+        },
+        "familyName": {
+          "type": "string",
+          "description": "要安裝的管帽/法蘭族群名稱"
+        }
+      },
+      "required": [
+        "pipeId",
+        "familyName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:export_families",
+    "name": "export_families",
+    "version": "upstream-cfe0739-local",
+    "description": "把專案中已載入的可編輯族群另存為 .rfa 檔到指定資料夾,建立可重用元件庫。預設匯出管配件(OST_PipeFitting)與管附件(OST_PipeAccessory)。自動依類別建立子資料夾;subFolderBySeries=true 時再依族群名稱系列(CIP/DWV/碳鋼.../)細分。略過系統族群、現地(in-place)與不可編輯族群。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "outputFolder": {
+          "type": "string",
+          "description": "輸出根資料夾絕對路徑,例如 C:\\Users\\xxx\\Desktop\\MEP管元件庫。不存在會自動建立。"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要匯出的 BuiltInCategory 名稱清單(如 OST_PipeFitting、OST_PipeAccessory)。省略則預設這兩類。"
+        },
+        "subFolderBySeries": {
+          "type": "boolean",
+          "description": "是否在類別資料夾下再依族群名稱系列建立子資料夾(預設 false,只依類別分層)。"
+        },
+        "overwrite": {
+          "type": "boolean",
+          "description": "目標 .rfa 已存在時是否覆寫(預設 true)。"
+        }
+      },
+      "required": [
+        "outputFolder"
+      ]
+    },
+    "status": "disabled",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_curtain_wall_info",
+    "name": "get_curtain_wall_info",
+    "version": "upstream-cfe0739-local",
+    "description": "取得帷幕牆詳細資訊，包含 Grid 排列、面板尺寸、面板類型分佈等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "帷幕牆的 Element ID（選填，若不指定則使用目前選取的元素）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_curtain_panel_types",
+    "name": "get_curtain_panel_types",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有可用的帷幕牆面板類型。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_curtain_panel_type",
+    "name": "create_curtain_panel_type",
+    "version": "upstream-cfe0739-local",
+    "description": "建立新的帷幕牆面板類型，可指定顏色（HEX）和透明度。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "typeName": {
+          "type": "string",
+          "description": "新類型的名稱"
+        },
+        "color": {
+          "type": "string",
+          "description": "面板顏色（HEX 格式，如 '#5C4033'）"
+        },
+        "baseTypeId": {
+          "type": "number",
+          "description": "基礎類型 ID（選填）"
+        }
+      },
+      "required": [
+        "typeName",
+        "color"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:apply_panel_pattern",
+    "name": "apply_panel_pattern",
+    "version": "upstream-cfe0739-local",
+    "description": "將面板排列模式套用到帷幕牆。需要類型映射表和排列矩陣。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "帷幕牆的 Element ID"
+        },
+        "typeMapping": {
+          "type": "object",
+          "description": "類型映射表（字母→面板類型 ID）"
+        },
+        "matrix": {
+          "type": "array",
+          "description": "面板排列矩陣，由上到下、由左到右",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "elementId",
+        "typeMapping",
+        "matrix"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_facade_panel",
+    "name": "create_facade_panel",
+    "version": "upstream-cfe0739-local",
+    "description": "建立單片立面面板（DirectShape）。支援 5 種幾何：curved_panel、beveled_opening、angled_panel、rounded_opening、flat_panel。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "參考牆的 Element ID"
+        },
+        "geometryType": {
+          "type": "string",
+          "enum": [
+            "curved_panel",
+            "beveled_opening",
+            "angled_panel",
+            "rounded_opening",
+            "flat_panel"
+          ],
+          "description": "幾何類型"
+        },
+        "positionAlongWall": {
+          "type": "number",
+          "description": "沿牆位置（mm）"
+        },
+        "positionZ": {
+          "type": "number",
+          "description": "底部 Z 高度（mm）"
+        },
+        "width": {
+          "type": "number",
+          "description": "寬度（mm），預設 800"
+        },
+        "height": {
+          "type": "number",
+          "description": "高度（mm），預設 3400"
+        },
+        "depth": {
+          "type": "number",
+          "description": "弧深/凹入深度（mm），預設 150"
+        },
+        "thickness": {
+          "type": "number",
+          "description": "板厚（mm），預設 30"
+        },
+        "offset": {
+          "type": "number",
+          "description": "距牆偏移（mm），預設 200"
+        },
+        "color": {
+          "type": "string",
+          "description": "顏色（HEX）"
+        },
+        "name": {
+          "type": "string",
+          "description": "面板名稱"
+        },
+        "curveType": {
+          "type": "string",
+          "enum": [
+            "concave",
+            "convex"
+          ],
+          "description": "[curved_panel] 曲線類型"
+        },
+        "tiltAngle": {
+          "type": "number",
+          "description": "[angled_panel] 傾斜角度（度）"
+        },
+        "tiltAxis": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "description": "[angled_panel] 傾斜軸"
+        },
+        "bevelDirection": {
+          "type": "string",
+          "enum": [
+            "center",
+            "up",
+            "down",
+            "left",
+            "right"
+          ],
+          "description": "[beveled_opening] 斜切方向"
+        },
+        "bevelDepth": {
+          "type": "number",
+          "description": "[beveled_opening] 斜切深度（mm）"
+        },
+        "openingWidth": {
+          "type": "number",
+          "description": "[opening] 開口寬度（mm）"
+        },
+        "openingHeight": {
+          "type": "number",
+          "description": "[opening] 開口高度（mm）"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "description": "[rounded_opening] 圓角半徑（mm）"
+        },
+        "openingShape": {
+          "type": "string",
+          "enum": [
+            "rounded_rect",
+            "arch",
+            "stadium",
+            "rect"
+          ],
+          "description": "[rounded_opening] 開口形狀"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_facade_from_analysis",
+    "name": "create_facade_from_analysis",
+    "version": "upstream-cfe0739-local",
+    "description": "根據分析結果批次建立整面立面。在牆面前方批次建立多片 DirectShape 面板，支援多種面板類型和排列模式。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "目標牆的 Element ID"
+        },
+        "facadeLayers": {
+          "type": "object",
+          "description": "立面層級定義",
+          "properties": {
+            "outer": {
+              "type": "object",
+              "description": "外層面板定義",
+              "properties": {
+                "offset": {
+                  "type": "number",
+                  "description": "距牆偏移（mm），預設 200"
+                },
+                "panelTypes": {
+                  "type": "array",
+                  "description": "面板類型定義陣列",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "類型代號（如 'A'）"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "類型名稱"
+                      },
+                      "width": {
+                        "type": "number",
+                        "description": "寬度（mm）"
+                      },
+                      "height": {
+                        "type": "number",
+                        "description": "高度（mm）"
+                      },
+                      "depth": {
+                        "type": "number",
+                        "description": "弧深（mm）"
+                      },
+                      "thickness": {
+                        "type": "number",
+                        "description": "板厚（mm）"
+                      },
+                      "curveType": {
+                        "type": "string",
+                        "enum": [
+                          "concave",
+                          "convex"
+                        ]
+                      },
+                      "color": {
+                        "type": "string",
+                        "description": "顏色（HEX）"
+                      },
+                      "geometryType": {
+                        "type": "string",
+                        "enum": [
+                          "curved_panel",
+                          "beveled_opening",
+                          "angled_panel",
+                          "rounded_opening",
+                          "flat_panel"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "width",
+                      "color"
+                    ]
+                  }
+                },
+                "pattern": {
+                  "type": "array",
+                  "description": "排列矩陣（如 ['ABABAB', 'BABABA']）",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "gap": {
+                  "type": "number",
+                  "description": "間距（mm），預設 20"
+                },
+                "horizontalBandHeight": {
+                  "type": "number",
+                  "description": "分隔帶高度（mm）"
+                },
+                "floorHeight": {
+                  "type": "number",
+                  "description": "層高（mm），預設 3600"
+                }
+              },
+              "required": [
+                "panelTypes",
+                "pattern"
+              ]
+            }
+          },
+          "required": [
+            "outer"
+          ]
+        }
+      },
+      "required": [
+        "facadeLayers"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:check_smoke_exhaust_windows",
+    "name": "check_smoke_exhaust_windows",
+    "version": "upstream-cfe0739-local",
+    "description": "排煙窗檢討：檢查天花板下 80cm 內可開啟窗面積是否 ≥ 區劃面積 2%。同時判定無窗居室。法源：建技規§101① + 消防§188。自動上色：綠=全開、黃=折減、紅=固定。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "levelName": {
+          "type": "string",
+          "description": "樓層名稱"
+        },
+        "ceilingHeightSource": {
+          "type": "string",
+          "enum": [
+            "room_parameter",
+            "ceiling_element"
+          ],
+          "description": "天花板高度來源",
+          "default": "room_parameter"
+        },
+        "colorize": {
+          "type": "boolean",
+          "description": "是否自動上色窗戶",
+          "default": true
+        },
+        "smokeZoneHeight": {
+          "type": "number",
+          "description": "有效帶高度（mm），預設 800",
+          "default": 800
+        },
+        "excludeKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "非居室排除關鍵字"
+        }
+      },
+      "required": [
+        "levelName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:check_floor_effective_openings",
+    "name": "check_floor_effective_openings",
+    "version": "upstream-cfe0739-local",
+    "description": "無開口樓層判定：檢查樓層外牆有效開口面積是否 ≥ 樓地板面積 1/30。法源：消防§4 + §28③。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "levelName": {
+          "type": "string",
+          "description": "樓層名稱"
+        },
+        "colorize": {
+          "type": "boolean",
+          "description": "是否自動上色開口",
+          "default": true
+        }
+      },
+      "required": [
+        "levelName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_section_view",
+    "name": "create_section_view",
+    "version": "upstream-cfe0739-local",
+    "description": "建立剖面視圖，面向指定牆面。可用於檢視窗戶與天花板的高度關係。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "目標牆的 Element ID"
+        },
+        "viewName": {
+          "type": "string",
+          "description": "視圖名稱",
+          "default": "排煙檢討剖面"
+        },
+        "offset": {
+          "type": "number",
+          "description": "剖面距牆偏移（mm），預設 1000",
+          "default": 1000
+        },
+        "scale": {
+          "type": "number",
+          "description": "比例尺（如 50 = 1:50），預設 50",
+          "default": 50
+        }
+      },
+      "required": [
+        "wallId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_detail_lines",
+    "name": "create_detail_lines",
+    "version": "upstream-cfe0739-local",
+    "description": "在視圖上繪製詳圖線（天花板線、有效帶範圍線等），可指定顏色和標籤。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖的 Element ID"
+        },
+        "lines": {
+          "type": "array",
+          "description": "線段陣列",
+          "items": {
+            "type": "object",
+            "properties": {
+              "startX": {
+                "type": "number",
+                "description": "起點 X（mm）"
+              },
+              "startY": {
+                "type": "number",
+                "description": "起點 Y（mm）"
+              },
+              "endX": {
+                "type": "number",
+                "description": "終點 X（mm）"
+              },
+              "endY": {
+                "type": "number",
+                "description": "終點 Y（mm）"
+              },
+              "color": {
+                "type": "object",
+                "properties": {
+                  "r": {
+                    "type": "number"
+                  },
+                  "g": {
+                    "type": "number"
+                  },
+                  "b": {
+                    "type": "number"
+                  }
+                }
+              },
+              "lineStyle": {
+                "type": "string",
+                "description": "線條樣式（選填）"
+              },
+              "label": {
+                "type": "string",
+                "description": "標籤（選填）"
+              }
+            },
+            "required": [
+              "startX",
+              "startY",
+              "endX",
+              "endY"
+            ]
+          }
+        }
+      },
+      "required": [
+        "viewId",
+        "lines"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_filled_region",
+    "name": "create_filled_region",
+    "version": "upstream-cfe0739-local",
+    "description": "建立填充區域（如排煙有效帶色塊），可設定顏色和透明度。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖的 Element ID"
+        },
+        "points": {
+          "type": "array",
+          "description": "多邊形頂點（至少 3 個點，自動封閉）",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ]
+          }
+        },
+        "color": {
+          "type": "object",
+          "properties": {
+            "r": {
+              "type": "number"
+            },
+            "g": {
+              "type": "number"
+            },
+            "b": {
+              "type": "number"
+            }
+          }
+        },
+        "transparency": {
+          "type": "number",
+          "description": "透明度 0-100，預設 50",
+          "default": 50
+        },
+        "regionType": {
+          "type": "string",
+          "description": "填充區域類型名稱（選填）"
+        }
+      },
+      "required": [
+        "viewId",
+        "points"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_text_note",
+    "name": "create_text_note",
+    "version": "upstream-cfe0739-local",
+    "description": "在視圖上建立文字標註。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖的 Element ID"
+        },
+        "x": {
+          "type": "number",
+          "description": "X 座標（mm）"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y 座標（mm）"
+        },
+        "text": {
+          "type": "string",
+          "description": "文字內容"
+        },
+        "textSize": {
+          "type": "number",
+          "description": "文字大小（mm），預設 2.5",
+          "default": 2.5
+        }
+      },
+      "required": [
+        "viewId",
+        "x",
+        "y",
+        "text"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:export_smoke_review_excel",
+    "name": "export_smoke_review_excel",
+    "version": "upstream-cfe0739-local",
+    "description": "匯出排煙窗檢討 Excel 報告（.xlsx），含樓層總覽、房間明細、窗戶明細、改善建議、§101補充檢討（排風量提醒+中央管理室偵測）五個工作表。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "levelName": {
+          "type": "string",
+          "description": "樓層名稱"
+        },
+        "ceilingHeightSource": {
+          "type": "string",
+          "enum": [
+            "room_parameter",
+            "ceiling_element"
+          ],
+          "default": "room_parameter"
+        },
+        "outputPath": {
+          "type": "string",
+          "description": "輸出路徑（選填）"
+        }
+      },
+      "required": [
+        "levelName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:analyze_smoke_detectors",
+    "name": "analyze_smoke_detectors",
+    "version": "upstream-cfe0739-local",
+    "description": "偵煙探測器設置分析：掃描當前視圖的探測器、空調出風口（FCU/冷風機）、房間，回傳各探測器的距出風口距離、距牆/樑距離、距天花板距離，以及各房間的探測器數量與樑區格數。供 JS 端進行五項法規判定。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "detectorKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "偵煙探測器族群名稱關鍵字（預設：偵煙、smoke detector、探測器、感知器）"
+        },
+        "outletKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "出風口族群名稱關鍵字（預設：FCU、冷風機、AHU、送風口、出風口、散流器）"
+        }
+      },
+      "required": []
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:visualize_detector_results",
+    "name": "visualize_detector_results",
+    "version": "upstream-cfe0739-local",
+    "description": "依照法規判定結果對偵煙探測器上色：綠=PASS、紅=FAIL、橙=WARN（出風口資料缺失）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "description": "判定結果陣列，每筆含 DetectorId、IsOk、IsWarn",
+          "items": {
+            "type": "object",
+            "properties": {
+              "DetectorId": {
+                "type": "number",
+                "description": "探測器 Element ID"
+              },
+              "IsOk": {
+                "type": "boolean",
+                "description": "是否通過"
+              },
+              "IsWarn": {
+                "type": "boolean",
+                "description": "是否為警告（非嚴格 FAIL）"
+              },
+              "Message": {
+                "type": "string",
+                "description": "違規說明"
+              }
+            },
+            "required": [
+              "DetectorId",
+              "IsOk"
+            ]
+          }
+        }
+      },
+      "required": [
+        "results"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_parallel_section_view",
+    "name": "create_parallel_section_view",
+    "version": "upstream-cfe0739-local",
+    "description": "依牆面開孔位置自動建立平行剖面視圖。自動偵測牆上的套管族群，以開孔群組為單位裁剪剖面範圍；支援長牆分割（相鄰開孔 > 3m 則各自建立獨立剖面）、房間方向自動判定。無開孔時建立整面牆的全寬剖面。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallId": {
+          "type": "number",
+          "description": "目標牆的 Element ID"
+        },
+        "wallLinkId": {
+          "type": "number",
+          "description": "牆所在的連結模型 LinkInstanceId（來自 get_linked_models）。主模型的牆不需傳此參數。"
+        },
+        "offset": {
+          "type": "number",
+          "description": "剖面線距牆面的偏移量（mm），預設 1mm（緊貼牆面）",
+          "default": 1
+        },
+        "splitLongWalls": {
+          "type": "boolean",
+          "description": "長牆分割：相鄰開孔間距 > 3m 時各自建立獨立剖面視圖",
+          "default": true
+        },
+        "viewNamePrefix": {
+          "type": "string",
+          "description": "視圖名稱前綴，預設「牆面套管剖面」",
+          "default": "牆面套管剖面"
+        },
+        "autoCrop": {
+          "type": "boolean",
+          "description": "是否依開孔實際範圍自動裁剪剖面框（上下加 marginVertical，左右加 marginHorizontal）",
+          "default": true
+        },
+        "directionLogic": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "inside_out",
+            "outside_in"
+          ],
+          "description": "剖面觀察方向。auto = 自動找房間側朝外看；inside_out = 從內向外；outside_in = 從外向內",
+          "default": "auto"
+        },
+        "scale": {
+          "type": "number",
+          "description": "視圖比例尺（如 50 = 1:50），預設 50",
+          "default": 50
+        },
+        "marginHorizontal": {
+          "type": "number",
+          "description": "左右留白（mm），預設 500",
+          "default": 500
+        },
+        "marginVertical": {
+          "type": "number",
+          "description": "上下留白（mm），預設 200",
+          "default": 200
+        }
+      },
+      "required": [
+        "wallId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:batch_create_wall_sections",
+    "name": "batch_create_wall_sections",
+    "version": "upstream-cfe0739-local",
+    "description": "批次建立牆面套管剖面：以當前視圖的 BoundingBox 範圍過濾指定連結模型中的牆，再比對所有 MEP 連結模型的管附件（圓形套管）與風管附件（矩形開口），只對有開孔的牆建立剖面視圖。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wallLinkId": {
+          "type": "number",
+          "description": "牆所在的連結模型 LinkInstanceId（來自 get_linked_models）"
+        },
+        "splitLongWalls": {
+          "type": "boolean",
+          "description": "相鄰開孔間距 > 3m 時自動分割為多個剖面，預設 true",
+          "default": true
+        },
+        "viewNamePrefix": {
+          "type": "string",
+          "description": "視圖名稱前綴，預設「牆面套管剖面」",
+          "default": "牆面套管剖面"
+        },
+        "autoCrop": {
+          "type": "boolean",
+          "description": "依開孔範圍自動裁剪剖面框，預設 true",
+          "default": true
+        },
+        "directionLogic": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "inside_out",
+            "outside_in"
+          ],
+          "description": "剖面觀察方向，預設 auto（自動找房間側）",
+          "default": "auto"
+        },
+        "scale": {
+          "type": "number",
+          "description": "視圖比例尺，預設 50（1:50）",
+          "default": 50
+        },
+        "marginHorizontal": {
+          "type": "number",
+          "description": "剖面左右留白（mm），預設 500",
+          "default": 500
+        },
+        "marginVertical": {
+          "type": "number",
+          "description": "剖面上下留白（mm），預設 200",
+          "default": 200
+        },
+        "minWallLength": {
+          "type": "number",
+          "description": "最短牆長過濾（mm），過短的牆略過，預設 500",
+          "default": 500
+        },
+        "sequentialNaming": {
+          "type": "boolean",
+          "description": "啟用流水號命名：依 sortOrder 排序後命名為 {prefix}-001、{prefix}-002…，預設 false（使用牆 ID 作為後綴）",
+          "default": false
+        },
+        "sortOrder": {
+          "type": "string",
+          "enum": [
+            "x_then_y",
+            "y_then_x",
+            "creation"
+          ],
+          "description": "流水號排序方式。x_then_y = 先左後右再由下往上；y_then_x = 先下後上再由左往右；creation = 依建立順序不重排。預設 x_then_y",
+          "default": "x_then_y"
+        }
+      },
+      "required": [
+        "wallLinkId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_stair_section_view",
+    "name": "create_stair_section_view",
+    "version": "upstream-cfe0739-local",
+    "description": "建立樓梯法規檢核剖面視圖（自動判斷長向走向以顯示踏板剖面）",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "stairId": {
+          "type": "number",
+          "description": "樓梯的 Element ID"
+        },
+        "viewName": {
+          "type": "string",
+          "description": "剖面視圖名稱（預設：樓梯檢核剖面）"
+        },
+        "offset": {
+          "type": "number",
+          "description": "剖面偏移距離（mm，預設 1500）"
+        },
+        "scale": {
+          "type": "number",
+          "description": "視圖比例（預設 50）"
+        }
+      },
+      "required": [
+        "stairId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_stair_actual_width",
+    "name": "get_stair_actual_width",
+    "version": "upstream-cfe0739-local",
+    "description": "取得樓梯梯段的真實實測寬度（透過 StairsRun.ActualRunWidth 屬性）",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "stairId": {
+          "type": "number",
+          "description": "樓梯的 Element ID"
+        }
+      },
+      "required": [
+        "stairId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:check_stair_headroom",
+    "name": "check_stair_headroom",
+    "version": "upstream-cfe0739-local",
+    "description": "檢查樓梯淨高是否符合法規要求（190cm + 裝修厚度）",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "stairId": {
+          "type": "number",
+          "description": "樓梯的 Element ID"
+        },
+        "finishThicknessCm": {
+          "type": "number",
+          "description": "裝修面厚度 (cm，預設 0)"
+        },
+        "headroomLimitCm": {
+          "type": "number",
+          "description": "法規最低淨高需求 (cm，預設 190)"
+        }
+      },
+      "required": [
+        "stairId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_stair_text_note_with_leader",
+    "name": "create_stair_text_note_with_leader",
+    "version": "upstream-cfe0739-local",
+    "description": "建立帶有引線的文字標註 (專用於樓梯檢核標示違規位置)",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖的 Element ID"
+        },
+        "x": {
+          "type": "number",
+          "description": "文字 X 座標 (mm)"
+        },
+        "y": {
+          "type": "number",
+          "description": "文字 Y 座標 (mm)"
+        },
+        "leaderX": {
+          "type": "number",
+          "description": "引線指向的 X 座標 (mm)"
+        },
+        "leaderY": {
+          "type": "number",
+          "description": "引線指向的 Y 座標 (mm)"
+        },
+        "text": {
+          "type": "string",
+          "description": "標註文字內容"
+        }
+      },
+      "required": [
+        "viewId",
+        "x",
+        "y",
+        "leaderX",
+        "leaderY",
+        "text"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_all_sheets",
+    "name": "get_all_sheets",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有的圖紙清單，包含 ID、編號與名稱。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_titleblocks",
+    "name": "get_titleblocks",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有可用的圖框（Title Blocks）類型。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_sheets",
+    "name": "create_sheets",
+    "version": "upstream-cfe0739-local",
+    "description": "依據指定的清單批次建立空的圖紙。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "titleBlockId": {
+          "type": "number",
+          "description": "圖框類型的 Element ID"
+        },
+        "sheets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "string",
+                "description": "圖紙編號（如 A101）"
+              },
+              "name": {
+                "type": "string",
+                "description": "圖紙名稱（如 一樓平面圖）"
+              }
+            },
+            "required": [
+              "number",
+              "name"
+            ]
+          },
+          "description": "要建立的圖紙清單"
+        }
+      },
+      "required": [
+        "titleBlockId",
+        "sheets"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:auto_renumber_sheets",
+    "name": "auto_renumber_sheets",
+    "version": "upstream-cfe0739-local",
+    "description": "自動掃描專案中所有帶有 -1 後綴的圖紙（例如 ARB-D0417-1），並將其合併至主序列中（變成 ARB-D0418），後續編號會自動順延。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_viewport_map",
+    "name": "get_viewport_map",
+    "version": "upstream-cfe0739-local",
+    "description": "取得專案中所有視埠（Viewport）與圖紙（Sheet）的對應關係。可用於查詢特定視圖被放置在哪張圖紙上。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_sheet_viewport_details",
+    "name": "get_sheet_viewport_details",
+    "version": "upstream-cfe0739-local",
+    "description": "取得指定圖紙上所有視埠的詳細資訊，包含中心點座標、邊界框（MinX/MinY/MaxX/MaxY）、寬度與高度（mm）。若不指定 sheetId，則使用當前作用視圖（必須是圖紙）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sheetId": {
+          "type": "number",
+          "description": "圖紙的 Element ID（選填，不指定則使用當前作用圖紙）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:arrange_viewports_on_sheet",
+    "name": "arrange_viewports_on_sheet",
+    "version": "upstream-cfe0739-local",
+    "description": "依指定順序排列圖紙上的視埠（僅限 DraftingView）。支援水平或垂直排列，邊緣對齊（edge-to-edge）。第一個視埠的位置作為錨點。可用 viewNames（view 名稱陣列）或 viewportIds（視埠 ID 陣列）指定順序，二擇一。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "依排列順序的 view 名稱陣列（與 viewportIds 二擇一）。工具會在圖紙上查找對應的 DraftingView viewport。"
+        },
+        "viewportIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "依排列順序的視埠 ID 陣列（與 viewNames 二擇一）"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "description": "排列方向：horizontal（水平，預設）或 vertical（垂直）"
+        },
+        "gapMm": {
+          "type": "number",
+          "description": "視埠之間的間距（mm），預設 0（邊緣對齊）"
+        },
+        "alignY": {
+          "type": "string",
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ],
+          "description": "垂直對齊方式（水平排列時有效）：top / center（預設）/ bottom"
+        },
+        "sheetId": {
+          "type": "number",
+          "description": "圖紙的 Element ID（選填，不指定則使用當前作用圖紙）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:scale_drafting_view_width",
+    "name": "scale_drafting_view_width",
+    "version": "upstream-cfe0739-local",
+    "description": "縮放圖紙上所有 DraftingView 中表格的寬度（僅 X 軸），高度不變。以每個 view 的左邊緣為錨點，將所有 DetailCurve 和 TextNote 的 X 座標按比例縮放。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "scaleFactor": {
+          "type": "number",
+          "description": "寬度縮放比例（例如 0.9 表示縮小到 90%，1.1 表示放大到 110%）。預設 0.9"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "只處理指定名稱的 DraftingView（選填，不指定則處理圖紙上所有 DraftingView）"
+        },
+        "sheetId": {
+          "type": "number",
+          "description": "圖紙的 Element ID（選填，不指定則使用當前作用圖紙）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:scale_drafting_view_height",
+    "name": "scale_drafting_view_height",
+    "version": "upstream-cfe0739-local",
+    "description": "縮放圖紙上所有 DraftingView 中表格的行高（僅 Y 軸），寬度不變。以每個 view 的上邊緣為錨點，將所有 DetailCurve 和 TextNote 的 Y 座標按比例縮放。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "scaleFactor": {
+          "type": "number",
+          "description": "行高縮放比例（例如 1.1 表示放大到 110%，0.9 表示縮小到 90%）。預設 1.1"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "只處理指定名稱的 DraftingView（選填，不指定則處理圖紙上所有 DraftingView）"
+        },
+        "sheetId": {
+          "type": "number",
+          "description": "圖紙的 Element ID（選填，不指定則使用當前作用圖紙）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_detail_components",
+    "name": "get_detail_components",
+    "version": "upstream-cfe0739-local",
+    "description": "查詢專案中的詳圖元件（Detail Components）實例。可依族群名稱篩選，回傳每個實例的 ID、族群名稱、類型名稱、所屬視圖及參數。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "familyName": {
+          "type": "string",
+          "description": "族群名稱篩選（選填，模糊比對）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_detail_component_type",
+    "name": "create_detail_component_type",
+    "version": "upstream-cfe0739-local",
+    "description": "指定詳圖項目族群，複製並設定新名稱（圖紙編號-圖紙名稱-詳圖名稱），同時自動填寫 詳圖圖號、圖說名稱、詳圖名稱、詳圖編號 等類型參數。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sheetNumber": {
+          "type": "string",
+          "description": "目標圖紙編號（如 A101）"
+        },
+        "detailName": {
+          "type": "string",
+          "description": "詳圖名稱（使用者輸入的新詳圖名稱）"
+        },
+        "familyName": {
+          "type": "string",
+          "description": "要複製的基礎詳圖項目族群名稱（選填，若未提供則預設尋找 'AE-圖號'）"
+        },
+        "detailNumber": {
+          "type": "string",
+          "description": "詳圖編號（選填，預設為 '1'）"
+        }
+      },
+      "required": [
+        "sheetNumber",
+        "detailName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:sync_detail_component_numbers",
+    "name": "sync_detail_component_numbers",
+    "version": "upstream-cfe0739-local",
+    "description": "自動同步所有詳圖元件的類型參數（詳圖圖號、圖說名稱）與其所在圖紙的編號和名稱。僅更新類型名稱已匹配圖紙編號的元件，不會影響共用標準詳圖。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_family_symbols",
+    "name": "list_family_symbols",
+    "version": "upstream-cfe0739-local",
+    "description": "列出專案中的 FamilySymbol（族群類型）。可依名稱篩選，回傳 ID、類型名稱、族群名稱、類別。用於查詢可用的詳圖項目族群。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "type": "string",
+          "description": "名稱篩選關鍵字（選填，模糊比對族群名稱或類型名稱）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:dedup_detail_elements_in_view",
+    "name": "dedup_detail_elements_in_view",
+    "version": "upstream-cfe0739-local",
+    "description": "找出當前視圖（或指定視圖）中重複的 detail element（同 Type + 位置量化後相同），保留 Detail Group 內的副本，刪除 group 外的副本。涵蓋 DetailComponent / DetailCurve / FilledRegion / TextNote / Dimension。只認 Detail Group（OST_IOSDetailGroups），不認 Model Group。預設 dryRun=true 只列清單；確認後設 dryRun=false 才實際刪除。邊界情形（全部都在 group 中、或全部都不在 group 中）會回報但不動。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖 ID（選填，預設使用當前 active view）"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "All",
+              "DetailComponent",
+              "DetailCurve",
+              "FilledRegion",
+              "TextNote",
+              "Dimension"
+            ]
+          },
+          "description": "處理的類別清單（選填，預設 ['All']）"
+        },
+        "tolerance": {
+          "type": "number",
+          "description": "位置比對容差（公釐），預設 1.0",
+          "default": 1
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "true=只列清單不刪除（預設）；false=實際刪除 group 外的重複副本",
+          "default": true
+        }
+      }
+    },
+    "status": "disabled",
+    "risk": "destructive",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_dimension_by_ray",
+    "name": "create_dimension_by_ray",
+    "version": "upstream-cfe0739-local",
+    "description": "使用射線偵測 (Ray-Casting) 建立尺寸標註。從指定原點向正反方向發射射線，偵測牆面並建立標註。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖 ID"
+        },
+        "origin": {
+          "type": "object",
+          "description": "射線原點 (通常為房間中心)",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "direction": {
+          "type": "object",
+          "description": "正向射線方向向量",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "counterDirection": {
+          "type": "object",
+          "description": "反向射線方向向量 (若未提供則自動取反)",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "required": [
+        "viewId",
+        "origin",
+        "direction"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_dimension_by_bounding_box",
+    "name": "create_dimension_by_bounding_box",
+    "version": "upstream-cfe0739-local",
+    "description": "使用房間邊界框自動標註房間淨尺寸（保證100%覆蓋率）",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "視圖 ID"
+        },
+        "roomId": {
+          "type": "number",
+          "description": "房間 ID"
+        },
+        "axis": {
+          "type": "string",
+          "description": "標註軸向：'X' 或 'Y'",
+          "enum": [
+            "X",
+            "Y"
+          ]
+        },
+        "offset": {
+          "type": "number",
+          "description": "標註線偏移距離 (mm)，默認 500"
+        }
+      },
+      "required": [
+        "viewId",
+        "roomId",
+        "axis"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:calculate_grid_bounds",
+    "name": "calculate_grid_bounds",
+    "version": "upstream-cfe0739-local",
+    "description": "計算給定 X 與 Y 網格範圍的邊界 BoundingBox 座標。可指定外擴偏移量 (offset_mm)。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "xGrids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "X 軸網格名稱清單 (例如 ['B23', 'B27'])"
+        },
+        "yGrids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Y 軸網格名稱清單 (例如 ['BE'])"
+        },
+        "offset_mm": {
+          "type": "number",
+          "description": "邊界向外偏移距離 (公釐)，預設 0",
+          "default": 0
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_dependent_views",
+    "name": "create_dependent_views",
+    "version": "upstream-cfe0739-local",
+    "description": "依據指定的母視圖 ID 與 BoundingBox 邊界，批次建立並裁切從屬視圖 (Dependent View)。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "parentViewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "母視圖的 Element ID 清單"
+        },
+        "min": {
+          "type": "object",
+          "description": "裁切框最小座標點",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        "max": {
+          "type": "object",
+          "description": "裁切框最大座標點",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "z"
+          ]
+        },
+        "suffixName": {
+          "type": "string",
+          "description": "視圖命名後綴 (例如 '-1')。若不指定則自動編號流水號。"
+        }
+      },
+      "required": [
+        "parentViewIds",
+        "min",
+        "max"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_dwg_column_layers",
+    "name": "get_dwg_column_layers",
+    "version": "upstream-cfe0739-local",
+    "description": "掃描目前 Revit 平面視圖中所有 CAD 匯入/連結的圖層名稱，回傳圖層清單並自動推薦可能包含柱子的圖層。使用前請確認 Revit 已開啟平面視圖且已匯入 CAD 檔案。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:preview_dwg_columns",
+    "name": "preview_dwg_columns",
+    "version": "upstream-cfe0739-local",
+    "description": "解析 CAD 指定圖層中的矩形幾何，預覽識別到的柱資訊（位置、寬度、深度、旋轉角）。此工具不會建立任何 Revit 元素，僅回傳解析結果供確認。建議在執行 create_columns_from_dwg 前先呼叫此工具確認數量與尺寸。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "layerName": {
+          "type": "string",
+          "description": "CAD 圖層名稱，請從 get_dwg_column_layers 回傳的清單中選擇"
+        }
+      },
+      "required": [
+        "layerName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_columns_from_dwg",
+    "name": "create_columns_from_dwg",
+    "version": "upstream-cfe0739-local",
+    "description": "從 CAD 指定圖層自動建立 Revit 結構柱或建築柱。會自動：辨識矩形輪廓、建立對應尺寸的族群類型、設定底頂樓層、套用旋轉角度。若指定 familyName，會從該族群的現有類型中依尺寸比對，直接使用原有柱名稱（如 C1、C2）；未指定時自動挑選最適族群並按尺寸建立新類型。執行前建議先呼叫 preview_dwg_columns 確認識別結果。此操作會修改 Revit 模型，無法自動復原，請謹慎使用。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "layerName": {
+          "type": "string",
+          "description": "CAD 圖層名稱，請從 get_dwg_column_layers 回傳的清單中選擇"
+        },
+        "columnType": {
+          "type": "string",
+          "enum": [
+            "structural",
+            "architectural"
+          ],
+          "default": "structural",
+          "description": "柱類型：'structural'（結構柱，OST_StructuralColumns）或 'architectural'（建築柱，OST_Columns）。預設為 structural"
+        },
+        "familyName": {
+          "type": "string",
+          "description": "（選填）指定使用的族群名稱，例如「B1_RC柱-矩形」。指定後會從該族群現有類型中依尺寸比對，保留 C1/C2/C3 等原有柱名稱；尺寸無對應時才建立新類型。不指定則自動挑選最適族群。"
+        },
+        "textLayerName": {
+          "type": "string",
+          "description": "（選填）CAD 圖面上標注柱名稱（C1、C2 等）文字所在的圖層名稱。指定後會讀取該圖層的 TEXT/MTEXT 文字，依空間距離將最近的標注對應到每根柱，再以標注文字（如 C1）在 familyName 族群中尋找對應類型。DXF 格式可直接讀取；DWG 格式需安裝 ODA File Converter，未安裝時會回傳 labelReadStatus=no_oda 並附上安裝說明，柱仍會建立但不對應名稱。"
+        }
+      },
+      "required": [
+        "layerName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_dwg_beam_layers",
+    "name": "get_dwg_beam_layers",
+    "version": "upstream-cfe0739-local",
+    "description": "掃描目前 Revit 平面視圖中所有 CAD 匯入/連結的圖層名稱，回傳圖層清單並自動推薦可能包含樑、標註文字的圖層。使用前請確認 Revit 已開啟平面視圖且已匯入 CAD 檔案。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:preview_dwg_beams",
+    "name": "preview_dwg_beams",
+    "version": "upstream-cfe0739-local",
+    "description": "解析 CAD 指定圖層中的雙線幾何，預覽識別到的樑中心線資訊（區分 X 向與 Y 向）。此工具不會建立任何 Revit 元素，僅回傳解析結果供確認數量。建議在執行 create_beams_from_dwg 前先呼叫此工具確認數量。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "layerName": {
+          "type": "string",
+          "description": "CAD 圖層名稱，請從 get_dwg_beam_layers 回傳的清單中選擇樑輪廓圖層"
+        }
+      },
+      "required": [
+        "layerName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_beams_from_dwg",
+    "name": "create_beams_from_dwg",
+    "version": "upstream-cfe0739-local",
+    "description": "從 CAD 指定圖層建立 Revit 結構樑（必須搭配文字標注圖層）。\n重要：建議按類型分批執行（先大樑、再次樑、再地樑），\n每批只處理一個線條圖層與對應的文字圖層。\n使用 beamRole 參數標示目前處理的批次。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "layerName": {
+          "type": "string",
+          "description": "CAD 樑輪廓線條的圖層名稱（必填）"
+        },
+        "familyName": {
+          "type": "string",
+          "description": "指定使用的族群名稱（必填），例如「2_RC樑-矩形」。"
+        },
+        "typeName": {
+          "type": "string",
+          "description": "（選填）指定族群類型名稱（例如「60x80」）。有填此參數時為「快速模式」，該批次所有樑都用這個型別建立，忽略文字圖層。沒填時為「名稱對應模式」，依文字標注比對類型。"
+        },
+        "textLayerNameX": {
+          "type": "string",
+          "description": "（名稱對應模式必填其一）CAD 圖面上 X 軸向標注樑名稱（例如水平向的 B1）的文字圖層。文字僅會與 X 軸向的中心線進行配對，避免干擾。"
+        },
+        "textLayerNameY": {
+          "type": "string",
+          "description": "（名稱對應模式必填其一）CAD 圖面上 Y 軸向標注樑名稱（例如垂直向的 B1）的文字圖層。文字僅會與 Y 軸向的中心線進行配對，避免干擾。"
+        },
+        "beamRole": {
+          "type": "string",
+          "description": "（選填）標示此批次處理的樑角色，例如「大樑」、「次樑」、「地樑」。用於回報顯示。"
+        }
+      },
+      "required": [
+        "layerName",
+        "familyName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:link_cad_to_view",
+    "name": "link_cad_to_view",
+    "version": "upstream-cfe0739-local",
+    "description": "將指定的 CAD 檔案（.dwg / .dxf）連結（Link，非 Import）到 Revit 中的指定視圖。預設 thisViewOnly=true，連結僅在該視圖可見；3D 視圖不支援 thisViewOnly。視圖可用 viewId（最精確）或 viewName（會自動 fallback：精確 → 包含；多筆會回傳候選清單）。此操作會修改 Revit 模型，且 Revit 不允許程式化卸除連結，請謹慎使用。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filePath": {
+          "type": "string",
+          "description": "CAD 檔案絕對路徑（.dwg 或 .dxf）"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖的 Element ID（與 viewName 二擇一）"
+        },
+        "viewName": {
+          "type": "string",
+          "description": "目標視圖名稱（與 viewId 二擇一）。找不到完全相符時會自動 fallback 到包含搜尋；多筆相符會回傳候選清單。"
+        },
+        "thisViewOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "true=連結僅在指定視圖可見（最常見的「連結到指定視圖」語意）；false=全模型可見，View 僅用於 Level 參考。3D 視圖必須設 false。"
+        },
+        "placement": {
+          "type": "string",
+          "enum": [
+            "Origin",
+            "Centered",
+            "Site",
+            "Shared",
+            "DefaultLocation"
+          ],
+          "default": "Origin",
+          "description": "對齊模式。Origin=自動原點對原點；Centered=置中；Site=站點；Shared=共用座標。"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "Default",
+            "Foot",
+            "Inch",
+            "Meter",
+            "Decimeter",
+            "Centimeter",
+            "Millimeter",
+            "Custom"
+          ],
+          "default": "Default",
+          "description": "DWG 單位。Default=使用 DWG 內定單位。"
+        },
+        "colorMode": {
+          "type": "string",
+          "enum": [
+            "BlackAndWhite",
+            "Preserved",
+            "InvertColors"
+          ],
+          "default": "BlackAndWhite",
+          "description": "顏色模式。BlackAndWhite 為 CAD 底圖最常見設定。"
+        },
+        "visibleLayersOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "true=只匯入 DWG 中可見的圖層。"
+        },
+        "orientToView": {
+          "type": "boolean",
+          "default": false,
+          "description": "true=方向對齊視圖。需要 thisViewOnly=false。"
+        },
+        "autoCorrectAlmostVHLines": {
+          "type": "boolean",
+          "default": true,
+          "description": "自動將近似水平/垂直的線校正為精準水平/垂直。"
+        },
+        "customScale": {
+          "type": "number",
+          "description": "自訂縮放係數（>0），會覆蓋 unit。不填或 ≤0 則沿用 unit。"
+        },
+        "referencePoint": {
+          "type": "object",
+          "description": "插入點（公釐，會自動轉換為 Revit 內部單位英尺）。",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "required": [
+        "filePath"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:link_cads_by_floor",
+    "name": "link_cads_by_floor",
+    "version": "upstream-cfe0739-local",
+    "description": "批次將多個 CAD 檔連結到對應樓層的平面視圖，並把每個 CAD 平移對齊到指定的 Revit Grid 交點。自動從 CAD 檔名抽樓層代碼（支援 FL1/FL2、B1/B1F、RF、1F/2F、地下1樓、3樓 等格式）→ 找名稱含該代碼的 FloorPlan。對齊方式：Link 後做 ElementTransformUtils.MoveElement，translation = (Revit Grid 交點 − CAD 錨點)。強制 Placement=Origin、不旋轉、不支援自訂 referencePoint / orientToView / customScale（會干擾對齊）。全部在單一 Transaction 內，失敗會 commit 已成功的部分並回報每筆狀態。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "description": "要連結的 CAD 清單，每筆指定檔案與在 CAD 內的對齊錨點座標。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "CAD 檔案絕對路徑（.dwg / .dxf）。檔名須含可辨識樓層代碼。"
+              },
+              "cadAnchorPoint": {
+                "type": "object",
+                "description": "CAD 內對應 Grid 交點的座標（公釐）。",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ]
+              }
+            },
+            "required": [
+              "filePath",
+              "cadAnchorPoint"
+            ]
+          }
+        },
+        "gridLabelX": {
+          "type": "string",
+          "description": "Revit Grid 標籤（X 方向那條），例如「X1」或「A」。"
+        },
+        "gridLabelY": {
+          "type": "string",
+          "description": "Revit Grid 標籤（Y 方向那條），例如「Y1」或「1」。"
+        },
+        "thisViewOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "true=連結只在對應 FloorPlan 可見。"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "Default",
+            "Foot",
+            "Inch",
+            "Meter",
+            "Decimeter",
+            "Centimeter",
+            "Millimeter",
+            "Custom"
+          ],
+          "default": "Default"
+        },
+        "colorMode": {
+          "type": "string",
+          "enum": [
+            "BlackAndWhite",
+            "Preserved",
+            "InvertColors"
+          ],
+          "default": "BlackAndWhite"
+        },
+        "visibleLayersOnly": {
+          "type": "boolean",
+          "default": false
+        },
+        "autoCorrectAlmostVHLines": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "items",
+        "gridLabelX",
+        "gridLabelY"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_linked_models",
+    "name": "get_linked_models",
+    "version": "upstream-cfe0739-local",
+    "description": "列出當前專案中所有連結模型（RevitLinkInstance），含 LinkInstanceId、檔名、路徑、載入狀態、Transform 原點。用於碰撞偵測第一步：找到 MEP 連結的 LinkInstanceId。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:query_linked_elements",
+    "name": "query_linked_elements",
+    "version": "upstream-cfe0739-local",
+    "description": "查詢指定連結模型中的元素，支援品類篩選、參數過濾、自訂回傳欄位。座標會自動套用連結模型 Transform，確保與主模型對齊。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "linkInstanceId": {
+          "type": "number",
+          "description": "連結模型實體 ID（來自 get_linked_models）"
+        },
+        "category": {
+          "type": "string",
+          "description": "Revit 品類名稱，例如 Pipes、Ducts、CableTrays、Walls、StructuralFraming"
+        },
+        "filters": {
+          "type": "array",
+          "description": "參數過濾條件",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "參數名（例 System Type、Size）"
+              },
+              "operator": {
+                "type": "string",
+                "description": "equals / contains / not_equals / less_than / greater_than"
+              },
+              "value": {
+                "type": "string",
+                "description": "比對值"
+              }
+            }
+          }
+        },
+        "returnFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "額外回傳的參數欄位名（選填）"
+        },
+        "maxCount": {
+          "type": "number",
+          "description": "最大回傳數量",
+          "default": 500
+        }
+      },
+      "required": [
+        "linkInstanceId",
+        "category"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:get_element_geometry",
+    "name": "get_element_geometry",
+    "version": "upstream-cfe0739-local",
+    "description": "抽取元素的幾何資訊，支援主模型或連結模型元素。geometryType 可選 centerline（中心線）、boundingbox（範圍盒）、solid（實體統計）、all（全部）。連結模型的座標會套用 Transform。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "元素 ID"
+        },
+        "linkInstanceId": {
+          "type": "number",
+          "description": "若為連結模型元素，需提供連結實體 ID（選填）"
+        },
+        "geometryType": {
+          "type": "string",
+          "description": "幾何類型：centerline / boundingbox / solid / all",
+          "default": "centerline"
+        },
+        "applyTransform": {
+          "type": "boolean",
+          "description": "是否套用連結模型 Transform",
+          "default": true
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "validated",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:detect_clashes",
+    "name": "detect_clashes",
+    "version": "upstream-cfe0739-local",
+    "description": "執行 MEP 管線（連結模型）與 CSA 結構體（主模型）的碰撞偵測，使用 Curve-to-Solid 策略：MEP 抽中心線、CSA 保留實體、計算穿透線段。回傳每筆碰撞的入口/出口座標、貫穿長度、截面積、佔用體積，以及依系統/依 CSA 品類的統計摘要。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mepSource": {
+          "type": "object",
+          "description": "MEP 管線來源（通常來自連結模型）",
+          "properties": {
+            "linkInstanceId": {
+              "type": "number",
+              "description": "連結模型 ID；為 0 或省略時從主模型讀取"
+            },
+            "category": {
+              "type": "string",
+              "description": "單一品類名稱（例 Pipes）；與 categories 擇一"
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "品類清單（例 [Pipes, Ducts, CableTrays]）；預設為這三類"
+            },
+            "filters": {
+              "type": "array",
+              "description": "參數過濾（例 System Type contains 消防、Size greater_than 100）",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "csaSource": {
+          "type": "object",
+          "description": "CSA 結構來源（通常為主模型）",
+          "properties": {
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "結構品類清單；預設 [Walls, Floors, StructuralFraming, StructuralColumns]"
+            }
+          }
+        },
+        "options": {
+          "type": "object",
+          "description": "運算選項",
+          "properties": {
+            "useCoarseFilter": {
+              "type": "boolean",
+              "description": "是否啟用 BoundingBox 粗篩",
+              "default": true
+            },
+            "tolerance": {
+              "type": "number",
+              "description": "公差（mm）",
+              "default": 0
+            },
+            "levelFilter": {
+              "type": "string",
+              "description": "樓層名稱過濾（選填）"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "最大回傳碰撞數",
+              "default": 1000
+            }
+          }
+        }
+      },
+      "required": [
+        "mepSource"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:colorize_clashes",
+    "name": "colorize_clashes",
+    "version": "upstream-cfe0739-local",
+    "description": "將 detect_clashes 的結果視覺化上色到 CSA 元素。colorScheme 可選 by_csa_category（柱紅/樑橘/板黃/牆藍）、by_system（依 MEP 系統）、by_severity（依貫穿深度嚴重度）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "clashData": {
+          "type": "object",
+          "description": "detect_clashes 的完整回傳物件（含 Clashes 陣列）"
+        },
+        "colorScheme": {
+          "type": "string",
+          "description": "配色方案：by_csa_category / by_system / by_severity",
+          "default": "by_csa_category"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖 ID；省略則使用當前 active view"
+        }
+      },
+      "required": [
+        "clashData"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:export_clash_report",
+    "name": "export_clash_report",
+    "version": "upstream-cfe0739-local",
+    "description": "匯出 detect_clashes 結果為報表。format 可選 csv、json、both。預設輸出到桌面，檔名含時間戳。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "clashData": {
+          "type": "object",
+          "description": "detect_clashes 的完整回傳物件（含 Clashes 陣列）"
+        },
+        "format": {
+          "type": "string",
+          "description": "輸出格式：csv / json / both",
+          "default": "csv"
+        },
+        "outputPath": {
+          "type": "string",
+          "description": "自訂輸出路徑（不含副檔名）；省略則輸出到桌面"
+        },
+        "reportTitle": {
+          "type": "string",
+          "description": "報表標題",
+          "default": "MEP-CSA 碰撞偵測報告"
+        }
+      },
+      "required": [
+        "clashData"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:door-window-legend-tools",
+    "name": "door-window-legend-tools",
+    "version": "upstream-cfe0739-local",
+    "description": "門窗圖例工具。mode=list 列出專案中已使用的門/窗型；mode=create 以 seed Legend 複製生成新圖例；mode=update 更新既有門窗圖例。create/update 會要求使用者明確選擇 layoutDirection、maxPerLine、dimensionTypeId，create 另需 seedLegendViewId，update 另需 legendViewId。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "targetType": {
+          "type": "string",
+          "enum": [
+            "door",
+            "window"
+          ],
+          "description": "目標類型：door 產生門圖例，window 產生窗圖例。"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "list",
+            "create",
+            "update"
+          ],
+          "description": "list 列出型別；create 建立新 Legend；update 更新既有 Legend。"
+        },
+        "layoutDirection": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "description": "create/update 的排列方向。"
+        },
+        "maxPerLine": {
+          "type": "number",
+          "minimum": 1,
+          "description": "create/update 每列或每欄最多放幾個項目，必須大於等於 1。"
+        },
+        "seedLegendViewId": {
+          "type": "number",
+          "description": "create 使用的 seed Legend 視圖 ID。若缺少，工具會要求先呼叫 list_seeds 讓使用者選擇。"
+        },
+        "legendViewId": {
+          "type": "number",
+          "description": "update 要更新的既有 Legend 視圖 ID。若缺少，工具會要求先呼叫 list_legend_views 讓使用者選擇。"
+        },
+        "dimensionTypeId": {
+          "type": "number",
+          "description": "門窗圖例尺寸標註使用的 DimensionType ID。若缺少，工具會要求先呼叫 list_dimension_types 讓使用者選擇。"
+        }
+      },
+      "required": [
+        "mode"
+      ]
+    },
+    "status": "disabled",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_seeds",
+    "name": "list_seeds",
+    "version": "upstream-cfe0739-local",
+    "description": "列出 seed 候選資料。這版支援 seedType=legend，會回傳所有非樣板 Legend 視圖與其中 Legend Component 數量。此 tool 的結果必須顯示給使用者選擇；assistant 不得根據清單自動決定 seed，也不得在使用者未選 ViewName 前自動重試 create。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "seedType": {
+          "type": "string",
+          "enum": [
+            "legend"
+          ],
+          "description": "seed 類型，目前僅支援 legend。"
+        }
+      },
+      "required": [
+        "seedType"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_dimension_types",
+    "name": "list_dimension_types",
+    "version": "upstream-cfe0739-local",
+    "description": "列出目前 Revit 專案可用的 DimensionType。door-window-legend-tools create/update 需要先由使用者選擇 dimensionTypeName，再把對應 dimensionTypeId 傳回。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:list_legend_views",
+    "name": "list_legend_views",
+    "version": "upstream-cfe0739-local",
+    "description": "列出目前 Revit 專案中的 Legend 視圖與其中的門窗 legend component 數量。door-window-legend-tools update 需要先由使用者選擇 viewName。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:analyze_beam_penetration",
+    "name": "analyze_beam_penetration",
+    "version": "upstream-cfe0739-local",
+    "description": "分析特定結構梁上的套管穿孔。回傳精確的幾何數據，如距離柱心長度、梁深度、開孔直徑等。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "beamId": {
+          "type": "number",
+          "description": "要分析的目標結構梁 Element ID"
+        },
+        "diameterParamNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可選。搜尋套管『直徑』的動態參數名稱清單（實體與類型自動 Fallback）。預設為 ['開孔直徑', '直徑', '管徑', 'Diameter', 'Size']"
+        },
+        "lengthParamNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可選。搜尋套管『長度』的動態參數名稱清單。預設為 ['長度', 'Length']"
+        },
+        "widthParamNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可選。搜尋梁『寬度』的動態參數名稱清單。預設為 ['b', '梁寬', 'Width']"
+        },
+        "sleeveIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "可選。指定檢核的套管 ID 清單，避免全區掃描"
+        },
+        "linkInstanceId": {
+          "type": "number",
+          "description": "可選。連結模型的 ID"
+        }
+      },
+      "required": [
+        "beamId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:scan_penetrated_beams_in_view",
+    "name": "scan_penetrated_beams_in_view",
+    "version": "upstream-cfe0739-local",
+    "description": "掃描目前視圖中所有被套管（Sleeves）穿過的結構梁。回傳包含梁 ID、連結模型 ID 及穿過該梁的套管數量的清單。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:grade_toposolid_to_floors",
+    "name": "grade_toposolid_to_floors",
+    "version": "upstream-cfe0739-local",
+    "description": "依指定樓板底面的水平投影範圍整平 Toposolid；本次僅支援 footprint_only 模式。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "toposolidId": {
+          "type": "integer",
+          "description": "要整地的 Toposolid 元素 ID"
+        },
+        "floorIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer"
+          },
+          "description": "作為整地範圍來源的樓板元素 ID；至少提供一筆"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "footprint_only"
+          ],
+          "default": "footprint_only",
+          "description": "整地模式；本次只接受 footprint_only"
+        },
+        "targetFace": {
+          "type": "string",
+          "enum": [
+            "bottom"
+          ],
+          "default": "bottom",
+          "description": "樓板目標面；本次只接受 bottom"
+        },
+        "allowPhaseSetup": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否自動設定整地所需階段（預設 true）：原地形會改為較早階段建立、於目前階段拆除，設計副本建立於目前階段——與 Revit 原生整地行為一致。設為 false 時不修改階段，僅回報所需變更。"
+        },
+        "updateExisting": {
+          "type": "boolean",
+          "enum": [
+            false
+          ],
+          "default": false,
+          "description": "是否更新既有整地結果；本次只接受 false"
+        }
+      },
+      "required": [
+        "toposolidId",
+        "floorIds"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:copy_detail_items_to_views",
+    "name": "copy_detail_items_to_views",
+    "version": "upstream-cfe0739-local",
+    "description": "批次複製詳圖項目（DetailCurve、TextNote、FilledRegion、DetailComponent、Dimension）從來源視圖到一或多個目標視圖（同一專案內）。支援 DraftingView 與 model view。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sourceViewId": {
+          "type": "number",
+          "description": "來源視圖的 Element ID"
+        },
+        "targetViewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標視圖的 Element ID 陣列"
+        },
+        "elementCategories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "DetailCurves",
+              "TextNotes",
+              "FilledRegions",
+              "DetailComponents",
+              "Dimensions",
+              "All"
+            ]
+          },
+          "description": "要複製的詳圖項目類別，預設 [\"All\"]。可指定子集如 [\"DetailCurves\", \"Dimensions\"]。Dimensions 包含 Linear/Aligned/Radial/Angular/ArcLength/SpotElevation 等所有尺寸標註類型。",
+          "default": [
+            "All"
+          ]
+        },
+        "sourceElementIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "指定要複製的元素 ID 清單（選填）。省略則複製來源視圖中符合 elementCategories 的所有詳圖項目。"
+        },
+        "offset": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "X 方向偏移量（公釐），預設 0"
+            },
+            "y": {
+              "type": "number",
+              "description": "Y 方向偏移量（公釐），預設 0"
+            }
+          },
+          "description": "複製後的位置偏移（公釐）。預設 {x:0, y:0} 即原位置。"
+        },
+        "preserveGroups": {
+          "type": "boolean",
+          "description": "true=收集到的 group 成員會被替換成整個 group instance 一起複製，保留 detail group/model group 結構（推薦）；false=group 成員以個別元素複製，丟失 group 結構（舊行為）。注意：preserveGroups=true 時，若 group 內含其他類別的成員（不在 elementCategories 過濾範圍內），那些成員仍會隨 group 一起複製過去。",
+          "default": true
+        },
+        "fallbackToIndividual": {
+          "type": "boolean",
+          "description": "true=當批次複製失敗時，自動 fallback 為逐個元素重試，記錄哪些成功哪些失敗（強烈推薦）；false=批次失敗則整批 rollback，回傳 Failed 狀態。Dimension 跨 view 複製常因 host element 引用遺失導致整批 fail，這個參數能自動繞過問題元素只保留可複製的部分。回傳結構新增 Mode（Batch/Individual）、FailedCount、FailedElements、BatchErrorReason 欄位。",
+          "default": true
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "若 true 則只回傳要複製的元素統計，不實際複製。",
+          "default": false
+        }
+      },
+      "required": [
+        "sourceViewId",
+        "targetViewIds"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:set_scope_box_for_views",
+    "name": "set_scope_box_for_views",
+    "version": "upstream-cfe0739-local",
+    "description": "批次將 ScopeBox 套用到一組 views（透過設定 view 的 VIEWER_VOLUME_OF_INTEREST_CROP 參數）。被套用後 view 的 CropBox 會自動跟隨 ScopeBox 的範圍，以後 ScopeBox 移動或調整大小時 view 會跟著更新。三選一指定目標 views，優先序：viewIds（最精確）> viewNames > viewNameContains。可選 viewTypeFilter 進一步篩選。View template、不支援 ScopeBox 的 view（Schedule, Legend 等）會自動跳過並記錄在 Skipped 中。觸發條件：使用者提到 scope box、範圍框、套用 scope box、批次設定 scope box、scopebox to views。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "scopeBoxName": {
+          "type": "string",
+          "description": "目標 ScopeBox 的名稱（須與 Revit 中 ScopeBox 名稱完全一致；找不到時會列出所有可用名稱）"
+        },
+        "viewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 view ElementId 清單（最精確的識別方式）"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "目標 view 名稱清單（精確匹配）"
+        },
+        "viewNameContains": {
+          "type": "string",
+          "description": "view 名稱包含此字串（substring match，case-insensitive）"
+        },
+        "viewTypeFilter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 view type, 例: ['FloorPlan', 'CeilingPlan']"
+        }
+      },
+      "required": [
+        "scopeBoxName"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:align_view_cropbox_to_element",
+    "name": "align_view_cropbox_to_element",
+    "version": "upstream-cfe0739-local",
+    "description": "將指定視圖的 CropBox 對齊到目標元素（如 Detail Group 圖框）的 BoundingBox。保留原 Z 軸深度與 CropBox Transform。viewId 不指定時使用 active view。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "elementId": {
+          "type": "number",
+          "description": "要對齊的目標元素 ID（例如 Detail Group 的 ID）"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖 ID（選填）；不填則使用當前 active view"
+        },
+        "padding_mm": {
+          "type": "number",
+          "description": "向外擴大的邊距（公釐），預設 0",
+          "default": 0
+        }
+      },
+      "required": [
+        "elementId"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:shift_view_cropbox",
+    "name": "shift_view_cropbox",
+    "version": "upstream-cfe0739-local",
+    "description": "在 CropBox 自身座標系中平移視圖的 CropBox。dx 正值往右、dy 正值往上（單位公釐）。viewId 不指定時使用 active view。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "number",
+          "description": "目標視圖 ID（選填）；不填則使用當前 active view"
+        },
+        "dx_mm": {
+          "type": "number",
+          "description": "X 方向位移（公釐，正值往右）",
+          "default": 0
+        },
+        "dy_mm": {
+          "type": "number",
+          "description": "Y 方向位移（公釐，正值往上）",
+          "default": 0
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:move_text_notes_in_views",
+    "name": "move_text_notes_in_views",
+    "version": "upstream-cfe0739-local",
+    "description": "在多個 DraftingView 中，依文字內容子字串搜尋 TextNote 並批次平移。適用於跨圖面統一調整法規文字位置。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "textMatch": {
+          "type": "string",
+          "description": "要搜尋的 TextNote 文字內容（子字串比對，不區分大小寫）"
+        },
+        "deltaXMm": {
+          "type": "number",
+          "description": "水平位移量（mm），正值向右、負值向左。預設 0"
+        },
+        "deltaYMm": {
+          "type": "number",
+          "description": "垂直位移量（mm），正值向上、負值向下。預設 0"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "只在指定名稱的 DraftingView 中搜尋（選填，不指定則搜尋全部 DraftingView）"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "設為 true 時僅搜尋並回報結果，不實際移動。預設 false"
+        }
+      },
+      "required": [
+        "textMatch"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:align_titleblocks_on_sheets",
+    "name": "align_titleblocks_on_sheets",
+    "version": "upstream-cfe0739-local",
+    "description": "批次將多個 sheet 上的 titleblock 移動到同一個 anchor 座標。可用『referenceSheetNumber』指定要拷貝某張 sheet 上 titleblock 的位置，或用『referencePositionMm』直接給絕對座標。anchor 決定要對齊 titleblock bbox 的哪個角（top-left / top-right / bottom-left / bottom-right / center）。建議先 dryRun=true 預覽 delta，確認後再實際執行。觸發條件：使用者提到 titleblock 對齊、圖框對齊、把所有 sheet 圖框對齊到 X、change_element_type 後圖框沒跟著移動、align titleblock、move titleblock to match。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "referenceSheetNumber": {
+          "type": "string",
+          "description": "參考 sheet 編號，會抓取此 sheet 上 titleblock 在 anchor 位置的座標作為 ground truth。不可與 referencePositionMm 同時使用"
+        },
+        "referencePositionMm": {
+          "type": "object",
+          "description": "直接給絕對座標（公釐，sheet 座標）。不可與 referenceSheetNumber 同時使用",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "X 座標（mm）"
+            },
+            "y": {
+              "type": "number",
+              "description": "Y 座標（mm）"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right",
+            "center"
+          ],
+          "description": "對齊 titleblock bbox 的哪個角（預設 top-left）",
+          "default": "top-left"
+        },
+        "targetSheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要對齊的 sheet 編號清單。省略 = 全部 sheets（會跳過沒有 titleblock 的）"
+        },
+        "toleranceMm": {
+          "type": "number",
+          "description": "若 delta 小於此公差（mm）則視為已對齊不移動，預設 0.1",
+          "default": 0.1
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "若 true 則只計算不實際移動，回傳預期 delta 供確認",
+          "default": false
+        }
+      },
+      "required": [
+        "anchor"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_floor_plans_from_template",
+    "name": "create_floor_plans_from_template",
+    "version": "upstream-cfe0739-local",
+    "description": "以指定的 FloorPlan 視圖作為範本，在多個 Level 上批次建立新的樓層平面視圖。複製範本的 ViewFamilyType、View Template、Phase、Phase Filter。適用於補齊缺漏的正式建築圖系列（例：A- 前綴的樓層平面圖）。已存在同名 view 時會跳過並在回傳的 Skipped 清單中記錄原因。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "templateViewId": {
+          "type": "number",
+          "description": "要複製設定的範本 FloorPlan 視圖 ElementId（例：A-十層平面圖）"
+        },
+        "creations": {
+          "type": "array",
+          "description": "要建立的視圖清單；每一項指定 Level 名稱與新視圖名稱",
+          "items": {
+            "type": "object",
+            "properties": {
+              "levelName": {
+                "type": "string",
+                "description": "目標樓層名稱，需與專案 Level 名稱完全一致（例：11FL）"
+              },
+              "newName": {
+                "type": "string",
+                "description": "新視圖名稱；若已存在同名 view 則會跳過"
+              }
+            },
+            "required": [
+              "levelName",
+              "newName"
+            ]
+          }
+        },
+        "applyViewTemplate": {
+          "type": "boolean",
+          "description": "是否套用範本的 View Template。預設 true。",
+          "default": true
+        }
+      },
+      "required": [
+        "templateViewId",
+        "creations"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:batch_apply_view_template",
+    "name": "batch_apply_view_template",
+    "version": "upstream-cfe0739-local",
+    "description": "批次將指定的 ViewTemplate 套用到多個 views。支援透過圖紙（sheets）、view ID、view 名稱或名稱子字串來選取目標 views。可搭配 viewTypeFilter 篩選特定視圖類型。dryRun 模式可預覽變更內容而不實際修改。觸發條件：使用者提到批次修改 view template、套用視圖樣版、sheet 中的 view 改 template。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewTemplateId": {
+          "type": "number",
+          "description": "目標 ViewTemplate 的 ElementId（與 viewTemplateName 二擇一）"
+        },
+        "viewTemplateName": {
+          "type": "string",
+          "description": "目標 ViewTemplate 的名稱（與 viewTemplateId 二擇一；精確匹配）"
+        },
+        "sheetIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "圖紙 ElementId 清單 — 套用到這些圖紙上所有 viewport 對應的 views"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "圖紙編號清單（如 ['A101', 'A102']）— 套用到這些圖紙上所有 viewport 對應的 views"
+        },
+        "viewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 view ElementId 清單（精確指定）"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "目標 view 名稱清單（精確匹配）"
+        },
+        "viewNameContains": {
+          "type": "string",
+          "description": "view 名稱包含此字串（substring match，case-insensitive）"
+        },
+        "viewTypeFilter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 view type，例: ['FloorPlan', 'CeilingPlan', 'Section', 'Elevation', 'ThreeD']"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "設為 true 時僅預覽變更清單，不實際修改。預設 false"
+        },
+        "skipIfSameTemplate": {
+          "type": "boolean",
+          "description": "若 view 已使用相同 template 則跳過。預設 true"
+        }
+      },
+      "required": []
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:debug_viewport_geometry",
+    "name": "debug_viewport_geometry",
+    "version": "upstream-cfe0739-local",
+    "description": "診斷工具：dump 一個 viewport 的所有座標資料（boxOutline、cropbox、view origin、scale 等）。用於反推 Revit 內部 cropbox vs viewport 的座標映射規則。指定 viewportId 或 viewId 其中之一。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewportId": {
+          "type": "number",
+          "description": "Viewport ElementId（直接指定 viewport）"
+        },
+        "viewId": {
+          "type": "number",
+          "description": "View ElementId（會自動找對應 viewport）"
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:position_viewports_on_sheet",
+    "name": "position_viewports_on_sheet",
+    "version": "upstream-cfe0739-local",
+    "description": "批次將 viewports 移動到 sheet 上的指定位置。位置是用「view 的某個錨點 + sheet 上某個參考點 + offset」三段組合定義。例：『所有平面圖的左上角』移到『title block 左上角 X+10mm Y+10mm』。識別目標 viewports 有多種方式（viewportIds / viewIds / viewNames / viewNameContains），可結合 sheetNumbers 和 viewTypeFilter 進一步過濾。建議搭配 dryRun=true 先預覽位移，再實際執行。觸發條件：使用者提到 viewport 位置、視埠定位、移動視埠到圖框、view 對齊圖框、批次定位、align viewport to titleblock、move viewport。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewAnchor": {
+          "type": "string",
+          "enum": [
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right",
+            "center"
+          ],
+          "description": "View 上的錨點（哪一角/中心會被定位到目標位置）"
+        },
+        "sheetReference": {
+          "type": "string",
+          "enum": [
+            "titleblock-top-left",
+            "titleblock-top-right",
+            "titleblock-bottom-left",
+            "titleblock-bottom-right",
+            "sheet-top-left",
+            "sheet-top-right",
+            "sheet-bottom-left",
+            "sheet-bottom-right"
+          ],
+          "description": "Sheet 上的參考點。titleblock-* 用 title block 邊界；sheet-* 用 sheet 印刷區域邊界"
+        },
+        "offsetRightMm": {
+          "type": "number",
+          "description": "X 方向 offset（公釐）。正值往右、負值往左",
+          "default": 0
+        },
+        "offsetDownMm": {
+          "type": "number",
+          "description": "Y 方向 offset（公釐）。正值往下、負值往上（直覺 sheet layout 慣例）",
+          "default": 0
+        },
+        "viewportIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 Viewport ElementId 清單（最精確識別方式）"
+        },
+        "viewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 View ElementId 清單（會找對應的 viewport）"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "目標 view 名稱清單（精確匹配）"
+        },
+        "viewNameContains": {
+          "type": "string",
+          "description": "view 名稱包含此字串（substring match, case-insensitive）"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 sheet 編號清單（與其他識別方式組合使用）"
+        },
+        "viewTypeFilter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 view type, 例: ['FloorPlan', 'CeilingPlan']"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "若 true 則只計算不實際移動，回傳預期 delta 供確認",
+          "default": false
+        }
+      },
+      "required": [
+        "viewAnchor",
+        "sheetReference"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:move_viewport_titles",
+    "name": "move_viewport_titles",
+    "version": "upstream-cfe0739-local",
+    "description": "批次移動 viewport 標題（label line + text）的位置。支援兩種模式：(1) below-view-center: 將標題置中放在 view 正下方（自動計算 cropbox 底邊中心 + gapMm 距離）；(2) reset: LabelOffset 還原為 XYZ.Zero（Revit 預設位置，通常在 viewport 左下角）。識別目標 viewports 與 position_viewports_on_sheet 相同：viewportIds / viewIds / viewNames / viewNameContains，可加 sheetNumbers / viewTypeFilter 過濾。觸發條件：使用者提到 viewport 標題位置、視埠標題、view title 對齊、把標題挪到視圖下方、reset title position。建議搭配 dryRun=true 先預覽。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "below-view-center",
+            "reset"
+          ],
+          "description": "below-view-center: 標題置中於 view 正下方（透過 cropbox 計算）；reset: 還原預設位置",
+          "default": "below-view-center"
+        },
+        "gapMm": {
+          "type": "number",
+          "description": "標題距離 view cropbox 底邊的距離（mm，僅 below-view-center 模式有效）",
+          "default": 5
+        },
+        "viewportIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 Viewport ElementId 清單（最精確識別方式）"
+        },
+        "viewIds": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "目標 View ElementId 清單（會找對應的 viewport）"
+        },
+        "viewNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "目標 view 名稱清單（精確匹配）"
+        },
+        "viewNameContains": {
+          "type": "string",
+          "description": "view 名稱包含此字串（substring match, case-insensitive）"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 sheet 編號清單（與其他識別方式組合使用）"
+        },
+        "viewTypeFilter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定 view type, 例: ['FloorPlan', 'CeilingPlan']"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "description": "若 true 則只計算不實際移動，回傳預期 delta 供確認",
+          "default": false
+        }
+      }
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:read_source_file_sheets",
+    "name": "read_source_file_sheets",
+    "version": "upstream-cfe0739-local",
+    "description": "開啟來源 .rvt 檔案並讀取所有圖紙 (sheets)、視埠 (viewports)、視圖 (views) 與 ScheduleSheetInstance 的 metadata。同時偵測與目標檔（目前開啟的專案）的衝突。回傳結構化 JSON 供 AI agent 預覽與規劃後續 copy_sheets_from_file 操作。不修改任何檔案。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sourceFilePath": {
+          "type": "string",
+          "description": "來源 .rvt 檔案的絕對路徑"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要讀取的圖紙編號清單。省略則讀取全部 sheets。"
+        },
+        "keepOpen": {
+          "type": "boolean",
+          "description": "讀取完成後是否保持來源檔開啟（供後續 copy_sheets_from_file 使用，避免重複開啟）。預設 true。",
+          "default": true
+        }
+      },
+      "required": [
+        "sourceFilePath"
+      ]
+    },
+    "status": "experimental",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:copy_sheets_from_file",
+    "name": "copy_sheets_from_file",
+    "version": "upstream-cfe0739-local",
+    "description": "從來源 .rvt 檔案複製圖紙到目前開啟的專案。讀取來源的 sheet/viewport/view metadata，在目標專案中重建 sheets、匹配或建立 views、放置 viewports 並同步設定。View 依四級分類處理：Tier 1（FloorPlan/CeilingPlan）可自動建立；Tier 2（Section/3D/DraftingView）可部分建立；Tier 3（Legend/Schedule）只匹配不建立；Tier 4（Elevation/Callout/AreaPlan）回報 manual_action_required。衝突項目必須在 conflictResolution 中指定處理方式。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sourceFilePath": {
+          "type": "string",
+          "description": "來源 .rvt 檔案的絕對路徑"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要複製的圖紙編號清單。省略則複製全部 sheets。"
+        },
+        "viewMatchStrategy": {
+          "type": "string",
+          "enum": [
+            "match_only",
+            "match_or_create"
+          ],
+          "description": "view 匹配策略。match_only: 只使用目標檔已存在的同名 view；match_or_create: 優先匹配，找不到時建立新 view（僅 Tier 1-2）。預設 match_or_create。",
+          "default": "match_or_create"
+        },
+        "conflictResolution": {
+          "type": "object",
+          "description": "衝突解決設定。當 read_source_file_sheets 偵測到衝突時必須提供。",
+          "properties": {
+            "sheets": {
+              "type": "object",
+              "description": "Sheet 衝突解決。Key=圖紙編號, Value='skip'(跳過) 或 'rename'(自動加後綴)",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "skip",
+                  "rename"
+                ]
+              }
+            },
+            "views": {
+              "type": "object",
+              "description": "View 衝突解決。Key=view 名稱, Value='use_existing'(使用現有) / 'overwrite'(刪除重建) / 'rename'(新 view 加後綴)",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "use_existing",
+                  "overwrite",
+                  "rename"
+                ]
+              }
+            },
+            "schedules": {
+              "type": "object",
+              "description": "Schedule 衝突解決。Key=schedule 名稱, Value='use_existing'(使用現有) / 'skip'(不放置)",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "use_existing",
+                  "skip"
+                ]
+              }
+            },
+            "typeConflicts": {
+              "type": "string",
+              "enum": [
+                "use_destination",
+                "use_source"
+              ],
+              "description": "CopyElements 時遇到同名 type 的全域處理策略。use_destination: 使用目標檔的 type（安全預設）；use_source: 使用來源檔的 type。",
+              "default": "use_destination"
+            }
+          }
+        },
+        "copyDraftingContents": {
+          "type": "boolean",
+          "description": "是否複製 DraftingView 的內容（detail lines, text notes 等）。預設 true。",
+          "default": true
+        },
+        "copySheetCustomParameters": {
+          "type": "boolean",
+          "description": "是否複製 sheet 上的 custom parameters（如 sheet folder/圖集、Discipline、繪圖人、Issue Date 等）。同名 + 同 StorageType 的 writable parameter 會被複製，ElementId 類型跳過（跨文件 ID 不可移植）。預設 true。",
+          "default": true
+        },
+        "syncProperties": {
+          "type": "object",
+          "description": "控制同步哪些 view 屬性到目標。全部預設 true。",
+          "properties": {
+            "scale": {
+              "type": "boolean",
+              "description": "同步 Scale",
+              "default": true
+            },
+            "cropBox": {
+              "type": "boolean",
+              "description": "同步 CropBox",
+              "default": true
+            },
+            "viewTemplate": {
+              "type": "boolean",
+              "description": "同步 View Template（優先名稱匹配，若目標檔不存在則自動從來源複製）",
+              "default": true
+            },
+            "detailLevel": {
+              "type": "boolean",
+              "description": "同步 Detail Level",
+              "default": true
+            },
+            "displayStyle": {
+              "type": "boolean",
+              "description": "同步 Display Style",
+              "default": true
+            }
+          }
+        },
+        "closeAfterCopy": {
+          "type": "boolean",
+          "description": "完成後是否關閉來源檔案。預設 true。",
+          "default": true
+        }
+      },
+      "required": [
+        "sourceFilePath"
+      ]
+    },
+    "status": "disabled",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:sync_sheet_parameters_from_source",
+    "name": "sync_sheet_parameters_from_source",
+    "version": "upstream-cfe0739-local",
+    "description": "補丁工具：為 target 中已存在的 sheets 從 source 同號 sheet 補齊 custom parameters（例如修補先前 copy_sheets_from_file 沒帶到的 sheet folder/圖集 / Discipline / 繪圖人 等）。**不會重建 sheet、不會動 viewport**，只比對同 SheetNumber 並複製 custom parameters。同名 + 同 StorageType 的 writable parameter 才會被複製，ElementId 類型跳過。觸發條件：使用者提到 sheet folder 缺失、補圖集、修圖紙分組、sheet 沒歸入 folder、補 sheet metadata、sync sheet parameter、batch update sheet parameter。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sourceFilePath": {
+          "type": "string",
+          "description": "來源 .rvt 檔案的絕對路徑"
+        },
+        "sheetNumbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "限定要補的 sheet 編號清單。省略 = 所有 source 中能在 target 找到同號的 sheet。"
+        },
+        "closeAfterSync": {
+          "type": "boolean",
+          "description": "完成後是否關閉來源檔案。預設 true。",
+          "default": true
+        }
+      },
+      "required": [
+        "sourceFilePath"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:create_legends",
+    "name": "create_legends",
+    "version": "upstream-cfe0739-local",
+    "description": "⚠️ 若目的是把 Excel 內容繪製到 Revit view，**請改用 `import_excel_to_drafting_views`**（一站式、自動 viewport 還原）。本工具僅複製已存在的 seed legend，**不會繪製任何內容**，使用情境僅限：(1) 需要 Legend View 而非 Drafting View 以便在多張 sheet 重複放置同份內容；(2) 純複製空白 legend 模板。從 seed legend 批次複製出多個 legend 視圖。Revit API 不支援憑空建立 legend，必須先在樣板/專案中手動放置一個 seed legend（建議命名為 _SEED_BLANK）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "要建立的 legend 視圖名稱清單，例如 ['A01','A02']"
+        },
+        "seedName": {
+          "type": "string",
+          "description": "指定 seed legend 名稱（選填）。未指定時優先找名稱以 _SEED_ 開頭的 legend，找不到再退到任一 legend。"
+        },
+        "duplicateMode": {
+          "type": "string",
+          "enum": [
+            "empty",
+            "withDetailing"
+          ],
+          "description": "複製模式：empty=只複製空 view（純框線/文字場景）；withDetailing=連同詳圖元件一起複製（預設）。"
+        }
+      },
+      "required": [
+        "names"
+      ]
+    },
+    "status": "experimental",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:read_excel_tables",
+    "name": "read_excel_tables",
+    "version": "upstream-cfe0739-local",
+    "description": "⚠️ 若目的是把 Excel 內容繪製到 Revit Drafting View，**請改用 `import_excel_to_drafting_views`**（一站式命令，內部自帶 Excel 解析、layout、wrap、viewport 還原，token 省 95%+）。本工具僅用於純讀取/探索 Excel 結構，**不會建立任何 view 或畫任何元素**。讀取 Excel 檔案中的 named table（或整張 worksheet），僅回傳落在 worksheet 列印範圍 (PrintArea) 內的儲存格內容。沒有設定列印範圍的 worksheet 會被略過。預設不傳 borders 陣列以節省 token；若需粗細資訊請傳 includeBorders=true。summary=true 模式只回每張表的維度與是否含非 Thin 邊框，適合大量 sheet 的初探階段。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filePath": {
+          "type": "string",
+          "description": "Excel 檔案的絕對路徑（.xlsx）"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "named_table",
+            "worksheet"
+          ],
+          "description": "named_table=讀取每個 worksheet 內的命名 table（預設）；worksheet=每個 worksheet 視為一張表，名稱為 worksheet 名稱。兩種模式皆只讀列印範圍。"
+        },
+        "tableNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "選填：只讀取指定名稱的 table（不分大小寫）"
+        },
+        "includeBorders": {
+          "type": "boolean",
+          "description": "是否回傳每格的 borders 陣列（[top,right,bottom,left]）。預設 false（不回，節省 token）。",
+          "default": false
+        },
+        "summary": {
+          "type": "boolean",
+          "description": "summary 模式：每張表只回 {name, rowCount, colCount, mergeCount, hasNonThinBorders, clippedByPrintArea}，不含 rows/borders。預設 false。",
+          "default": false
+        }
+      },
+      "required": [
+        "filePath"
+      ]
+    },
+    "status": "disabled",
+    "risk": "readOnly",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:import_excel_to_drafting_views",
+    "name": "import_excel_to_drafting_views",
+    "version": "upstream-cfe0739-local",
+    "description": "原子化命令：讀 Excel → 對每張有列印範圍的 worksheet 建立 Drafting View → 畫框線（merge-aware）→ 寫文字。固定 viewScale=1:1、textSize=3mm、rowH=4.5mm、colW=30mm。Claude 端只送檔案路徑與 sheet 清單，所有座標計算、Revit Transaction 都在 C# 內完成，token 用量極低（25 sheet ≈ 1.5K）。已自動正規化 \\r\\n → \\n。**Overwrite 時會在 doc.Delete 之前先擷取舊 view 在所有 sheet 上的 viewport 中心點，重建後自動 Viewport.Create 放回原位**，使用者不需再到 UI 手動補放。回應新增 ViewportsRestored 計數與 ViewportFailures 列表（個別失敗不會影響整批 Commit）。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filePath": {
+          "type": "string",
+          "description": "Excel 檔案絕對路徑（.xlsx）"
+        },
+        "sheets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "選填：只匯入指定名稱的 worksheet（不分大小寫）。不給=匯入所有有列印範圍的 sheet。"
+        },
+        "namingPattern": {
+          "type": "string",
+          "description": "Drafting View 命名樣式，可用 {name} 取代為 worksheet 名。預設 '{name}'。例：'面積計算表_{name}'。"
+        },
+        "overwrite": {
+          "type": "boolean",
+          "description": "同名 view 已存在時是否刪除重建。預設 true。",
+          "default": true
+        }
+      },
+      "required": [
+        "filePath"
+      ]
+    },
+    "status": "disabled",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  },
+  {
+    "toolId": "builtin:execute_dynamic_csharp",
+    "name": "execute_dynamic_csharp",
+    "version": "upstream-cfe0739-local",
+    "description": "Compile and run a reviewed C# command inside the current Revit 2024 document. Use mode=analyze to compile and inspect without execution. The source must define one public class implementing RevitMCP.Core.IDynamicRevitCommand with Describe(DynamicRevitContext) and Execute(DynamicRevitContext). The host owns ExternalEvent and Transaction. Do not create a Transaction. Normal create/modify commands execute directly. Document.Delete or metadata marked destructive requires affected element IDs and an in-Revit confirmation dialog. Host file, network, process, reflection, P/Invoke, threading, registry, assembly-loading, and application document-management APIs are rejected.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "analyze",
+            "execute"
+          ],
+          "default": "execute",
+          "description": "analyze compiles and checks only; execute runs after successful analysis."
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 60000,
+          "description": "Complete C# source implementing IDynamicRevitCommand. Return DynamicCommandMetadata.Reversible(summary) for normal work or DynamicCommandMetadata.Destructive(summary, elementIds) for destructive work."
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "status": "validated",
+    "risk": "reversibleMutation",
+    "binding": "portable",
+    "tags": [
+      "revit",
+      "builtin"
+    ],
+    "source": "shuotao/REVIT_MCP_study@cfe0739+local"
+  }
+]

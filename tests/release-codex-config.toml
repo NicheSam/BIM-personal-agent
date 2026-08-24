@@ -1,0 +1,7 @@
+model = "test-model"
+
+[mcp_servers."revit-mcp"]
+command = "legacy"
+
+[mcp_servers."keep-this"]
+command = "keep"
