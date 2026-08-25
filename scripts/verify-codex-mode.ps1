@@ -37,8 +37,8 @@ if ($registry.tool_policy.public_mcp_tools -ne 6) {
     throw "Codex must see exactly six Agent MCP tools."
 }
 
-if ($catalog.Count -ne 148 -or $uniqueCatalogIds.Count -ne 148) {
-    throw "Built-in catalog must contain 148 unique tools."
+if ($catalog.Count -ne $registry.tool_policy.builtin_tools -or $uniqueCatalogIds.Count -ne $registry.tool_policy.builtin_tools) {
+    throw "Built-in catalog count must match the registry and contain unique tools."
 }
 
 if ($upstreamLock.integration.internalToolCount -ne $catalog.Count -or
@@ -49,8 +49,8 @@ if ($upstreamLock.integration.internalToolCount -ne $catalog.Count -or
 $classified = $registry.tool_policy.validated_tools +
     $registry.tool_policy.experimental_tools +
     $registry.tool_policy.disabled_tools
-if ($classified -ne 148) {
-    throw "Tool status counts must total 148."
+if ($classified -ne $registry.tool_policy.builtin_tools) {
+    throw "Tool status counts must total the registry built-in tool count."
 }
 
 if ($blockedTools.Count -ne 7 -or (Compare-Object $expectedBlockedTools ($blockedTools | Sort-Object -Unique))) {
@@ -73,4 +73,4 @@ if ($gatewaySource -notmatch 'DEFAULT_PORT\s*=\s*9686' -or
     throw "Gateway and Revit Bridge must both default to localhost:9686."
 }
 
-Write-Host "Agent registry verified: 6 public MCP tools, 148 internal tools, 21 validated, 120 experimental, 7 disabled, port 9686."
+Write-Host "Agent registry verified: 6 public MCP tools, $($catalog.Count) internal tools, $($registry.tool_policy.validated_tools) validated, $($registry.tool_policy.experimental_tools) experimental, $($registry.tool_policy.disabled_tools) disabled, port 9686."

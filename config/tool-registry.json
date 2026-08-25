@@ -7,7 +7,7 @@
     "catalog": "gateway/src/catalog/builtin-tools.json",
     "bridge": "src/BimPersonalAgent.RevitBridge",
     "upstream_tool_count": 146,
-    "agent_owned_tool_count": 2
+    "agent_owned_tool_count": 3
   },
   "execution_policy": {
     "read": {
@@ -38,13 +38,14 @@
   "tool_policy": {
     "mode": "internal_searchable_catalog",
     "public_mcp_tools": 6,
-    "builtin_tools": 148,
-    "validated_tools": 21,
+    "builtin_tools": 149,
+    "validated_tools": 22,
     "experimental_tools": 120,
     "disabled_tools": 7,
     "required_tools": [
       "get_task_context",
-      "execute_dynamic_csharp"
+      "execute_dynamic_csharp",
+      "inspect_element_context"
     ],
     "blocked_tools": [
       "copy_sheets_from_file",
