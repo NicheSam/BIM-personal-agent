@@ -5,7 +5,8 @@ import { ActivityStore } from "./activity-store.js";
 import { ContextSnapshotStore } from "./context-snapshots.js";
 import { getDomainProfile } from "./domain-profiles.js";
 import { decideElementInspection } from "./element-inspection-policy.js";
-import { planTargeting, recommendTargetInspections } from "./targeting-policy.js";
+import { planTargeting, recommendTargetInspections, selectAutoFollowInspection } from "./targeting-policy.js";
+import type { AutoFollowInspection, PostOperationTargeting } from "./targeting-policy.js";
 import { AgentError, normalizeError } from "./errors.js";
 import { LoopController } from "./loop-controller.js";
 import { RunStore } from "./run-store.js";
@@ -124,6 +125,10 @@ export class AgentRuntime {
       } else {
         throw new AgentError("TOOL_NOT_FOUND", `Unknown Agent tool: ${name}`);
       }
+      const targeting = name === "run_bim_tool" || name === "execute_dynamic_csharp" || name === "run_bim_plan"
+        ? recommendTargetInspections(data, risk)
+        : undefined;
+      if (targeting) targeting.autoFollowInspection = await this.tryAutoFollowInspection(targeting, toolId);
       const durationMs = Date.now() - startedAt;
       const response: AgentResponse = {
         requestId, taskId, success: true, data, toolId, version, durationMs,
@@ -132,9 +137,7 @@ export class AgentRuntime {
         executionStatus: "succeeded",
         verificationStatus: taskVerificationStatus(input, data),
         reportUrl: taskId ? this.taskReporter?.reportUrl(taskId) : undefined,
-        targeting: name === "run_bim_tool" || name === "execute_dynamic_csharp" || name === "run_bim_plan"
-          ? recommendTargetInspections(data, risk)
-          : undefined,
+        targeting,
       };
       this.observe(async () => {
         await this.telemetry.record({
@@ -654,6 +657,39 @@ export class AgentRuntime {
         throw new AgentError(normalized.code, `${normalized.message} Draft saved as saved:${saved.toolId}@${saved.version}.`);
       }
       throw normalized;
+    }
+  }
+
+  private async tryAutoFollowInspection(targeting: PostOperationTargeting, sourceToolId: string): Promise<AutoFollowInspection> {
+    const selection = selectAutoFollowInspection(targeting, sourceToolId);
+    if (!selection.recommendation) return { executed: false, status: "skipped", reason: selection.reason };
+    const args = { ...selection.recommendation.arguments };
+    const elementId = typeof args.elementId === "number" ? args.elementId : undefined;
+    try {
+      const result = (await this.sendCommand("inspect_element_context", args, 30_000)).data;
+      return {
+        executed: true,
+        status: "succeeded",
+        reason: selection.reason,
+        source: selection.recommendation.source,
+        elementId,
+        toolId: "builtin:inspect_element_context",
+        arguments: args,
+        result,
+      };
+    } catch (error) {
+      const normalized = normalizeError(error);
+      return {
+        executed: false,
+        status: "failed",
+        reason: selection.reason,
+        source: selection.recommendation.source,
+        elementId,
+        toolId: "builtin:inspect_element_context",
+        arguments: args,
+        errorCode: normalized.code,
+        errorMessage: normalized.message,
+      };
     }
   }
 

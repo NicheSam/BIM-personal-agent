@@ -50,6 +50,17 @@ class CreatedElementBridge extends FakeBridge {
     if (commandName === "create_test_element") {
       return { success: true, data: { ActualCreatedElementIds: [1001], Summary: "created one element" } };
     }
+    if (commandName === "inspect_element_context") {
+      return {
+        success: true,
+        data: {
+          SchemaVersion: "bim-agent.element-context.v1",
+          Status: "ok",
+          Identity: { ElementId: parameters.elementId, Name: "Created target" },
+          AgentSummary: { ElementId: parameters.elementId, Category: "Generic Models" },
+        },
+      };
+    }
     return { success: true, data: { ok: true } };
   }
 }
@@ -59,6 +70,16 @@ class ModifiedElementBridge extends FakeBridge {
     this.calls.push({ commandName, parameters });
     if (commandName === "apply_test_override") {
       return { success: true, data: { AppliedCount: 2, VerifiedCount: 2, ElementIds: [2002, 2001] } };
+    }
+    return { success: true, data: { ok: true } };
+  }
+}
+
+class ElementLensEchoBridge extends FakeBridge {
+  override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
+    this.calls.push({ commandName, parameters });
+    if (commandName === "inspect_element_context") {
+      return { success: true, data: { ActualCreatedElementIds: [3003], Summary: "lens echo" } };
     }
     return { success: true, data: { ok: true } };
   }
@@ -114,6 +135,7 @@ const elementLensBuiltin: ToolDescriptor = {
     type: "object",
     additionalProperties: false,
     properties: {
+      elementId: { type: "number" },
       detail: { type: "string" },
       maxParameters: { type: "number" },
       maxViewsScanned: { type: "number" },
@@ -560,13 +582,15 @@ test("run_bim_tool recommends Element Lens for created ElementIds", async () => 
       risk: "reversibleMutation",
       tags: ["create", "element"],
     };
-    const runtime = new AgentRuntime(new CreatedElementBridge(), new ToolCatalog(store, [elementLensBuiltin, createTool, builtin]), store, new TelemetryStore(root));
+    const bridge = new CreatedElementBridge();
+    const runtime = new AgentRuntime(bridge, new ToolCatalog(store, [elementLensBuiltin, createTool, builtin]), store, new TelemetryStore(root));
     const result = await runtime.execute("run_bim_tool", { toolId: createTool.toolId, arguments: {} });
     assert.equal(result.success, true);
     const targeting = result.targeting as {
       hasTargets: boolean;
       createdElementIds: number[];
       recommendedInspections: Array<{ source: string; elementIds: number[]; arguments: JsonObject }>;
+      autoFollowInspection: { executed: boolean; status: string; reason: string; elementId: number; result: JsonObject };
     };
     assert.equal(targeting.hasTargets, true);
     assert.deepEqual(targeting.createdElementIds, [1001]);
@@ -574,6 +598,15 @@ test("run_bim_tool recommends Element Lens for created ElementIds", async () => 
     assert.deepEqual(targeting.recommendedInspections[0].elementIds, [1001]);
     assert.equal(targeting.recommendedInspections[0].arguments.elementId, 1001);
     assert.equal(targeting.recommendedInspections[0].arguments.detail, "full");
+    assert.equal(targeting.autoFollowInspection.executed, true);
+    assert.equal(targeting.autoFollowInspection.status, "succeeded");
+    assert.equal(targeting.autoFollowInspection.reason, "single_target");
+    assert.equal(targeting.autoFollowInspection.elementId, 1001);
+    assert.deepEqual((targeting.autoFollowInspection.result.Identity as JsonObject).ElementId, 1001);
+    assert.equal(bridge.calls.length, 2);
+    assert.equal(bridge.calls[1].commandName, "inspect_element_context");
+    assert.equal(bridge.calls[1].parameters.elementId, 1001);
+    assert.equal(bridge.calls[1].parameters.detail, "full");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -591,18 +624,48 @@ test("run_bim_tool projects verified applied ElementIds as modified targets", as
       risk: "reversibleMutation",
       tags: ["modify", "element"],
     };
-    const runtime = new AgentRuntime(new ModifiedElementBridge(), new ToolCatalog(store, [elementLensBuiltin, modifyTool, builtin]), store, new TelemetryStore(root));
+    const bridge = new ModifiedElementBridge();
+    const runtime = new AgentRuntime(bridge, new ToolCatalog(store, [elementLensBuiltin, modifyTool, builtin]), store, new TelemetryStore(root));
     const result = await runtime.execute("run_bim_tool", { toolId: modifyTool.toolId, arguments: {} });
     assert.equal(result.success, true);
     const targeting = result.targeting as {
       modifiedElementIds: number[];
       recommendedInspections: Array<{ source: string; elementIds: number[]; arguments: JsonObject }>;
+      autoFollowInspection: { executed: boolean; status: string; reason: string };
     };
     assert.deepEqual(targeting.modifiedElementIds, [2001, 2002]);
     assert.equal(targeting.recommendedInspections[0].source, "modified");
     assert.deepEqual(targeting.recommendedInspections[0].elementIds, [2001, 2002]);
     assert.equal(targeting.recommendedInspections[0].arguments.elementId, undefined);
     assert.equal(targeting.recommendedInspections[0].arguments.detail, "parameters");
+    assert.equal(targeting.autoFollowInspection.executed, false);
+    assert.equal(targeting.autoFollowInspection.status, "skipped");
+    assert.equal(targeting.autoFollowInspection.reason, "requires_single_target");
+    assert.equal(bridge.calls.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("Element Lens auto-follow does not recurse into itself", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const bridge = new ElementLensEchoBridge();
+    const store = new ToolStore(root);
+    const runtime = new AgentRuntime(bridge, new ToolCatalog(store, [elementLensBuiltin, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("run_bim_tool", { toolId: elementLensBuiltin.toolId, arguments: { elementId: 3003 } });
+    assert.equal(result.success, true);
+    const targeting = result.targeting as {
+      hasTargets: boolean;
+      createdElementIds: number[];
+      autoFollowInspection: { executed: boolean; status: string; reason: string };
+    };
+    assert.equal(targeting.hasTargets, true);
+    assert.deepEqual(targeting.createdElementIds, [3003]);
+    assert.equal(targeting.autoFollowInspection.executed, false);
+    assert.equal(targeting.autoFollowInspection.status, "skipped");
+    assert.equal(targeting.autoFollowInspection.reason, "source_tool_is_element_lens");
+    assert.equal(bridge.calls.length, 1);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

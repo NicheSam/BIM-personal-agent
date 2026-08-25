@@ -27,11 +27,30 @@ export interface TargetInspectionRecommendation {
   reason: string;
 }
 
+export interface AutoFollowInspection {
+  executed: boolean;
+  status: "succeeded" | "skipped" | "failed";
+  reason: string;
+  source?: TargetInspectionRecommendation["source"];
+  elementId?: number;
+  toolId?: "builtin:inspect_element_context";
+  arguments?: JsonObject;
+  result?: unknown;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
 export interface PostOperationTargeting {
   hasTargets: boolean;
   createdElementIds: number[];
   modifiedElementIds: number[];
   recommendedInspections: TargetInspectionRecommendation[];
+  autoFollowInspection?: AutoFollowInspection;
+  reason: string;
+}
+
+export interface AutoFollowSelection {
+  recommendation?: TargetInspectionRecommendation;
   reason: string;
 }
 
@@ -137,6 +156,20 @@ export function recommendTargetInspections(data: unknown, risk?: ToolRisk): Post
       ? "Operation returned concrete ElementIds that can be locked for Element Lens follow-up."
       : "No created or modified ElementIds were found in the operation result.",
   };
+}
+
+export function selectAutoFollowInspection(targeting: PostOperationTargeting, sourceToolId?: string): AutoFollowSelection {
+  if (sourceToolId === "builtin:inspect_element_context") return { reason: "source_tool_is_element_lens" };
+  if (!targeting.hasTargets || targeting.recommendedInspections.length === 0) return { reason: "no_targets" };
+  const targetIds = uniqueIds(targeting.recommendedInspections.flatMap((recommendation) => recommendation.elementIds));
+  if (targetIds.length !== 1) return { reason: "requires_single_target" };
+  const elementId = targetIds[0];
+  const recommendation = targeting.recommendedInspections.find((item) =>
+    item.toolId === "builtin:inspect_element_context"
+    && item.elementIds.length === 1
+    && item.elementIds[0] === elementId
+    && typeof item.arguments.elementId === "number");
+  return recommendation ? { recommendation, reason: "single_target" } : { reason: "no_single_target_recommendation" };
 }
 
 function makeRecommendation(
