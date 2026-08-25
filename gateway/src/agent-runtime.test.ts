@@ -44,6 +44,26 @@ class DestructiveFakeBridge extends FakeBridge {
   }
 }
 
+class CreatedElementBridge extends FakeBridge {
+  override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
+    this.calls.push({ commandName, parameters });
+    if (commandName === "create_test_element") {
+      return { success: true, data: { ActualCreatedElementIds: [1001], Summary: "created one element" } };
+    }
+    return { success: true, data: { ok: true } };
+  }
+}
+
+class ModifiedElementBridge extends FakeBridge {
+  override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
+    this.calls.push({ commandName, parameters });
+    if (commandName === "apply_test_override") {
+      return { success: true, data: { AppliedCount: 2, VerifiedCount: 2, ElementIds: [2002, 2001] } };
+    }
+    return { success: true, data: { ok: true } };
+  }
+}
+
 class VerifiedPlanBridge extends FakeBridge {
   override async sendCommand(commandName: string, parameters: JsonObject = {}): Promise<BridgeResponse> {
     this.calls.push({ commandName, parameters });
@@ -485,6 +505,104 @@ test("uncovered workflow steps are routed to dynamic C# without replacing covere
     assert.equal(data.workflow[1].route, "dynamicCSharp");
     assert.ok(data.workflow[1].dynamicCSharp);
     assert.deepEqual(data.dynamicSteps, [2]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("tool search exposes a targeting policy for autonomous creation work", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const createTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:create_test_element",
+      name: "create_test_element",
+      description: "Create a model element",
+      risk: "reversibleMutation",
+      tags: ["create", "element"],
+    };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [elementLensBuiltin, createTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "Create a new duct segment and inspect its created ElementId after creation",
+        actions: ["create"],
+        objects: ["duct segment"],
+        steps: [{ action: "create", object: "duct segment", outcome: "created ElementId is inspected after creation" }],
+        mode: "execute",
+      },
+    });
+    assert.equal(result.success, true);
+    const data = result.data as {
+      workflow: Array<{ recommendedToolId?: string }>;
+      inspectionPolicy: { shouldInspect: boolean };
+      targetingPolicy: { resolution: string; postOperation: Record<string, unknown>; targetSources: string[] };
+    };
+    assert.notEqual(data.workflow[0].recommendedToolId, elementLensBuiltin.toolId);
+    assert.equal(data.inspectionPolicy.shouldInspect, false);
+    assert.equal(data.targetingPolicy.resolution, "post_operation_target");
+    assert.equal(data.targetingPolicy.postOperation.inspectCreated, true);
+    assert.equal(data.targetingPolicy.targetSources.includes("created_element_ids"), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("run_bim_tool recommends Element Lens for created ElementIds", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const createTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:create_test_element",
+      name: "create_test_element",
+      description: "Create a model element",
+      risk: "reversibleMutation",
+      tags: ["create", "element"],
+    };
+    const runtime = new AgentRuntime(new CreatedElementBridge(), new ToolCatalog(store, [elementLensBuiltin, createTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("run_bim_tool", { toolId: createTool.toolId, arguments: {} });
+    assert.equal(result.success, true);
+    const targeting = result.targeting as {
+      hasTargets: boolean;
+      createdElementIds: number[];
+      recommendedInspections: Array<{ source: string; elementIds: number[]; arguments: JsonObject }>;
+    };
+    assert.equal(targeting.hasTargets, true);
+    assert.deepEqual(targeting.createdElementIds, [1001]);
+    assert.equal(targeting.recommendedInspections[0].source, "created");
+    assert.deepEqual(targeting.recommendedInspections[0].elementIds, [1001]);
+    assert.equal(targeting.recommendedInspections[0].arguments.elementId, 1001);
+    assert.equal(targeting.recommendedInspections[0].arguments.detail, "full");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("run_bim_tool projects verified applied ElementIds as modified targets", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const modifyTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:apply_test_override",
+      name: "apply_test_override",
+      description: "Apply reversible overrides to elements",
+      risk: "reversibleMutation",
+      tags: ["modify", "element"],
+    };
+    const runtime = new AgentRuntime(new ModifiedElementBridge(), new ToolCatalog(store, [elementLensBuiltin, modifyTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("run_bim_tool", { toolId: modifyTool.toolId, arguments: {} });
+    assert.equal(result.success, true);
+    const targeting = result.targeting as {
+      modifiedElementIds: number[];
+      recommendedInspections: Array<{ source: string; elementIds: number[]; arguments: JsonObject }>;
+    };
+    assert.deepEqual(targeting.modifiedElementIds, [2001, 2002]);
+    assert.equal(targeting.recommendedInspections[0].source, "modified");
+    assert.deepEqual(targeting.recommendedInspections[0].elementIds, [2001, 2002]);
+    assert.equal(targeting.recommendedInspections[0].arguments.elementId, undefined);
+    assert.equal(targeting.recommendedInspections[0].arguments.detail, "parameters");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

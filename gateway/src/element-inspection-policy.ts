@@ -13,8 +13,8 @@ export interface ElementInspectionRecommendation {
 
 const selectedElementTerms = [
   "selected", "selection", "current selection", "picked", "this element", "this object",
-  "current element", "active element", "chosen element", "element id", "elementid",
-  "\u9078\u53d6", "\u5df2\u9078", "\u76ee\u524d\u9078\u53d6", "\u9019\u500b\u5143\u7d20", "\u9019\u500b\u7269\u4ef6", "\u5143\u7d20id",
+  "current element", "active element", "chosen element",
+  "\u9078\u53d6", "\u5df2\u9078", "\u76ee\u524d\u9078\u53d6", "\u9019\u500b\u5143\u7d20", "\u9019\u500b\u7269\u4ef6",
 ];
 
 const elementObjectTerms = [
@@ -63,7 +63,7 @@ export function decideElementInspection(task: BimTaskUnderstanding, query = ""):
     query,
   ].join(" "));
 
-  const selectedIntent = containsAny(text, selectedElementTerms);
+  const selectedIntent = containsAny(text, selectedElementTerms) || hasExplicitElementId(text);
   if (!selectedIntent) {
     return noInspection("No current selection, this-element, or explicit ElementId intent was detected.");
   }
@@ -121,6 +121,12 @@ function noInspection(reason: string): ElementInspectionRecommendation {
 
 function containsAny(text: string, terms: string[]): boolean {
   return terms.some((term) => text.includes(term));
+}
+
+function hasExplicitElementId(text: string): boolean {
+  return /\belement\s*id\s*[:#]?\s*\d+\b/i.test(text)
+    || /\belementid\s*[:#]?\s*\d+\b/i.test(text)
+    || /\u5143\u7d20\s*id\s*[:\uff1a]?\s*\d+/i.test(text);
 }
 
 function normalizeText(text: string): string {

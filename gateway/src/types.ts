@@ -170,6 +170,7 @@ export interface AgentResponse {
   executionStatus?: TaskExecutionStatus;
   verificationStatus?: TaskVerificationStatus;
   reportUrl?: string;
+  targeting?: unknown;
 }
 
 export interface ToolPerformanceRecord {

@@ -5,6 +5,7 @@ import { ActivityStore } from "./activity-store.js";
 import { ContextSnapshotStore } from "./context-snapshots.js";
 import { getDomainProfile } from "./domain-profiles.js";
 import { decideElementInspection } from "./element-inspection-policy.js";
+import { planTargeting, recommendTargetInspections } from "./targeting-policy.js";
 import { AgentError, normalizeError } from "./errors.js";
 import { LoopController } from "./loop-controller.js";
 import { RunStore } from "./run-store.js";
@@ -131,6 +132,9 @@ export class AgentRuntime {
         executionStatus: "succeeded",
         verificationStatus: taskVerificationStatus(input, data),
         reportUrl: taskId ? this.taskReporter?.reportUrl(taskId) : undefined,
+        targeting: name === "run_bim_tool" || name === "execute_dynamic_csharp" || name === "run_bim_plan"
+          ? recommendTargetInspections(data, risk)
+          : undefined,
       };
       this.observe(async () => {
         await this.telemetry.record({
@@ -294,6 +298,7 @@ export class AgentRuntime {
     const limit = clampInteger(input.limit, 1, 10, 5);
     const performance = await this.telemetry.summaries();
     const inspectionPolicy = decideElementInspection(task, query);
+    const targetingPolicy = planTargeting(task, query);
     const inspectionDescriptor = inspectionPolicy.shouldInspect
       ? await this.resolveOptionalTool("builtin:inspect_element_context")
       : undefined;
@@ -382,6 +387,7 @@ export class AgentRuntime {
       resultCount: candidateIds.size,
       dynamicSteps,
       inspectionPolicy,
+      targetingPolicy,
       loop: run ? { enabled: true, requestedMode: run.requestedMode, effectiveMode: run.effectiveMode, remainingBudget: this.loop.remaining(run) } : { enabled: false },
       guidance: dynamicSteps.length === 0
         ? "Validate the proposed workflow, then run its tools individually or as one atomic plan when the steps modify the same document."
