@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { ActivityStore } from "./activity-store.js";
 import { ContextSnapshotStore } from "./context-snapshots.js";
 import { getDomainProfile } from "./domain-profiles.js";
+import { decideElementInspection } from "./element-inspection-policy.js";
 import { AgentError, normalizeError } from "./errors.js";
 import { LoopController } from "./loop-controller.js";
 import { RunStore } from "./run-store.js";
@@ -292,9 +293,34 @@ export class AgentRuntime {
     const query = typeof input.query === "string" ? input.query.trim().slice(0, 500) : "";
     const limit = clampInteger(input.limit, 1, 10, 5);
     const performance = await this.telemetry.summaries();
+    const inspectionPolicy = decideElementInspection(task, query);
+    const inspectionDescriptor = inspectionPolicy.shouldInspect
+      ? await this.resolveOptionalTool("builtin:inspect_element_context")
+      : undefined;
     const recommendedById = new Map<string, ToolDescriptor>();
     const workflow = [];
     const candidateIds = new Set<string>();
+    if (inspectionDescriptor) {
+      recommendedById.set(inspectionDescriptor.toolId, inspectionDescriptor);
+      candidateIds.add(inspectionDescriptor.toolId);
+      workflow.push({
+        stepNumber: 0,
+        action: "inspect selected element context",
+        object: "current single Revit selection or explicit elementId",
+        outcome: "selected element evidence is available before deciding the target operation",
+        directory: [{ id: "elements", name: "Elements and parameters", score: 1 }],
+        route: "existingTool",
+        recommendedToolId: inspectionDescriptor.toolId,
+        suggestedArguments: inspectionPolicy.arguments,
+        inspectionPolicy: {
+          detail: inspectionPolicy.detail,
+          maxParameters: inspectionPolicy.maxParameters,
+          beforeStepNumbers: inspectionPolicy.beforeStepNumbers,
+          reason: inspectionPolicy.reason,
+        },
+        alternatives: [],
+      });
+    }
     for (const [index, step] of task.steps.entries()) {
       const stepTask = {
         ...task,
@@ -355,6 +381,7 @@ export class AgentRuntime {
       recommendedTools: [...recommendedById.values()],
       resultCount: candidateIds.size,
       dynamicSteps,
+      inspectionPolicy,
       loop: run ? { enabled: true, requestedMode: run.requestedMode, effectiveMode: run.effectiveMode, remainingBudget: this.loop.remaining(run) } : { enabled: false },
       guidance: dynamicSteps.length === 0
         ? "Validate the proposed workflow, then run its tools individually or as one atomic plan when the steps modify the same document."
@@ -363,6 +390,14 @@ export class AgentRuntime {
     if (!run) return data;
     run = await this.loop.recordResponse(run.runId, data);
     return { ...data, loop: { enabled: true, requestedMode: run.requestedMode, effectiveMode: run.effectiveMode, remainingBudget: this.loop.remaining(run) } };
+  }
+
+  private async resolveOptionalTool(toolId: string): Promise<ToolDescriptor | undefined> {
+    try {
+      return (await this.catalog.resolve(toolId)).descriptor;
+    } catch {
+      return undefined;
+    }
   }
 
   private async runTool(input: JsonObject): Promise<{

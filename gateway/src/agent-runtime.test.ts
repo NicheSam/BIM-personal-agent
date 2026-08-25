@@ -85,6 +85,28 @@ class UncertainPlanBridge extends FakeBridge {
   }
 }
 
+const elementLensBuiltin: ToolDescriptor = {
+  toolId: "builtin:inspect_element_context",
+  name: "inspect_element_context",
+  version: "test",
+  description: "Inspect selected element context",
+  inputSchema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      detail: { type: "string" },
+      maxParameters: { type: "number" },
+      maxViewsScanned: { type: "number" },
+      includeDocumentPath: { type: "boolean" },
+    },
+  },
+  risk: "readOnly",
+  status: "validated",
+  binding: "portable",
+  capabilityKey: "element.context.inspect",
+  tags: ["element", "parameter", "selection", "context"],
+};
+
 const builtin: ToolDescriptor = {
   toolId: "builtin:get_project_info",
   name: "get_project_info",
@@ -238,6 +260,113 @@ test("tool search requires task understanding and decomposition", async () => {
     const result = await runtime.execute("search_bim_tools", { query: "project" });
     assert.equal(result.success, false);
     assert.equal(result.errorCode, "VALIDATION_ERROR");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("tool search adds Element Lens before selected element parameter work", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const parameterTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:set_element_parameter",
+      name: "set_element_parameter",
+      description: "Set a selected element parameter",
+      risk: "reversibleMutation",
+      tags: ["element", "parameter", "selection"],
+    };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [elementLensBuiltin, parameterTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "Set the Mark parameter on the selected element",
+        actions: ["set parameter"],
+        objects: ["selected element", "Mark parameter"],
+        steps: [{ action: "set", object: "selected element Mark parameter", outcome: "parameter value is updated" }],
+        mode: "execute",
+      },
+    });
+    assert.equal(result.success, true);
+    const data = result.data as {
+      workflow: Array<{ stepNumber: number; recommendedToolId?: string; suggestedArguments?: JsonObject; inspectionPolicy?: Record<string, unknown> }>;
+      recommendedTools: ToolDescriptor[];
+      inspectionPolicy: Record<string, unknown>;
+    };
+    assert.equal(data.workflow[0].stepNumber, 0);
+    assert.equal(data.workflow[0].recommendedToolId, elementLensBuiltin.toolId);
+    assert.deepEqual(data.workflow[0].suggestedArguments, {
+      detail: "parameters",
+      maxParameters: 80,
+      maxViewsScanned: 0,
+      includeDocumentPath: false,
+    });
+    assert.deepEqual(data.workflow[0].inspectionPolicy?.beforeStepNumbers, [1]);
+    assert.equal(data.recommendedTools[0].toolId, elementLensBuiltin.toolId);
+    assert.equal(data.inspectionPolicy.shouldInspect, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("tool search does not add Element Lens for non-selected parameter work", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const parameterTool: ToolDescriptor = {
+      ...builtin,
+      toolId: "builtin:list_type_parameters",
+      name: "list_type_parameters",
+      description: "List family type parameters",
+      tags: ["element", "parameter", "type"],
+    };
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [elementLensBuiltin, parameterTool, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "List wall type parameters",
+        actions: ["list"],
+        objects: ["wall type parameters"],
+        steps: [{ action: "list", object: "wall type parameters", outcome: "parameters are returned" }],
+        mode: "assess",
+      },
+    });
+    assert.equal(result.success, true);
+    const data = result.data as {
+      workflow: Array<{ recommendedToolId?: string }>;
+      recommendedTools: ToolDescriptor[];
+      inspectionPolicy: Record<string, unknown>;
+    };
+    assert.notEqual(data.workflow[0].recommendedToolId, elementLensBuiltin.toolId);
+    assert.equal(data.recommendedTools.some((tool) => tool.toolId === elementLensBuiltin.toolId), false);
+    assert.equal(data.inspectionPolicy.shouldInspect, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("tool search does not add Element Lens for project-wide context work", async () => {
+  const root = await mkdtemp(join(tmpdir(), "bpa-runtime-"));
+  try {
+    const store = new ToolStore(root);
+    const runtime = new AgentRuntime(new FakeBridge(), new ToolCatalog(store, [elementLensBuiltin, builtin]), store, new TelemetryStore(root));
+    const result = await runtime.execute("search_bim_tools", {
+      task: {
+        goal: "Read project information",
+        actions: ["read"],
+        objects: ["project"],
+        steps: [{ action: "read", object: "project", outcome: "project information is returned" }],
+        mode: "assess",
+      },
+    });
+    assert.equal(result.success, true);
+    const data = result.data as {
+      workflow: Array<{ recommendedToolId?: string }>;
+      recommendedTools: ToolDescriptor[];
+      inspectionPolicy: Record<string, unknown>;
+    };
+    assert.notEqual(data.workflow[0].recommendedToolId, elementLensBuiltin.toolId);
+    assert.equal(data.recommendedTools.some((tool) => tool.toolId === elementLensBuiltin.toolId), false);
+    assert.equal(data.inspectionPolicy.shouldInspect, false);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
