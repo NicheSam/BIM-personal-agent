@@ -1,8 +1,8 @@
-# 產品定義：BIM Personal Agent v0.8.0
+# 產品定義：BIM Personal Agent v0.8.1
 
 ## 決策
 
-建立共用的本機 BIM Agent Runtime。V1 以 Codex 作為唯一 LLM，對外只提供六個穩定 MCP tools；148個內部工具（146個固定上游工具加2個 Agent 自有工具）與成功保存的 C# 都留在可搜尋的內部 catalog。Revit 內不提供另一套文字指令或參數修改介面，避免繞過 Gateway、Tool Store 與任務回報。
+建立共用的本機 BIM Agent Runtime。V1 以 Codex 作為唯一 LLM，對外只提供六個穩定 MCP tools；149個內部工具（146個固定上游工具加3個 Agent 自有工具）與成功保存的 C# 都留在可搜尋的內部 catalog。Revit 內不提供另一套文字指令或參數修改介面，避免繞過 Gateway、Tool Store 與任務回報。
 
 ## 使用者與核心流程
 
@@ -19,7 +19,8 @@
 In scope：
 
 - Revit 2024、單一 Revit session、單一 active document。
-- Codex MCP Gateway、148-tool internal catalog、saved-tool store 與 performance telemetry。
+- Codex MCP Gateway、149-tool internal catalog、saved-tool store 與 performance telemetry。
+- 唯讀 Element Lens、分級 context、單一目標判定與安全自動追蹤。
 - 單一 BIM Personal Agent Add-in、共用 queue、`ExternalEvent`、host-owned Transaction 與 Undo。
 - Revit Ribbon 的 Agent 服務開關與破壞性操作原生確認。
 - Dynamic C# schema inputs、project binding、source audit、版本與 session compilation cache。

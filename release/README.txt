@@ -1,4 +1,4 @@
-BIM Personal Agent V0.8.0 - User Package
+BIM Personal Agent V0.8.1 - User Package
 
 Requirements:
 - Windows
@@ -22,3 +22,8 @@ https://github.com/NicheSam/BIM-personal-agent
 
 Guide:
 https://nichesam.github.io/BIM-personal-agent/
+
+Upstream and acknowledgments:
+- REVIT_MCP_study: https://github.com/shuotao/REVIT_MCP_study
+- RevitParameterInspector: https://github.com/laytonluo/RevitParameterInspector
+- Full notices: THIRD_PARTY_NOTICES.md

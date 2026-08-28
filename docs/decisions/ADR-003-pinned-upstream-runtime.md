@@ -12,7 +12,7 @@ Accepted
 
 BIM Personal Agent began as a derivative of `shuotao/REVIT_MCP_study`, but the product now owns a six-tool MCP facade, task routing, Dynamic C#, saved tools, execution policy and the activity console. Converting the whole product into a normal GitHub fork would preserve Git lineage but would not prevent two MCP servers or two Revit Add-ins from running. The runtime boundary and the source-update boundary are separate concerns.
 
-The current Agent catalog contains 148 internal descriptors: 146 names overlap the pinned upstream runtime and two tools (`execute_dynamic_csharp` and `get_task_context`) are Agent-owned. The latest audited upstream contains 167 tool names. Publishing those additional descriptors before the matching C# runtime is integrated would advertise tools that the Revit Bridge cannot execute.
+The current Agent catalog contains 149 internal descriptors: 146 names overlap the pinned upstream runtime and three tools (`execute_dynamic_csharp`, `get_task_context`, and `inspect_element_context`) are Agent-owned. The latest audited upstream contains 167 tool names. Publishing those additional descriptors before the matching C# runtime is integrated would advertise tools that the Revit Bridge cannot execute.
 
 ## Decision
 
@@ -34,5 +34,5 @@ Automatic upstream merging and automatic catalog publication are prohibited. The
 - A normal clone of BIM Personal Agent remains sufficient to build a pinned release.
 - A sibling `REVIT_MCP_study` checkout is needed only for development audits and upgrades, never at runtime.
 - Upstream additions remain visible without silently entering the production catalog.
-- The current 148-tool runtime stays unchanged until the 21 upstream-only tools pass parity work.
-- A full current-upstream integration would produce 169 internal descriptors: 167 upstream plus two Agent-owned tools.
+- The current 149-tool runtime stays unchanged until the 21 upstream-only tools pass parity work.
+- A full current-upstream integration would produce 170 internal descriptors: 167 upstream plus three Agent-owned tools.

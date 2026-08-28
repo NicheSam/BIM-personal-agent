@@ -1,33 +1,59 @@
 # BIM Personal Agent
 
-Revit 2024 個人執行與回報代理。Codex 負責自然語言與必要的 C# 生成；本機 Gateway 負責工具搜尋、參數驗證、保存工具、任務狀態與 telemetry；單一 Revit Add-in 負責 queue、`ExternalEvent`、`Transaction`、Undo、破壞性確認與即時進度回報。
+BIM Personal Agent 是給 Revit 2024 單機工作流程使用的本機執行代理。使用者在 Codex 描述工作；Gateway 負責工具搜尋、參數驗證、工具記憶、任務狀態與遙測；Revit Add-in 透過 `ExternalEvent` 與 host-owned `Transaction` 執行，並保留 Revit 原生 Undo 與破壞性確認。
 
-[用圖解了解 BIM Personal Agent 如何運作](https://nichesam.github.io/BIM-personal-agent/)
+[圖解介紹與安裝說明](https://nichesam.github.io/BIM-personal-agent/) · [GitHub Releases](https://github.com/NicheSam/BIM-personal-agent/releases)
 
 ```text
 Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
       -> BIM Personal Agent RevitBridge -> Revit API -> Revit 2024
 ```
 
-目前版本為 **v0.8.0**。產品不使用模型 API Key，也不在 Revit 內維護第二套文字輸入或參數編輯器。任務從 Codex 輸入，執行紀錄由瀏覽器工作台非同步回報；Revit Ribbon 只保留 Agent 服務開關，破壞性操作仍由 Revit 原生對話框確認。
+目前版本為 **v0.8.1**。這個版本加入 Element Lens、單一目標判定與安全自動追蹤，並修正工作台對 saved tool 與模型影響摘要的呈現。公開 MCP 介面仍維持六個工具，既有使用方式不變。
 
-v0.8.0 已在 Revit 2024 實機確認 Gateway/Bridge 版本一致、既有唯讀工具可執行、active-view 視圖覆寫可 Undo、68 個選取元素可完整讀回驗證，且相同 saved-tool source hash 第二次執行會命中 session compilation cache，不建立重複工具版本。詳見 [v0.8.0 release notes](release/RELEASE_NOTES_V0.8.0.md)。
+## 適合誰
+
+- 使用 Revit 2024、希望由 Codex 協助執行重複 BIM 工作的單人工程師。
+- 需要把一次成功的 Dynamic C# 轉成可搜尋、可帶不同參數重用工具的人。
+- 需要在執行前掌握文件、視圖、選取與範圍，執行後保留 Transaction、模型影響與驗證紀錄的人。
+
+它不是多人雲端協作平台、Revit 內聊天視窗、通用 Revit 資料庫瀏覽器，也不是無限制執行任意 C# 的沙箱。
+
+## 主要能力
+
+- **工具搜尋與重用**：149 個內部工具，包括 146 個固定上游工具與 3 個 Agent 自有工具；相同 saved-tool source hash 不會產生重複版本或重複編譯。
+- **Element Lens**：以 `builtin:inspect_element_context` 唯讀取得單一元素的 identity、instance/type parameters、位置、輕量幾何、關聯及 view/sheet context。
+- **安全目標判定**：區分目前選取、明確 ElementId、候選覆核、工具回傳與新建元素；只有一個可證明的目標才會自動追蹤。
+- **Dynamic C#**：由 Revit host 管理 Transaction；禁止檔案、網路、程序、反射、P/Invoke、threading、assembly loading 與 document save/open。
+- **工程師工作台**：在 `http://127.0.0.1:4178` 顯示任務摘要、執行結果、模型影響、驗證、Transaction 與可展開資料。
+- **有限 Harness**：只在明確要求證據、自動修正或 `startLoop=true` 時啟用，並受次數、時間及修改範圍限制。
 
 ## 一般使用者安裝
 
-一般 BIM 工程人員請下載 [v0.8.0 Windows 安裝包](https://github.com/NicheSam/BIM-personal-agent/releases/download/v0.8.0/BIMPersonalAgent-v0.8.0-win-x64.zip)，不要使用 GitHub 的 `Source code (zip)`。
+下載 [BIMPersonalAgent-v0.8.1-win-x64.zip](https://github.com/NicheSam/BIM-personal-agent/releases/download/v0.8.1/BIMPersonalAgent-v0.8.1-win-x64.zip)，不要使用 GitHub 自動產生的 `Source code (zip)`。
 
-1. 解壓縮 `BIMPersonalAgent-v0.8.0-win-x64.zip`。
+1. 解壓縮安裝包。
 2. 關閉 Revit 2024 與 Codex Desktop。
-3. 執行 `install.bat -CheckOnly`。
-4. 檢查通過後執行 `install.bat`。
-5. 重新開啟 Revit 與 Codex，在新 task 輸入 `$bim-agent`。
+3. 執行 `install.bat -CheckOnly`，確認環境與安裝目標。
+4. 通過後執行 `install.bat`。
+5. 開啟 Revit 2024 與目標模型，在 Ribbon 啟動 Agent service。
+6. 重新開啟 Codex Desktop，在新 task 輸入 `$bim-agent`。
 
-使用者安裝包已包含 portable Node.js、production Gateway、預建 Revit DLL 與 skill；同事不需要另裝 Node.js、npm、Python 或 .NET SDK，也不需要系統管理員權限。
+安裝包包含 portable Node.js、production Gateway、Console、預建 Revit DLL 與 `bim-agent` skill；一般使用者不需要另裝 Node.js、npm、Python 或 .NET SDK，也不需要系統管理員權限。安裝器會先備份既有 runtime、Add-in 與 skill；Revit 執行中時不會覆寫載入中的 DLL。
 
-## MCP 工具
+## 日常工作方式
 
-Codex 固定只看見六個工具：
+1. Agent 先確認 Gateway／Bridge 版本、active document、active view 與必要 selection。
+2. 簡單工作只搜尋一次；優先使用既有或 saved tool。
+3. 沒有合適工具時，才針對缺口執行受限 Dynamic C#。
+4. 模型修改應先限定範圍，執行後讀回必要結果，並回報 Undo 方式。
+5. 文件切換、timeout、狀態不確定、範圍超限或可能改變設計意圖時停止。
+
+工作台是非同步觀測層，不是執行權威。若摘要與 Bridge 回應或 Revit readback 衝突，以 Bridge 回應與實際模型狀態為準。
+
+## MCP 與內部工具
+
+Codex 固定只看見六個公開工具：
 
 - `get_agent_status`
 - `get_bim_context`
@@ -36,121 +62,93 @@ Codex 固定只看見六個工具：
 - `run_bim_plan`
 - `execute_dynamic_csharp`
 
-內部 catalog 目前有148個工具：146個來自固定版本的 `REVIT_MCP_study` runtime，另有 `execute_dynamic_csharp`、`get_task_context` 兩個 Agent 自有工具；狀態為21個 `validated`、120個 `experimental`、7個 `disabled`。保存的 C# 不會擴增 MCP schema，而是透過 `search_bim_tools` 與 `run_bim_tool` 重用。
+內部 catalog 有 149 個工具：146 個來自固定版本的 `REVIT_MCP_study` runtime，3 個 Agent 自有工具為 `execute_dynamic_csharp`、`get_task_context`、`inspect_element_context`。目前狀態為 22 個 `validated`、120 個 `experimental`、7 個 `disabled`。保存的 C# 透過 `search_bim_tools` 與 `run_bim_tool` 重用，不會增加公開 MCP schema。
 
-工具搜尋不是直接拿使用者句子反覆查詢。Codex 會先整理目標、BIM 對象、動作、限制與步驟，再由 Gateway 為每個步驟設計工具流程；一次回傳完成任務所需工具的完整 schema，其他候選保持精簡。只有未覆蓋或不適用的步驟才再細化搜尋一次，仍無工具時只在該步驟加入 Dynamic C#，不重寫整個流程。
+## Element Lens 的功能邊界
 
-### 有限 Harness
+- 只讀，不修改模型。
+- 需要明確 ElementId 或恰好一個選取元素；空選取或多選不猜測。
+- 預設回傳 summary，需要參數工作才提升到 parameters，診斷才使用 bounded full。
+- `maxParameters` 限制回傳量；`maxViewsScanned` 目前保留，並不啟動專案全視圖掃描。
+- 保留原始 Revit API 名稱；在地化顯示只能附加，不能覆蓋原始名稱。
+- 它不是 RevitParameterInspector 的 UI、匯出器或第二套 Add-in。
 
-Harness 預設不介入一般工作。普通讀取、建立、修改、單次 plan 與 Dynamic C# 維持原本直接路徑；只有任務明確要求驗收證據、自動修正，或呼叫端設定 `startLoop=true` 時才建立 run。啟用後標準任務最多兩次執行，明確標記的複雜任務最多三次，並以搜尋、MCP 呼叫、Dynamic C#、修改範圍與十分鐘作為成本上限。Codex 保留選工具、組合流程、產生 C#、設計驗證及根據證據重新規劃的自由；Gateway 只在 timeout、文件切換、重複錯誤、破壞性需求、範圍超限或結果不確定時硬停止。領域 profile 與驗證項目是方向建議，不是固定工作表或領域禁令。
+## 功能與責任邊界
 
-## 原始碼開發需求
+- **Codex**：理解需求、選工具、組合流程、產生必要 C#、判讀證據。
+- **Gateway**：公開 MCP contract、schema validation、搜尋、工具記憶、政策與 telemetry。
+- **RevitBridge**：最終安全裁決、queue、`ExternalEvent`、Transaction、Undo 與模型 readback。
+- **Console**：顯示背景保存的任務與證據，不參與 Revit Transaction。
+- **Skill**：啟動與檢查 Agent，不能取代 Bridge 安全政策，也不代表可任意修改模型。
 
-- Windows 與 Autodesk Revit 2024。
-- .NET SDK 10（用於建置 `net48` RevitBridge 與 Revit Add-in）。
-- Node.js 22 以上與 npm。
-- Codex Desktop 或支援 stdio MCP server 的 Codex 環境。
+目前只支援 Revit 2024、單一 Revit session 與單一 active document。MCP timeout 無法安全終止已進入 Revit UI thread 的程式，因此 timeout 後不自動重試。delete、purge、overwrite、破壞性取代及不可 Undo 操作仍需明確範圍與 Revit 原生確認。
 
-建置時會從標準安裝位置 `C:\Program Files\Autodesk\Revit 2024` 參考 `RevitAPI.dll` 與 `RevitAPIUI.dll`，不會把 Autodesk DLL 納入 repository。
+## 上游、設計來源與致謝
 
-## 建置
+### REVIT_MCP_study
+
+[shuotao/REVIT_MCP_study](https://github.com/shuotao/REVIT_MCP_study) 是本專案 Revit 工具 runtime 的母專案。BIM Personal Agent 固定使用 commit [`cfe073951fa1e43792f9d93f015d7b82416df621`](https://github.com/shuotao/REVIT_MCP_study/commit/cfe073951fa1e43792f9d93f015d7b82416df621) 的 146 個工具，並在其上加入 Gateway、queue、Dynamic C#、安全政策、工具記憶、Element Lens 與工作台。感謝原作者與貢獻者以 MIT License 開放此基礎。
+
+`config/upstream-lock.json` 記錄固定 commit、Agent overlay、工具數與 source SHA-256。上游更新只會先稽核，不會自動 merge 或直接發布。正式安裝只載入 BIM Personal Agent Add-in，不需要另一份上游 checkout 或服務。詳見[上游維護](docs/UPSTREAM_MAINTENANCE.md)與[架構決策](docs/decisions/ADR-003-pinned-upstream-runtime.md)。
+
+### RevitParameterInspector
+
+[laytonluo/RevitParameterInspector](https://github.com/laytonluo/RevitParameterInspector) 是 Element Lens 的重要設計與能力移植來源。BIM Personal Agent 採納其結構化元素 context、instance/type parameter 分離、位置／幾何／關聯／view-sheet reader 思路與 AI 可讀輸出方向，再依 Gateway 的單一目標、分級深度、token 邊界與 readback 流程重新整合。
+
+本專案沒有併入 RevitParameterInspector 的 WPF UI、Ribbon、Excel／Markdown 匯出器或獨立 Add-in；執行時也不依賴它。感謝原作者與貢獻者以 MIT License 提供可研究與移植的實作。完整授權與來源聲明見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 原始碼建置
+
+需求：Windows、Autodesk Revit 2024、.NET SDK 10、Node.js 22 以上與 npm。建置會從標準 Revit 2024 安裝位置參考 Autodesk DLL，但不會把 Autodesk DLL 納入 repository。
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 ```
 
-建置會執行 Gateway 測試、C# 核心測試、完整 RevitBridge 建置、registry 驗證，並輸出：
+建置會執行 Gateway／Console 測試、C# 核心測試、RevitBridge 建置與 registry 驗證，輸出到：
 
 ```text
 artifacts\BimPersonalAgent.Revit2024\
 artifacts\BimPersonalAgent.Gateway\
 ```
 
-MCP protocol 與本機 overhead smoke：
+建立一般使用者安裝包：
 
 ```powershell
-cd gateway
-npm.cmd run smoke:mcp
+powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1 -Version 0.8.1
 ```
 
-Revit 開啟模型且 Agent 服務啟動後，執行 read-only live smoke：
+其他診斷命令：
 
 ```powershell
-cd gateway
-npm.cmd run smoke:live
-```
-
-開發時可透過同一 MCP Gateway 診斷單一公開工具：
-
-```powershell
-npm.cmd run call:live -- get_agent_status '{}'
-```
-
-## 上游 REVIT_MCP_study
-
-BIM Personal Agent 維持獨立產品 repository，`REVIT_MCP_study` 作為固定版本、唯讀追蹤的上游執行核心。Fork 或保留上游 checkout 不代表執行兩套服務；正式安裝仍只載入 Agent Add-in，Codex 仍只連六工具 Gateway。
-
-`config/upstream-lock.json` 記錄上游 commit、Agent overlay、工具數及 vendored source SHA-256。`scripts/audit-revit-mcp-upstream.mjs` 可比較最新上游，但不會自動 merge 或發布工具。只有對應的 C# runtime 通過 build、parity 與 Revit smoke 後，catalog importer 才允許明確寫入。詳見[上游維護](docs/UPSTREAM_MAINTENANCE.md)與[架構決策](docs/decisions/ADR-003-pinned-upstream-runtime.md)。
-
-## 從原始碼安裝
-
-```powershell
-install.bat -CheckOnly
-install.bat
-```
-
-Repository 根目錄的 `install.bat` 是開發者版本，會從原始碼建置，因此需要 Node.js 22+ 與 .NET SDK 10。一般使用者應使用 GitHub Release 內附的 `install.bat`，兩者用途不同。
-
-### BIM Agent skill
-
-專案內含 `skills/bim-agent`。安裝到 Codex 個人 skills 目錄後，可在新 task 輸入 `$bim-agent` 或「啟用 BIM Agent」完成以下流程：
-
-- 檢查 Revit 2024 與 localhost Bridge。
-- 開啟 BIM 工程師使用的唯讀活動控制台。
-- 只在任務需要選取、active view、樓層或專案識別時讀取對應 context。
-
-Skill 不會啟動第二個模型服務，也不會改用 raw `revit-mcp`。
-
-### BIM Agent 工作台
-
-```powershell
+npm.cmd --prefix gateway run smoke:mcp
 npm.cmd --prefix gateway run console:start
+npm.cmd --prefix gateway run smoke:live
 ```
 
-工作台預設位於 `http://127.0.0.1:4178`。v0.8.0 以通用 execution envelope 保存輸入來源、原始與正規化結果、限定範圍的模型前後狀態、Transaction、元素變更、資料血緣、claim-based verification 與錯誤層。摘要會顯示實際修改元素與已覆核元素數量；舊任務若保留一致的 `AppliedCount`、`VerifiedCount` 與 `ElementIds`，讀取時也會安全投影。摘要、輸入、結果、驗證、Raw JSON 五頁與 Run Diff 只屬於觀測層，不是工具執行的必經流程。
+`smoke:live` 需要 Revit 已開啟模型且 Agent service 已啟動。source build、測試通過、已安裝 DLL 與 live Revit smoke 是不同驗證層級，不能互相替代。
 
-一般任務採最短路徑：先理解、搜尋一次、直接執行。只有複雜、高風險、失敗或明確要求驗證的任務才建立 plan、readback 或有限修正。Console、Evidence Mode、Domain Renderer 與詳細 JSON 由背景佇列保存，不阻塞主要 Revit 回應。完整契約與案例見[工作台觀測架構](docs/OBSERVABILITY_V3.md)。
-
-每個可關聯的任務會顯示本機 Codex session 實際記錄的未快取輸入、快取輸入、輸出與總 Token。Token 關聯在背景執行，不阻塞 Revit 狀態回報；無法透過 Gateway `requestId` 證明關聯時顯示尚未關聯，不以 bytes 推估。工作台不顯示 prompt、完整 arguments、參數值、動態 C# 原始碼或 MCP schema。
-
-## 本機資料
+## Repository 結構
 
 ```text
-%APPDATA%\BIMPersonalAgent\config\
-%APPDATA%\BIMPersonalAgent\tools\<tool-id>\<version>\
-%APPDATA%\BIMPersonalAgent\telemetry\
-%APPDATA%\BIMPersonalAgent\audits\
-%APPDATA%\BIMPersonalAgent\events\activity.jsonl
-%APPDATA%\BIMPersonalAgent\tasks\<task-id>\summary.json
-%APPDATA%\BIMPersonalAgent\tasks\<task-id>\events.jsonl
-%APPDATA%\BIMPersonalAgent\tasks\<task-id>\details\<request-id>.json
-%APPDATA%\BIMPersonalAgent\developer-traces\<task-id>\<request-id>.json
-%APPDATA%\BIMPersonalAgent\logs\
+gateway/     MCP Gateway、catalog、policy、tool store、tests
+console/     本機工程師工作台
+src/         RevitBridge、Revit Add-in、C# tests
+skills/      $bim-agent skill
+config/      tool registry、upstream lock、policy
+docs/        架構、維護、決策與 GitHub Pages
+release/     安裝器模板與 release notes
+scripts/     build、package、upstream audit
 ```
 
-Performance telemetry 不保存 prompt、arguments 或模型回應。保存工具包含 `manifest.json` 與 `command.cs`；project-bound 工具只能在相同 project fingerprint 執行。
+## 本機資料與隱私
 
-Developer Trace 必須明確啟用，最多保存七天；認證資料即使在 Developer Mode 也不保存。公開工作台與 Evidence Mode 不顯示 prompt、完整 schema、原始程式碼、本機絕對路徑或帳號資料。
+設定、saved tools、telemetry、task details 與 logs 位於 `%APPDATA%\BIMPersonalAgent\`。Performance telemetry 不保存 prompt、完整 arguments 或模型回應。Developer Trace 必須明確啟用且最多保存七天；認證資料不保存。Console 對 Codex session 的背景關聯只回傳任務識別與 token 數字，不顯示 prompt、完整 schema、動態 C# 原始碼、本機絕對路徑或帳號資料。
 
-控制台會唯讀掃描 `%USERPROFILE%\.codex\sessions` 中的 `session_meta`、`turn_context`、`mcp_tool_call_end` 與 `token_count`，只回傳任務識別與 Token 數字，不回傳 prompt、工具參數、專案路徑或 session 原文。
+## English summary
 
-## 邊界
+BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes six stable MCP tools, keeps 149 Revit operations in a searchable internal catalog, supports bounded Dynamic C# and saved-tool reuse, and records task-level model impact and verification in a local workbench. The Windows release bundles the runtime, Revit add-in, Console, portable Node.js, and Codex skill.
 
-- 僅支援 Revit 2024、單一 Revit session、單一 active document。
-- Console 是非同步觀測層；Gateway/Bridge 回應與 Revit 實際模型狀態才是執行結果的權威來源。
-- 一般 read/create/modify 不確認；delete、purge、overwrite、破壞性取代及不可 Undo 操作需在 Revit 顯示範圍並確認。
-- 動態 C# 禁止檔案、網路、程序、反射、P/Invoke、threading、assembly loading、document save/open 與自行建立 Transaction。
-- MCP timeout 無法安全終止已進入 Revit UI thread 的程式；明顯無限迴圈會被拒絕，但本 runtime 不是完整沙箱。
-- 146 個上游工具與2個 Agent 自有工具已納入 `BimPersonalAgent.RevitBridge` 的148工具內部 catalog，保留 MIT attribution；上游 checkout 不再是執行時依賴。
+## 授權與第三方聲明
 
-參考：[Codex 模式](docs/CODEX_MODE.md)、[執行架構](docs/EXECUTION_ARCHITECTURE.md)、[動態 C#](docs/DYNAMIC_CSHARP.md)、[遷移基準](docs/MIGRATION_BASELINE.md)、[上游維護](docs/UPSTREAM_MAINTENANCE.md)、[Live smoke](docs/LIVE_SMOKE_2026-07-13.md)、[Gateway 架構決策](docs/decisions/ADR-001-agent-gateway-and-single-bridge.md)、[Thin Harness 決策](docs/decisions/ADR-002-thin-harness-and-local-token-attribution.md)、[上游固定版本決策](docs/decisions/ADR-003-pinned-upstream-runtime.md)。
+本 repository 目前沒有專案層級的 `LICENSE` 檔，因此不宣稱 BIM Personal Agent 自有程式碼採用特定開源授權。已整合或參考之第三方來源、固定版本與授權聲明見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

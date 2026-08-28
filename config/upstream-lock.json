@@ -19,7 +19,7 @@
       "get_task_context",
       "inspect_element_context"
     ],
-    "vendoredTreeSha256": "8438b6522c452418f22664ddeecc27055579370795deddca1b2e56594c5ee73b",
+    "vendoredTreeSha256": "bc286578f96bd23d092916685957be70997268497edb6bc0c1147ff1dea5e198",
     "catalogSha256": "374b1a24baa6bb68fe8de8607c0b5d3a92a789af5e9377e2e55dbd7f2280e505"
   },
   "syncPolicy": {

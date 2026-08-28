@@ -19,13 +19,13 @@ const port = parsePort(process.env.BIM_AGENT_CONSOLE_PORT, 4178);
 const usageCache = new Map();
 let usageRefreshPromise;
 const buildMetadata = await readJson(join(root, "build-metadata.json")) || {
-  semanticVersion: "0.8.0",
+  semanticVersion: "0.8.1",
   buildHash: "development",
   commitHash: null,
   buildTimeUtc: "development",
   gatewaySchemaVersion: 3,
   consoleSchemaVersion: 3,
-  buildId: "0.8.0-development",
+  buildId: "0.8.1-development",
 };
 
 const assets = new Map([

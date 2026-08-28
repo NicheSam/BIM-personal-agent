@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="用 BIM 工程人員能理解的方式，說明 BIM Personal Agent 如何把自然語言指令轉成 Revit 模型操作。">
-  <title>BIM Personal Agent v0.8.0｜怎麼工作</title>
+  <title>BIM Personal Agent v0.8.1｜怎麼工作</title>
   <style>
     :root {
       --ink: #172126;
@@ -156,7 +156,7 @@
   </style>
 </head>
 <body>
-  <header><div class="shell"><div class="brand">BIM Personal Agent</div><span>v0.8.0 · 給 BIM 工程人員的運作說明</span></div></header>
+  <header><div class="shell"><div class="brand">BIM Personal Agent</div><span>v0.8.1 · 給 BIM 工程人員的運作說明</span></div></header>
 
   <main>
     <section class="hero">
@@ -230,12 +230,12 @@
     <section class="deploy" id="deploy">
       <div class="shell">
         <div class="section-head"><h2>如何部署與開始使用</h2><p>首次部署只做一次；完成後，BIM 工程人員每天只要開啟 Revit、啟動 Agent，再用自然語言下指令。</p></div>
-        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/tag/v0.8.0">GitHub Release v0.8.0</a> 下載 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
+        <div class="deploy-note"><strong>下載同事用 Windows 安裝包</strong><span>請從 <a href="https://github.com/NicheSam/BIM-personal-agent/releases/tag/v0.8.1">GitHub Release v0.8.1</a> 下載 <code>BIMPersonalAgent-v0.8.1-win-x64.zip</code>，不要下載 Source code ZIP。只需要 Windows、Revit 2024 與 Codex Desktop；Node.js、npm、Python 與 .NET SDK 都不必另外安裝。</span></div>
         <div class="deploy-grid">
           <div class="deploy-column">
             <h3>首次部署：管理者執行</h3>
             <div class="deploy-step"><span class="deploy-index">1</span><div><strong>先關閉 Revit</strong><p>避免正在載入的 Add-in DLL 無法安全更新。Codex 安裝後再重新啟動即可。</p></div></div>
-            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 <code>BIMPersonalAgent-v0.8.0-win-x64.zip</code>，不要使用 Source code ZIP。</p></div></div>
+            <div class="deploy-step"><span class="deploy-index">2</span><div><strong>從 GitHub Releases 下載安裝包</strong><p>解壓縮 <code>BIMPersonalAgent-v0.8.1-win-x64.zip</code>，不要使用 Source code ZIP。</p></div></div>
             <div class="deploy-step"><span class="deploy-index">3</span><div><strong>先檢查，再執行 install.bat</strong><p>Release 安裝器使用內附的 portable Node.js、預建 Gateway 與 Revit DLL；不會在使用者電腦重新建置原始碼。</p></div></div>
             <div class="deploy-step"><span class="deploy-index">4</span><div><strong>重新啟動 Revit 與 Codex</strong><p>之後就依右側的日常流程開始使用，不必再次安裝。</p></div></div>
             <details>
@@ -259,6 +259,16 @@ install.bat</div>
           <div class="ready-item"><strong>Agent 服務已啟動</strong><span>localhost:9686</span></div>
           <div class="ready-item"><strong>Codex 使用 $bim-agent</strong><span>即可開始自然語言操作</span></div>
         </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="section-head"><h2>開源基礎與致謝</h2><p>產品邊界清楚標示來源；正式安裝只載入 BIM Personal Agent。</p></div>
+        <div class="tech"><div class="tech-grid">
+          <div class="tech-item"><strong><a href="https://github.com/shuotao/REVIT_MCP_study">REVIT_MCP_study</a></strong>146 個固定版本 Revit 工具的母專案；BIM Personal Agent 在其上加入 Gateway、安全政策、工具記憶與工作台。</div>
+          <div class="tech-item"><strong><a href="https://github.com/laytonluo/RevitParameterInspector">RevitParameterInspector</a></strong>Element Lens 的結構化元素 context 與 reader/builder 能力移植來源；未併入其 UI、匯出器或獨立 Add-in。</div>
+        </div></div>
       </div>
     </section>
 
@@ -298,7 +308,7 @@ install.bat</div>
     </section>
   </main>
 
-  <footer><div class="shell">BIM Personal Agent v0.8.0 · <a href="https://github.com/NicheSam/BIM-personal-agent">查看 GitHub repository</a></div></footer>
+  <footer><div class="shell">BIM Personal Agent v0.8.1 · <a href="https://github.com/NicheSam/BIM-personal-agent">查看 GitHub repository</a></div></footer>
 
   <script>
     const routes = {

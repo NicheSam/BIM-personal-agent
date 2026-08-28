@@ -34,7 +34,7 @@ $healthUrl = "$consoleUrl/health"
 $metadataPath = Join-Path $repoPath "console\build-metadata.json"
 $expectedBuildId = if (Test-Path -LiteralPath $metadataPath) {
     (Get-Content -LiteralPath $metadataPath -Encoding UTF8 -Raw | ConvertFrom-Json).buildId
-} else { "0.8.0-development" }
+} else { "0.8.1-development" }
 $consoleRunning = $false
 $consoleVersionMismatch = $null
 try {

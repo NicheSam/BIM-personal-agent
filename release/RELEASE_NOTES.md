@@ -1,35 +1,32 @@
-# BIM Personal Agent v0.6.0
+# BIM Personal Agent v0.8.1
 
-Executor and reporter release for Revit 2024 and Codex Desktop.
+Element Lens and targeting-policy release for Revit 2024 and Codex Desktop.
 
 ## Added
 
-- One `taskId` across tool search, execution, verification, and reporting.
-- Revit Bridge progress events for queued, executing, completed, and failed states.
-- Local Task Store with one summary and ordered event stream per BIM task.
-- Task-oriented BIM Agent Workbench with live SSE updates.
-- Background Codex token attribution that does not block live execution status.
+- Read-only `builtin:inspect_element_context` with bounded identity, instance/type parameter, location, geometry, relationship, and view/sheet context.
+- Explicit target-source policy and safe single-target auto-follow.
+- Element Lens rendering in the local engineer Workbench.
+
+## Changed
+
+- Internal catalog: 149 tools, comprising 146 pinned `REVIT_MCP_study` tools and 3 Agent-owned tools.
+- Correct Workbench saved-tool and model-impact/readback summaries.
+- Rewrite installation, capability-boundary, architecture, and acknowledgment documentation.
+- Credit `RevitParameterInspector` as the Element Lens design and capability-port source under the MIT License.
 
 ## Compatibility
 
-- The six public MCP tools remain unchanged; optional `taskId` correlation was added.
-- V1 activity events remain available for older console and audit consumers.
-- Existing built-in tools, saved tools, Dynamic C#, policy, and Harness behavior remain available.
-
-## User requirements
-
-- Windows.
-- Autodesk Revit 2024.
-- Codex Desktop.
-
-Node.js, npm, Python, .NET SDK, and administrator permissions are not required for the release package.
+- The six public MCP tools remain unchanged.
+- Revit support remains limited to Revit 2024, one Revit session, and one active document.
+- Existing saved tools remain searchable and source-hash reuse remains compatible.
 
 ## Install
 
-1. Download `BIMPersonalAgent-v0.6.0-win-x64.zip`.
-2. Extract the ZIP and close Revit and Codex Desktop.
+1. Download `BIMPersonalAgent-v0.8.1-win-x64.zip` rather than GitHub's source ZIP.
+2. Extract it and close Revit 2024 and Codex Desktop.
 3. Run `install.bat -CheckOnly`.
 4. Run `install.bat`.
 5. Restart Revit and Codex, start `BIM Personal > Agent service`, then enter `$bim-agent` in a new task.
 
-SHA256 is provided as a separate release asset.
+The SHA-256 checksum is published as a separate release asset.

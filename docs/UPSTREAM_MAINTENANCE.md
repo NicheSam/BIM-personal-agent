@@ -5,9 +5,9 @@ BIM Personal Agent 是獨立產品，`REVIT_MCP_study` 是 Revit 工具與執行
 ## 目前基準
 
 - 上游基準 commit：`cfe073951fa1e43792f9d93f015d7b82416df621`
-- 內部 catalog：148 個工具
+- 內部 catalog：149 個工具
 - 上游來源工具：146 個
-- Agent 自有工具：`execute_dynamic_csharp`、`get_task_context`
+- Agent 自有工具：`execute_dynamic_csharp`、`get_task_context`、`inspect_element_context`
 - 固定版本與雜湊：`config/upstream-lock.json`
 - 自動產生的最新差異：`docs/UPSTREAM_SYNC_REPORT.md`
 

@@ -263,7 +263,7 @@ export class AgentRuntime {
       bridge = { connected: false, errorCode: normalized.code, errorMessage: normalized.message };
     }
     return {
-      gatewayVersion: "0.8.0",
+      gatewayVersion: "0.8.1",
       bridge,
       catalog: await this.catalog.counts(),
       harness: {

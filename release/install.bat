@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 
-echo BIM Personal Agent V0.8.0 User Installer
+echo BIM Personal Agent V0.8.1 User Installer
 echo No Node.js, npm, Python, or .NET SDK installation is required.
 echo Close Revit and Codex Desktop before continuing.
 echo.

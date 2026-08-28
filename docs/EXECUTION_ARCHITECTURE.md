@@ -11,7 +11,7 @@ Gateway 的早期驗證不能降低 Bridge 判定的風險。所有模型相關�
 
 ## Tool Catalog
 
-`gateway/src/catalog/builtin-tools.json` 目前固定保存148個 internal descriptors：146個固定上游工具加2個 Agent 自有工具。建置時驗證唯一性；Codex 不直接載入這些 schemas，而是先搜尋，再以 `toolId + arguments` 執行。
+`gateway/src/catalog/builtin-tools.json` 目前固定保存149個 internal descriptors：146個固定上游工具加3個 Agent 自有工具。建置時驗證唯一性；Codex 不直接載入這些 schemas，而是先搜尋，再以 `toolId + arguments` 執行。
 
 狀態：
 
