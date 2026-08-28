@@ -1,5 +1,7 @@
 # Third-Party Notices
 
+BIM Personal Agent's original project code is licensed under the MIT License in `LICENSE`. That project license does not replace or override the licenses, notices, trademarks, or terms of the third-party components listed below.
+
 ## REVIT_MCP_study
 
 Portions of `src/BimPersonalAgent.RevitBridge/Legacy` are derived from `shuotao/REVIT_MCP_study`, commit `cfe073951fa1e43792f9d93f015d7b82416df621`, with local Agent Gateway, queue, dynamic C# and policy changes.

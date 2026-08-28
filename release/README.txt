@@ -23,6 +23,10 @@ https://github.com/NicheSam/BIM-personal-agent
 Guide:
 https://nichesam.github.io/BIM-personal-agent/
 
+Project license:
+- BIM Personal Agent original project code: MIT License
+- License text: LICENSE
+
 Upstream and acknowledgments:
 - REVIT_MCP_study: https://github.com/shuotao/REVIT_MCP_study
 - RevitParameterInspector: https://github.com/laytonluo/RevitParameterInspector

@@ -151,4 +151,6 @@ BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes s
 
 ## 授權與第三方聲明
 
-本 repository 目前沒有專案層級的 `LICENSE` 檔，因此不宣稱 BIM Personal Agent 自有程式碼採用特定開源授權。已整合或參考之第三方來源、固定版本與授權聲明見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+BIM Personal Agent 自有程式碼採用 [MIT License](LICENSE)，版權標示為 `Copyright (c) 2026 BIM Personal Agent contributors`。MIT License 允許使用、複製、修改、合併、發布、散布、再授權及銷售，但必須在軟體副本或重要部分保留原版權與授權聲明，且軟體不提供任何保證。
+
+MIT License 只涵蓋本專案有權授權的內容，不會改寫 Autodesk Revit、portable Node.js、`REVIT_MCP_study`、`RevitParameterInspector` 或其他相依套件各自的授權。完整第三方來源、固定版本與聲明見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

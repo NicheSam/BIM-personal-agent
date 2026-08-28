@@ -124,6 +124,7 @@ New-Item -ItemType Directory -Path (Join-Path $packageRoot "scripts") -Force | O
 Copy-Item -LiteralPath (Join-Path $repoRoot "release\install-release.ps1") -Destination (Join-Path $packageRoot "scripts") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "scripts\configure-codex-agent.ps1") -Destination (Join-Path $packageRoot "scripts") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "release\README.txt") -Destination $packageRoot -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot "LICENSE") -Destination $packageRoot -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "THIRD_PARTY_NOTICES.md") -Destination $packageRoot -Force
 
 $manifest = [ordered]@{
