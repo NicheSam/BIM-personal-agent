@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><OutputType>Exe</OutputType><LangVersion>latest</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Include="../../src/BimPersonalAgent.RevitBridge/Legacy/Core/Commands/ParametricCabinetSpec.cs" Link="ParametricCabinetSpec.cs" />
+  </ItemGroup>
+</Project>

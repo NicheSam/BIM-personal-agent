@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><OutputType>Exe</OutputType><LangVersion>latest</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Include="../../src/BimPersonalAgent.RevitBridge/Legacy/Core/Commands/FamilyAuthoringSpec.cs" Link="FamilyAuthoringSpec.cs" />
+    <Compile Include="../../src/BimPersonalAgent.RevitBridge/Legacy/Core/Commands/FamilyGeometrySpec.cs" Link="FamilyGeometrySpec.cs" />
+  </ItemGroup>
+</Project>

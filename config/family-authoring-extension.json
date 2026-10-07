@@ -1,0 +1,70 @@
+{
+  "extension": "family-authoring",
+  "version": "2.0.3",
+  "status": "installed-runtime-verified-for-tested-operations",
+  "upstream": {
+    "repository": "https://github.com/shuotao/REVIT_MCP_study.git",
+    "baselineCommit": "cfe073951fa1e43792f9d93f015d7b82416df621",
+    "baselineShort": "cfe0739"
+  },
+  "previousIntegrationHashes": {
+    "vendoredTreeSha256": "bc286578f96bd23d092916685957be70997268497edb6bc0c1147ff1dea5e198",
+    "catalogSha256": "374b1a24baa6bb68fe8de8607c0b5d3a92a789af5e9377e2e55dbd7f2280e505"
+  },
+  "reviewedIntegrationHashes": {
+    "vendoredTreeSha256": "a54b234b0fcb066cfeaf3a17a9c6399a1515622f4a87452703aee48da87e6353",
+    "catalogSha256": "c2252c25f2cd04c3903088f6246578a7bb46880c5caff68a007de1fa27b1e175"
+  },
+  "tools": [
+    "create_family_file",
+    "create_lighting_family_file"
+  ],
+  "changeReview": "docs/family-authoring.md",
+  "tests": [
+    "Gateway regression suite",
+    "FamilyAuthoring.Tests",
+    "Core command parser",
+    "Revit 2024 solution compilation"
+  ],
+  "liveVerification": {
+    "date": "2026-09-30",
+    "toolVersion": "2.0.3",
+    "positiveCases": 4,
+    "negativeRollbackCases": 3,
+    "sourcePreservingCopyCases": 1,
+    "productionFamilies": 7,
+    "productionNativeForms": 57,
+    "evidenceDirectory": "C:\\Users\\User\\Documents\\Codex\\2026-09-24\\new-chat-3\\outputs\\family-tool-v2-review",
+    "remainingUntested": [
+      "nonplanar reference-driven sweep",
+      "all arbitrary source-family constraints and combinations"
+    ]
+  },
+  "policy": "Geometry schema evolves through versioned source review and regression tests. Geometry kinds do not alter execution permissions. Preserve upstream provenance, six public Agent tools, destructive confirmation and disabled tools.",
+  "history": [
+    {
+      "version": "2.0.0",
+      "hashes": {
+        "vendoredTreeSha256": "7aeaa5f83b53684abef2b19689cfc64801cf3045d92c83a3036be461b3c025d3",
+        "catalogSha256": "b0c0fa762af8fce01581ca937bfed4207dd9afc84dc891087e1031d878dd7068"
+      },
+      "liveVerification": "failed: GenericForm Comments parameter absent; transaction rolled back, no output RFA"
+    },
+    {
+      "version": "2.0.1",
+      "hashes": {
+        "vendoredTreeSha256": "8afe44ec36cd129335280d000198579b734cc67ebe0e50dbdf35f351374dd927",
+        "catalogSha256": "0280e3f403e4f342d3a1f2c886b003f53314a9dc932731ff67e71b3dc85bafe4"
+      },
+      "liveVerification": "profile, revolution and rectangular cut passed; cylinder analytic tolerance and null sweep plane failed before saving"
+    },
+    {
+      "version": "2.0.2",
+      "hashes": {
+        "vendoredTreeSha256": "c8399ce34dcc5b2ff032255cac9ff777a10f87c635374364606f06d30f505be5",
+        "catalogSha256": "3ba01c8168f8ec4835c95b46d270726318282e975638a3d2e4c4232f65345262"
+      },
+      "liveVerification": "failed before save: collector requires native CurveElement class then ModelCurve postfilter"
+    }
+  ]
+}

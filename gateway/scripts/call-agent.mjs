@@ -35,7 +35,9 @@ const client = new Client({ name: "bpa-live-call", version: "1.0.0" }, { capabil
 
 try {
   await client.connect(transport);
-  const response = await client.callTool({ name: toolName, arguments: args });
+  const isCabinetBatch = toolName === "run_bim_tool" && args.toolId === "builtin:create_parametric_cabinet_files";
+  const response = await client.callTool({ name: toolName, arguments: args }, undefined,
+    isCabinetBatch ? { timeout: 150_000 } : undefined);
   const text = response.content?.find((item) => item.type === "text")?.text;
   if (!text) {
     throw new Error("Agent did not return a text envelope.");

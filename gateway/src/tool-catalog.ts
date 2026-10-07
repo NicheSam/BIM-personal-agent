@@ -73,8 +73,8 @@ function toPublicSavedTool(tool: ToolDescriptor): ToolDescriptor {
 function loadBuiltins(): ToolDescriptor[] {
   const path = join(dirname(fileURLToPath(import.meta.url)), "catalog", "builtin-tools.json");
   const tools = JSON.parse(readFileSync(path, "utf8")) as ToolDescriptor[];
-  if (tools.length !== 149 || new Set(tools.map((tool) => tool.toolId)).size !== tools.length) {
-    throw new AgentError("CATALOG_INVALID", "Built-in catalog must contain 149 unique tools.");
+  if (tools.length !== 152 || new Set(tools.map((tool) => tool.toolId)).size !== tools.length) {
+    throw new AgentError("CATALOG_INVALID", "Built-in catalog must contain 152 unique tools.");
   }
   return tools;
 }

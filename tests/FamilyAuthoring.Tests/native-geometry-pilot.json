@@ -1,0 +1,434 @@
+{
+  "schemaVersion": "2.0.3",
+  "status": "prepared_not_live_verified",
+  "cases": [
+    {
+      "request": {
+        "name": "NativeRecessPilot",
+        "metadata": {
+          "Purpose": "Synthetic API validation, not a product specification"
+        },
+        "parts": [
+          {
+            "name": "Housing",
+            "kind": "cylinder",
+            "xMm": 0,
+            "yMm": 0,
+            "zMm": 0,
+            "r": 180,
+            "g": 180,
+            "b": 180,
+            "widthMm": 160,
+            "depthMm": 160,
+            "heightMm": 170
+          },
+          {
+            "name": "Recess",
+            "kind": "cylinder",
+            "xMm": 0,
+            "yMm": 0,
+            "zMm": -1,
+            "r": 180,
+            "g": 180,
+            "b": 180,
+            "widthMm": 140,
+            "depthMm": 140,
+            "heightMm": 160,
+            "isVoid": true,
+            "cutTargets": [
+              "Housing"
+            ]
+          }
+        ]
+      },
+      "expectedVolumeMm3": 970437.9706938871
+    },
+    {
+      "request": {
+        "name": "NativeProfilePilot",
+        "metadata": {
+          "Purpose": "Synthetic API validation, not a product specification"
+        },
+        "parts": [
+          {
+            "name": "Annulus",
+            "kind": "profileExtrusion",
+            "xMm": 0,
+            "yMm": 0,
+            "zMm": 0,
+            "r": 180,
+            "g": 180,
+            "b": 180,
+            "heightMm": 10,
+            "profile": [
+              [
+                {
+                  "start": [
+                    80,
+                    0
+                  ],
+                  "end": [
+                    -80,
+                    0
+                  ],
+                  "mid": [
+                    0,
+                    80
+                  ]
+                },
+                {
+                  "start": [
+                    -80,
+                    0
+                  ],
+                  "end": [
+                    80,
+                    0
+                  ],
+                  "mid": [
+                    0,
+                    -80
+                  ]
+                }
+              ],
+              [
+                {
+                  "start": [
+                    70,
+                    0
+                  ],
+                  "end": [
+                    -70,
+                    0
+                  ],
+                  "mid": [
+                    0,
+                    70
+                  ]
+                },
+                {
+                  "start": [
+                    -70,
+                    0
+                  ],
+                  "end": [
+                    70,
+                    0
+                  ],
+                  "mid": [
+                    0,
+                    -70
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expectedVolumeMm3": 47123.8898038469
+    },
+    {
+      "request": {
+        "name": "NativeRevolutionPilot",
+        "metadata": {
+          "Purpose": "Synthetic API validation, not a product specification"
+        },
+        "parts": [
+          {
+            "name": "Reflector",
+            "kind": "revolution",
+            "xMm": 0,
+            "yMm": 0,
+            "zMm": 0,
+            "r": 180,
+            "g": 180,
+            "b": 180,
+            "profile": [
+              [
+                {
+                  "start": [
+                    70,
+                    0
+                  ],
+                  "end": [
+                    75,
+                    0
+                  ]
+                },
+                {
+                  "start": [
+                    75,
+                    0
+                  ],
+                  "end": [
+                    35,
+                    80
+                  ]
+                },
+                {
+                  "start": [
+                    35,
+                    80
+                  ],
+                  "end": [
+                    30,
+                    80
+                  ]
+                },
+                {
+                  "start": [
+                    30,
+                    80
+                  ],
+                  "end": [
+                    70,
+                    0
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expectedVolumeMm3": 131946.8914507713
+    },
+    {
+      "request": {
+        "name": "NativeSweepPilot",
+        "metadata": {
+          "Purpose": "Synthetic API validation, not a product specification"
+        },
+        "parts": [
+          {
+            "name": "Bracket",
+            "kind": "sweep",
+            "xMm": 0,
+            "yMm": 0,
+            "zMm": 0,
+            "r": 180,
+            "g": 180,
+            "b": 180,
+            "rotateZDeg": 30,
+            "profile": [
+              [
+                {
+                  "start": [
+                    -2,
+                    -3
+                  ],
+                  "end": [
+                    2,
+                    -3
+                  ]
+                },
+                {
+                  "start": [
+                    2,
+                    -3
+                  ],
+                  "end": [
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "start": [
+                    2,
+                    3
+                  ],
+                  "end": [
+                    -2,
+                    3
+                  ]
+                },
+                {
+                  "start": [
+                    -2,
+                    3
+                  ],
+                  "end": [
+                    -2,
+                    -3
+                  ]
+                }
+              ]
+            ],
+            "path": [
+              {
+                "start": [
+                  0,
+                  0,
+                  0
+                ],
+                "end": [
+                  0,
+                  0,
+                  100
+                ]
+              },
+              {
+                "start": [
+                  0,
+                  0,
+                  100
+                ],
+                "end": [
+                  50,
+                  0,
+                  150
+                ],
+                "mid": [
+                  14.64466094067263,
+                  0,
+                  135.35533905932738
+                ]
+              },
+              {
+                "start": [
+                  50,
+                  0,
+                  150
+                ],
+                "end": [
+                  150,
+                  0,
+                  150
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expectedVolumeMm3": 6684.955592153876
+    }
+  ],
+  "negativeCases": [
+    {
+      "name": "VoidMissMustRollback",
+      "metadata": {
+        "Purpose": "Synthetic API validation, not a product specification"
+      },
+      "parts": [
+        {
+          "name": "Housing",
+          "kind": "cylinder",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": 0,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 160,
+          "depthMm": 160,
+          "heightMm": 170
+        },
+        {
+          "name": "Recess",
+          "kind": "cylinder",
+          "xMm": 500,
+          "yMm": 0,
+          "zMm": -1,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 140,
+          "depthMm": 140,
+          "heightMm": 160,
+          "isVoid": true,
+          "cutTargets": [
+            "Housing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VoidWholeMustRollback",
+      "metadata": {
+        "Purpose": "Synthetic API validation, not a product specification"
+      },
+      "parts": [
+        {
+          "name": "Housing",
+          "kind": "cylinder",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": 0,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 160,
+          "depthMm": 160,
+          "heightMm": 170
+        },
+        {
+          "name": "Recess",
+          "kind": "cylinder",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": -1,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 200,
+          "depthMm": 200,
+          "heightMm": 200,
+          "isVoid": true,
+          "cutTargets": [
+            "Housing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UndeclaredCutMustRollback",
+      "metadata": {
+        "Purpose": "Synthetic API validation, not a product specification"
+      },
+      "parts": [
+        {
+          "name": "Housing",
+          "kind": "cylinder",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": 0,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 160,
+          "depthMm": 160,
+          "heightMm": 170
+        },
+        {
+          "name": "Recess",
+          "kind": "cylinder",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": -1,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 140,
+          "depthMm": 140,
+          "heightMm": 160,
+          "isVoid": true,
+          "cutTargets": [
+            "Housing"
+          ]
+        },
+        {
+          "name": "Unrequested",
+          "kind": "box",
+          "xMm": 0,
+          "yMm": 0,
+          "zMm": 0,
+          "r": 180,
+          "g": 180,
+          "b": 180,
+          "widthMm": 10,
+          "depthMm": 10,
+          "heightMm": 10
+        }
+      ]
+    }
+  ]
+}

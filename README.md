@@ -9,7 +9,9 @@ Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
       -> BIM Personal Agent RevitBridge -> Revit API -> Revit 2024
 ```
 
-目前版本為 **v0.8.1**。這個版本加入 Element Lens、單一目標判定與安全自動追蹤，並修正工作台對 saved tool 與模型影響摘要的呈現。公開 MCP 介面仍維持六個工具，既有使用方式不變。
+最新已發布安裝包為 **v0.8.1**；目前 `main` 原始碼另包含原生族群建模 2.0.3 與參數化電盤建模 1.1.0 候選功能，尚未另行發布安裝包。公開 MCP 介面仍維持六個工具。
+
+原生族群工具的已測試操作與限制見 [family authoring](docs/family-authoring.md)。參數化電盤的幾何與連接埠已有先前實機驗證紀錄，但新增 ModelText 批次功能仍待實機驗證，見 [parametric cabinet authoring](docs/parametric-cabinet-authoring.md)。
 
 ## 適合誰
 
@@ -21,7 +23,7 @@ Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
 
 ## 主要能力
 
-- **工具搜尋與重用**：149 個內部工具，包括 146 個固定上游工具與 3 個 Agent 自有工具；相同 saved-tool source hash 不會產生重複版本或重複編譯。
+- **工具搜尋與重用**：152 個內部工具，包括 146 個固定上游工具與 6 個 Agent 自有工具；相同 saved-tool source hash 不會產生重複版本或重複編譯。
 - **Element Lens**：以 `builtin:inspect_element_context` 唯讀取得單一元素的 identity、instance/type parameters、位置、輕量幾何、關聯及 view/sheet context。
 - **安全目標判定**：區分目前選取、明確 ElementId、候選覆核、工具回傳與新建元素；只有一個可證明的目標才會自動追蹤。
 - **Dynamic C#**：由 Revit host 管理 Transaction；禁止檔案、網路、程序、反射、P/Invoke、threading、assembly loading 與 document save/open。
@@ -62,7 +64,7 @@ Codex 固定只看見六個公開工具：
 - `run_bim_plan`
 - `execute_dynamic_csharp`
 
-內部 catalog 有 149 個工具：146 個來自固定版本的 `REVIT_MCP_study` runtime，3 個 Agent 自有工具為 `execute_dynamic_csharp`、`get_task_context`、`inspect_element_context`。目前狀態為 22 個 `validated`、120 個 `experimental`、7 個 `disabled`。保存的 C# 透過 `search_bim_tools` 與 `run_bim_tool` 重用，不會增加公開 MCP schema。
+內部 catalog 有 152 個工具：146 個來自固定版本的 `REVIT_MCP_study` runtime，6 個 Agent 自有工具為 `execute_dynamic_csharp`、`get_task_context`、`inspect_element_context`、`create_family_file`、`create_lighting_family_file`、`create_parametric_cabinet_files`。目前狀態為 22 個 `validated`、123 個 `experimental`、7 個 `disabled`。保存的 C# 透過 `search_bim_tools` 與 `run_bim_tool` 重用，不會增加公開 MCP schema。
 
 ## Element Lens 的功能邊界
 
@@ -147,7 +149,7 @@ scripts/     build、package、upstream audit
 
 ## English summary
 
-BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes six stable MCP tools, keeps 149 Revit operations in a searchable internal catalog, supports bounded Dynamic C# and saved-tool reuse, and records task-level model impact and verification in a local workbench. The Windows release bundles the runtime, Revit add-in, Console, portable Node.js, and Codex skill.
+BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes six stable MCP tools, keeps 152 Revit operations in a searchable internal catalog, supports bounded Dynamic C# and saved-tool reuse, and records task-level model impact and verification in a local workbench. The latest packaged release remains v0.8.1. Current main additionally includes native family authoring 2.0.3 and parametric cabinet authoring 1.1.0 candidate code; batch ModelText runtime verification remains pending. See the linked authoring documents for tested operations and limitations.
 
 ## 授權與第三方聲明
 

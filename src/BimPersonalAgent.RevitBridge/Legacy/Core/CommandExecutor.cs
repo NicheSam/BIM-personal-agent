@@ -85,6 +85,18 @@ namespace RevitMCP.Core
 
                 switch (request.CommandName.ToLowerInvariant())
                 {
+                    case "create_parametric_cabinet_files":
+                        result = CreateParametricCabinetFiles(parameters);
+                        break;
+
+                    case "create_family_file":
+                        result = CreateFamilyFile(parameters);
+                        break;
+
+                    case "create_lighting_family_file":
+                        result = CreateLightingFamilyFile(parameters);
+                        break;
+
                     case "create_wall":
                         result = CreateWall(parameters);
                         break;

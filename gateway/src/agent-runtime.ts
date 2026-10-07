@@ -421,6 +421,9 @@ export class AgentRuntime {
         "This legacy destructive tool cannot prove its actual scope before execution. Use dynamic C# with Describe() confirmation instead.",
       );
     }
+    if (["builtin:create_parametric_cabinet_files", "builtin:create_family_file", "builtin:create_lighting_family_file"].includes(toolId) && input.runId !== undefined) {
+      throw new AgentError("NON_ATOMIC_TOOL", "RFA file operations must run directly, outside Harness plans.");
+    }
     const args = normalizeArguments(resolved.descriptor.inputSchema, input.arguments ?? {}, readOriginHints(input.argumentOrigins)).arguments;
     await this.assertProjectBinding(resolved.descriptor);
     const runId = optionalRunId(input.runId);
@@ -436,7 +439,10 @@ export class AgentRuntime {
     }
     const command = toolId.startsWith("builtin:") ? resolved.descriptor.name : "execute_dynamic_csharp";
     const parameters = toolId.startsWith("builtin:") ? args : { mode: "execute", source: resolved.source, inputs: args };
-    const data = (await this.sendCommand(command, parameters, command === "execute_dynamic_csharp" ? 120_000 : 30_000)).data;
+    const data = (await this.sendCommand(command, parameters, ["execute_dynamic_csharp", "create_parametric_cabinet_files"].includes(command) ? 120_000 : 30_000)).data;
+    if (command === "create_parametric_cabinet_files" && (!data || (data as JsonObject).status !== "verified")) {
+      throw new AgentError("FAMILY_BATCH_FAILED", JSON.stringify(data ?? { status: "missing_result" }));
+    }
     return {
       data,
       toolId,
@@ -480,6 +486,9 @@ export class AgentRuntime {
   private async runPlan(input: JsonObject): Promise<unknown> {
     if (!Array.isArray(input.steps) || input.steps.length < 1 || input.steps.length > 20) {
       throw new AgentError("VALIDATION_ERROR", "steps must contain between 1 and 20 operations.");
+    }
+    if (input.steps.some((step) => step && typeof step === "object" && ["builtin:create_parametric_cabinet_files", "builtin:create_family_file", "builtin:create_lighting_family_file"].includes(String((step as JsonObject).toolId)))) {
+      throw new AgentError("NON_ATOMIC_TOOL", "RFA file operations cannot execute inside an atomic plan.");
     }
     const runId = optionalRunId(input.runId);
     const attempt = clampInteger(input.attempt, 1, 3, 1);

@@ -1,4 +1,1144 @@
 [
+{
+  "toolId": "builtin:create_parametric_cabinet_files",
+  "name": "create_parametric_cabinet_files",
+  "version": "1.1.0",
+  "description": "Create 1-3 independent native parametric electrical cabinet RFAs from bounded plane, dimension, box, editable ModelText and conduit-connector specifications. Each check supplies all parameter values and expected part bounds/port coordinates. Commits and verifies every flex check, restores baseline, saves unique filenames and reopens for verification. Stops on first failure and returns partial results. No existing file overwrite or project load. Direct calls only; not atomic-plan compatible.",
+  "capabilityKey": "family.cabinet.batch-parametric-save-verify",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "jobs": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "parameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "valueMm": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 10000
+                  }
+                },
+                "required": [
+                  "name",
+                  "valueMm"
+                ]
+              },
+              "minItems": 3,
+              "maxItems": 16
+            },
+            "planes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "axis": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2
+                  },
+                  "mm": {
+                    "type": "number",
+                    "minimum": -10000,
+                    "maximum": 10000
+                  },
+                  "pinned": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name",
+                  "axis",
+                  "mm"
+                ]
+              },
+              "minItems": 6,
+              "maxItems": 160
+            },
+            "dimensions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "minItems": 2,
+                    "maxItems": 3
+                  },
+                  "parameter": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "refs"
+                ]
+              },
+              "minItems": 3,
+              "maxItems": 200
+            },
+            "parts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "planes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 80
+                    },
+                    "minItems": 6,
+                    "maxItems": 6
+                  },
+                  "hidden": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name",
+                  "planes"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 64
+            },
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "part": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "face": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  },
+                  "diameterMm": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 500
+                  }
+                },
+                "required": [
+                  "name",
+                  "part",
+                  "face",
+                  "diameterMm"
+                ]
+              },
+              "minItems": 0,
+              "maxItems": 32
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "values": {
+                    "type": "object",
+                    "maxProperties": 16,
+                    "additionalProperties": {
+                      "type": "number",
+                      "minimum": 0.1,
+                      "maximum": 10000
+                    }
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "maxProperties": 64,
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      },
+                      "minItems": 6,
+                      "maxItems": 6
+                    }
+                  },
+                  "ports": {
+                    "type": "object",
+                    "maxProperties": 32,
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    }
+                  }
+                },
+                "required": [
+                  "values",
+                  "bounds",
+                  "ports"
+                ]
+              },
+              "minItems": 4,
+              "maxItems": 12
+            },
+            "derivedParameters": {
+              "type": "array",
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "total": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "subtract": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "name",
+                  "total",
+                  "subtract"
+                ]
+              }
+            },
+            "material": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "labels": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 24,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "parameter": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "frontPlane": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "zPlane": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "zOffsetMm": {
+                    "type": "number",
+                    "minimum": -10000,
+                    "maximum": 10000
+                  },
+                  "fontMm": {
+                    "type": "number",
+                    "minimum": 5,
+                    "maximum": 100
+                  },
+                  "depthMm": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 5
+                  }
+                },
+                "required": [
+                  "parameter",
+                  "text",
+                  "frontPlane",
+                  "zPlane",
+                  "zOffsetMm",
+                  "fontMm",
+                  "depthMm"
+                ]
+              }
+            }
+          },
+          "required": [
+            "name",
+            "parameters",
+            "planes",
+            "dimensions",
+            "parts",
+            "ports",
+            "checks"
+          ]
+        },
+        "minItems": 1,
+        "maxItems": 3
+      }
+    },
+    "required": [
+      "jobs"
+    ]
+  },
+  "status": "experimental",
+  "risk": "reversibleMutation",
+  "binding": "portable",
+  "tags": [
+    "revit",
+    "builtin",
+    "family",
+    "parametric",
+    "cabinet"
+  ],
+  "source": "agent-owned"
+},
+{
+  "toolId": "builtin:create_family_file",
+  "name": "create_family_file",
+  "version": "2.0.3",
+  "description": "Create an independent native editable RFA or update a source copy. Supports box, cylinder, profileExtrusion (XY loops), revolution (radius/Z loops about Z), sweep (XY profile and 3D path), explicit void cutTargets and X/Y/Z rotations followed by translation. Curves use start/end and optional arc mid, millimetres. Unique output, no source overwrite or project loading. Reopens and verifies native forms, bounds and volume. Fixed-size geometry; no parameter flex, connectors or photometry. Direct calls only.",
+  "capabilityKey": "family.create-edit-copy-save-verify",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "parts",
+      "metadata"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+      },
+      "metadata": {
+        "type": "object",
+        "maxProperties": 32,
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "parts": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 64,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "kind",
+            "xMm",
+            "yMm",
+            "zMm",
+            "r",
+            "g",
+            "b"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+            },
+            "kind": {
+              "enum": [
+                "box",
+                "cylinder",
+                "profileExtrusion",
+                "revolution",
+                "sweep"
+              ]
+            },
+            "xMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "yMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "widthMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "depthMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "heightMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "r": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "rotateXDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "rotateYDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "rotateZDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "startAngleDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            },
+            "endAngleDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            },
+            "isVoid": {
+              "type": "boolean"
+            },
+            "cutTargets": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+              }
+            },
+            "profile": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 128,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "start": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    },
+                    "end": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    },
+                    "mid": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "path": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  },
+                  "end": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  },
+                  "mid": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "box",
+                      "cylinder"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "widthMm",
+                  "depthMm",
+                  "heightMm"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "profile"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "path"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "else": {
+                "required": [
+                  "profile"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "profileExtrusion"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "heightMm"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "sweep"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "path"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "path"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "isVoid": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "isVoid"
+                ]
+              },
+              "then": {
+                "required": [
+                  "cutTargets"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "cutTargets"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "revolution"
+                  }
+                }
+              },
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "startAngleDeg"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "endAngleDeg"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sourcePath": {
+        "type": "string",
+        "maxLength": 1024,
+        "pattern": "^(?:[A-Za-z]:[\\\\/]|\\\\\\\\).+\\.[rR][fF][aA]$"
+      },
+      "templateName": {
+        "type": "string",
+        "maxLength": 160,
+        "pattern": "^[^\\\\/:]+\\.[rR][fF][tT]$"
+      }
+    },
+    "not": {
+      "required": [
+        "sourcePath",
+        "templateName"
+      ]
+    }
+  },
+  "status": "experimental",
+  "risk": "reversibleMutation",
+  "binding": "portable",
+  "tags": [
+    "revit",
+    "builtin",
+    "family",
+    "rfa",
+    "create",
+    "edit"
+  ],
+  "source": "local-family-authoring"
+},
+{
+  "toolId": "builtin:create_lighting_family_file",
+  "name": "create_lighting_family_file",
+  "version": "2.0.3",
+  "description": "Create an independent native editable RFA or update a source copy. Supports box, cylinder, profileExtrusion (XY loops), revolution (radius/Z loops about Z), sweep (XY profile and 3D path), explicit void cutTargets and X/Y/Z rotations followed by translation. Curves use start/end and optional arc mid, millimetres. Unique output, no source overwrite or project loading. Reopens and verifies native forms, bounds and volume. Fixed-size geometry; no parameter flex, connectors or photometry. Direct calls only.",
+  "capabilityKey": "family.lighting.create-save-verify",
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "parts",
+      "metadata"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+      },
+      "metadata": {
+        "type": "object",
+        "maxProperties": 32,
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "parts": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 64,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "kind",
+            "xMm",
+            "yMm",
+            "zMm",
+            "r",
+            "g",
+            "b"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+            },
+            "kind": {
+              "enum": [
+                "box",
+                "cylinder",
+                "profileExtrusion",
+                "revolution",
+                "sweep"
+              ]
+            },
+            "xMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "yMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -10000,
+              "maximum": 10000
+            },
+            "widthMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "depthMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "heightMm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "r": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "rotateXDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "rotateYDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "rotateZDeg": {
+              "type": "number",
+              "minimum": -360,
+              "maximum": 360
+            },
+            "startAngleDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            },
+            "endAngleDeg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            },
+            "isVoid": {
+              "type": "boolean"
+            },
+            "cutTargets": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$"
+              }
+            },
+            "profile": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 128,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "start": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    },
+                    "end": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    },
+                    "mid": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": -10000,
+                        "maximum": 10000
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "path": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  },
+                  "end": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  },
+                  "mid": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number",
+                      "minimum": -10000,
+                      "maximum": 10000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "box",
+                      "cylinder"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "widthMm",
+                  "depthMm",
+                  "heightMm"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "profile"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "path"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "else": {
+                "required": [
+                  "profile"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "profileExtrusion"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "heightMm"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "sweep"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "path"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "path"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "isVoid": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "isVoid"
+                ]
+              },
+              "then": {
+                "required": [
+                  "cutTargets"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "cutTargets"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "revolution"
+                  }
+                }
+              },
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "startAngleDeg"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "endAngleDeg"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sourcePath": {
+        "type": "string",
+        "maxLength": 1024,
+        "pattern": "^(?:[A-Za-z]:[\\\\/]|\\\\\\\\).+\\.[rR][fF][aA]$"
+      },
+      "templateName": {
+        "type": "string",
+        "maxLength": 160,
+        "pattern": "^[^\\\\/:]+\\.[rR][fF][tT]$"
+      }
+    },
+    "not": {
+      "required": [
+        "sourcePath",
+        "templateName"
+      ]
+    }
+  },
+  "status": "experimental",
+  "risk": "reversibleMutation",
+  "binding": "portable",
+  "tags": [
+    "revit",
+    "builtin",
+    "family",
+    "lighting",
+    "rfa"
+  ],
+  "source": "local-family-authoring"
+},
   {
     "toolId": "builtin:get_task_context",
     "name": "get_task_context",

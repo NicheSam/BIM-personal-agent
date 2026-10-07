@@ -24,6 +24,9 @@ namespace RevitMCP.Core
         private static readonly HashSet<string> NonAtomicOrDestructivePlanCommands =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
+                "create_parametric_cabinet_files",
+                "create_lighting_family_file",
+                "create_family_file",
                 "copy_sheets_from_file",
                 "dedup_detail_elements_in_view",
                 "delete_element",

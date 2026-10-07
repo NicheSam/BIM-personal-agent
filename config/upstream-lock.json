@@ -11,16 +11,19 @@
     "vendoredSourceRoot": "src/BimPersonalAgent.RevitBridge/Legacy",
     "catalogPath": "gateway/src/catalog/builtin-tools.json",
     "agentOverlay": "gateway-queue-dynamic-csharp-policy-tool-memory-element-lens",
-    "internalToolCount": 149,
+    "internalToolCount": 152,
     "upstreamToolCount": 146,
-    "agentOwnedToolCount": 3,
+    "agentOwnedToolCount": 6,
     "agentOwnedTools": [
       "execute_dynamic_csharp",
       "get_task_context",
-      "inspect_element_context"
+      "inspect_element_context",
+      "create_family_file",
+      "create_lighting_family_file",
+      "create_parametric_cabinet_files"
     ],
-    "vendoredTreeSha256": "bc286578f96bd23d092916685957be70997268497edb6bc0c1147ff1dea5e198",
-    "catalogSha256": "374b1a24baa6bb68fe8de8607c0b5d3a92a789af5e9377e2e55dbd7f2280e505"
+    "vendoredTreeSha256": "0ef6d428bf5dc3aced2371940b94f64d0960a5a94422749e47672873afa9ee3c",
+    "catalogSha256": "76de62ce030934e4b9b74ea1883290559b3681195f97f4ab1ae172f82f5b9d3f"
   },
   "syncPolicy": {
     "auditRef": "origin/main",
