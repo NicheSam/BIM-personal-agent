@@ -56,6 +56,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "Family authoring validation tests failed with exit code $LASTEXITCODE."
 }
 
+& $dotnet run --project (Join-Path $repoRoot "tests\CabinetAuthoring.Tests\CabinetAuthoring.Tests.csproj") -c $Configuration -- (Join-Path $repoRoot "tests\fixtures\cabinet-pilot.json")
+if ($LASTEXITCODE -ne 0) {
+    throw "Cabinet authoring validation tests failed with exit code $LASTEXITCODE."
+}
+
 & (Join-Path $PSScriptRoot "verify-codex-mode.ps1")
 
 $artifactRoot = Join-Path $repoRoot "artifacts\BimPersonalAgent.Revit2024"

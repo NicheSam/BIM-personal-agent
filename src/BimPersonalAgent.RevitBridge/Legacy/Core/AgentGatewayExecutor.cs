@@ -48,7 +48,7 @@ namespace RevitMCP.Core
             return new
             {
                 Connected = true,
-                BridgeVersion = "0.8.1",
+                BridgeVersion = "0.9.0",
                 RevitVersion = _uiApp.Application.VersionNumber,
                 HasActiveDocument = document != null,
                 ProjectName = document?.Title,

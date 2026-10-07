@@ -22,7 +22,7 @@
       "create_lighting_family_file",
       "create_parametric_cabinet_files"
     ],
-    "vendoredTreeSha256": "0ef6d428bf5dc3aced2371940b94f64d0960a5a94422749e47672873afa9ee3c",
+    "vendoredTreeSha256": "d3c6793eb01a05c30f5f805b70b01d7ef6992ba0b457644abc779a9fc6e938e9",
     "catalogSha256": "76de62ce030934e4b9b74ea1883290559b3681195f97f4ab1ae172f82f5b9d3f"
   },
   "syncPolicy": {

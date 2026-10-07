@@ -9,7 +9,7 @@ Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
       -> BIM Personal Agent RevitBridge -> Revit API -> Revit 2024
 ```
 
-最新已發布安裝包為 **v0.8.1**；目前 `main` 原始碼另包含原生族群建模 2.0.3 與參數化電盤建模 1.1.0 候選功能，尚未另行發布安裝包。公開 MCP 介面仍維持六個工具。
+目前版本為 **v0.9.0**，安裝包包含原生族群建模 2.0.3 與參數化電盤建模 1.1.0。這些新增工具仍標示為 experimental；ModelText 批次功能仍待實機驗證。公開 MCP 介面仍維持六個工具。完整更新與限制見 [v0.9.0 發布說明](release/RELEASE_NOTES_V0.9.0.md)。
 
 原生族群工具的已測試操作與限制見 [family authoring](docs/family-authoring.md)。參數化電盤的幾何與連接埠已有先前實機驗證紀錄，但新增 ModelText 批次功能仍待實機驗證，見 [parametric cabinet authoring](docs/parametric-cabinet-authoring.md)。
 
@@ -32,7 +32,7 @@ Codex -> BIM Personal Agent MCP Gateway -> localhost:9686
 
 ## 一般使用者安裝
 
-下載 [BIMPersonalAgent-v0.8.1-win-x64.zip](https://github.com/NicheSam/BIM-personal-agent/releases/download/v0.8.1/BIMPersonalAgent-v0.8.1-win-x64.zip)，不要使用 GitHub 自動產生的 `Source code (zip)`。
+下載 [BIMPersonalAgent-v0.9.0-win-x64.zip](https://github.com/NicheSam/BIM-personal-agent/releases/download/v0.9.0/BIMPersonalAgent-v0.9.0-win-x64.zip)，不要使用 GitHub 自動產生的 `Source code (zip)`。同一發布頁提供 SHA-256 校驗檔。
 
 1. 解壓縮安裝包。
 2. 關閉 Revit 2024 與 Codex Desktop。
@@ -117,7 +117,7 @@ artifacts\BimPersonalAgent.Gateway\
 建立一般使用者安裝包：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1 -Version 0.8.1
+powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1 -Version 0.9.0
 ```
 
 其他診斷命令：
@@ -149,7 +149,7 @@ scripts/     build、package、upstream audit
 
 ## English summary
 
-BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes six stable MCP tools, keeps 152 Revit operations in a searchable internal catalog, supports bounded Dynamic C# and saved-tool reuse, and records task-level model impact and verification in a local workbench. The latest packaged release remains v0.8.1. Current main additionally includes native family authoring 2.0.3 and parametric cabinet authoring 1.1.0 candidate code; batch ModelText runtime verification remains pending. See the linked authoring documents for tested operations and limitations.
+BIM Personal Agent is a local Revit 2024 execution agent for Codex. It exposes six stable MCP tools, keeps 152 Revit operations in a searchable internal catalog, supports bounded Dynamic C# and saved-tool reuse, and records task-level model impact and verification in a local workbench. Release v0.9.0 includes native family authoring 2.0.3 and parametric cabinet authoring 1.1.0. These authoring tools remain experimental; batch ModelText runtime verification remains pending. See the linked authoring documents and release notes for tested operations and limitations.
 
 ## 授權與第三方聲明
 

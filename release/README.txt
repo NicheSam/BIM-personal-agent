@@ -1,4 +1,8 @@
-BIM Personal Agent V0.8.1 - User Package
+BIM Personal Agent V0.9.0 - User Package
+
+Includes native family authoring 2.0.3 and parametric cabinet authoring 1.1.0.
+These tools remain experimental. Batch ModelText live verification is pending.
+See RELEASE_NOTES_V0.9.0.md in the repository for tested scope and limitations.
 
 Requirements:
 - Windows
