@@ -6,6 +6,7 @@
 - Package parametric cabinet authoring 1.1.0: bounded dimensions, flex checks, conduit connectors, and candidate ModelText/material support.
 - Keep six public MCP tools; expand the internal catalog to 152 tools, with 22 validated, 123 experimental, and 7 disabled.
 - Reject family-file operations inside atomic plans and Harness runs. Preserve destructive-operation confirmation and Dynamic C# policy.
+- Refresh compatible npm dependencies in the lockfile; the production dependency audit reports zero known vulnerabilities at release validation time.
 
 ## Validation and limits
 
